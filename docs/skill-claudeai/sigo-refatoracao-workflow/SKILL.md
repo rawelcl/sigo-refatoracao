@@ -37,7 +37,7 @@ Todo artefato gerado DEVE respeitar a estrutura abaixo. Consulte-a antes de cria
 WS-PROJETO-REFACT-SIGO/
 ?
 ??? .github/
-?   ??? skills/                             # Skills de IA (Claude/Copilot)
+?   ??? agents/                             # Agentes especializados (Claude/Copilot)
 ?   ??? copilot-instructions.md
 ?
 ??? _templates/                             # Template padrao — copiar para nova rotina

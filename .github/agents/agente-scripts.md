@@ -198,7 +198,7 @@ def criar_estrutura(objeto, tipo):
     print(f"[OK] Tag CVS resolvida: {tag}")
     print(f"\n[OK] Proximos passos:")
     print(f"     1. Consultar base: _shared/base-conhecimento/indice.md")
-    print(f"     2. Iniciar eng. reversa com: @.github/skills/agente-eng-reversa.md")
+    print(f"     2. Iniciar eng. reversa com: @.github/agents/agente-eng-reversa.md")
 
 def main():
     if len(sys.argv) < 3:

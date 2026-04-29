@@ -61,12 +61,12 @@ C:\Users\thiagorc\Documents\Repos\Refatoracao\adrs arquitetura hapvida
 
 | Etapa | Agente | Arquivo |
 |---|---|---|
-| 0 — Consulta base | Agente Base | `.github/skills/agente-base-conhecimento.md` |
-| 1 — Eng. Reversa | Agente Eng. Reversa | `.github/skills/agente-eng-reversa.md` |
-| 2/3/4 — DDD + C4 + Fluxos | Agente DDD | `.github/skills/agente-ddd.md` |
-| 5/6 — Impacto + Backlog | Agente Backlog | `.github/skills/agente-backlog.md` |
-| F — Retroalimentacao | Agente Base | `.github/skills/agente-base-conhecimento.md` |
-| Scripts | Agente Scripts | `.github/skills/agente-scripts.md` |
+| 0 — Consulta base | Agente Base | `.github/agents/agente-base-conhecimento.md` |
+| 1 — Eng. Reversa | Agente Eng. Reversa | `.github/agents/agente-eng-reversa.md` |
+| 2/3/4 — DDD + C4 + Fluxos | Agente DDD | `.github/agents/agente-ddd.md` |
+| 5/6 — Impacto + Backlog | Agente Backlog | `.github/agents/agente-backlog.md` |
+| F — Retroalimentacao | Agente Base | `.github/agents/agente-base-conhecimento.md` |
+| Scripts | Agente Scripts | `.github/agents/agente-scripts.md` |
 
 ---
 
@@ -93,11 +93,11 @@ Modo   : completo
 **Sequencia executada automaticamente:**
 
 ```
-PASSO 1  Ler .github/skills/agente-base-conhecimento.md
+PASSO 1  Ler .github/agents/agente-base-conhecimento.md
          Executar Etapa 0 — consultar base de conhecimento
          Reportar o que ja existe sobre o objeto
 
-PASSO 2  Ler .github/skills/agente-eng-reversa.md
+PASSO 2  Ler .github/agents/agente-eng-reversa.md
          Executar Etapa 1 — engenharia reversa completa
          Salvar reversa-[nome].md
          Executar Etapa F parcial — atualizar base (objetos, tabelas, riscos, pendencias)
@@ -105,7 +105,7 @@ PASSO 2  Ler .github/skills/agente-eng-reversa.md
          Token esperado do usuario: "aprovado" / "aprovado com ressalvas: [obs]" / "reprovar"
 
 PASSO 3  [somente se aprovado]
-         Ler .github/skills/agente-ddd.md
+         Ler .github/agents/agente-ddd.md
          Executar Etapa 2 — modelagem DDD
          Executar Etapa 3 — diagramas C4
          Executar Etapa 4 — fluxogramas as-is e to-be
@@ -114,7 +114,7 @@ PASSO 3  [somente se aprovado]
          >> PAUSA: apresentar artefatos ao usuario e aguardar aprovacao <<
 
 PASSO 4  [somente se aprovado]
-         Ler .github/skills/agente-backlog.md
+         Ler .github/agents/agente-backlog.md
          Executar Etapa 5 — analise de impacto
          Executar Etapa 6 — backlog (epicos, features, user stories)
          Salvar artefatos em 06-analise-impacto/, 07-backlog/
@@ -216,7 +216,7 @@ WS-PROJETO-REFACT-SIGO/
 ??? README.md                             ? indice geral de status de todas as rotinas
 ?
 ??? .github/
-?   ??? skills/                           ? agentes especializados
+?   ??? agents/                           ? agentes especializados
 ?       ??? agente-eng-reversa.md
 ?       ??? agente-ddd.md
 ?       ??? agente-backlog.md

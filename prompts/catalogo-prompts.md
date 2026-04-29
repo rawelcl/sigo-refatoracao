@@ -25,7 +25,7 @@ Modo   : completo
 ### 2.1 Iniciar eng. reversa (usa ultima tag PRODUCAO automaticamente)
 
 ```
-@.github/skills/agente-eng-reversa.md
+@.github/agents/agente-eng-reversa.md
 
 Inicie a engenharia reversa da rotina abaixo.
 Objeto : [NOME_DA_ROTINA]
@@ -36,7 +36,7 @@ Schema : [SCHEMA]
 ### 2.2 Retomar eng. reversa a partir de uma etapa especifica
 
 ```
-@.github/skills/agente-eng-reversa.md
+@.github/agents/agente-eng-reversa.md
 
 Retome a engenharia reversa da rotina abaixo.
 Objeto : [NOME_DA_ROTINA]
@@ -48,7 +48,7 @@ Retomar do Passo: [2 — rastreamento de sub-rotinas | 3 — extracao de regras | 4 
 ### 2.3 Eng. reversa com escopo reduzido
 
 ```
-@.github/skills/agente-eng-reversa.md
+@.github/agents/agente-eng-reversa.md
 
 Inicie a engenharia reversa da rotina abaixo com escopo reduzido.
 Objeto : [NOME_DA_ROTINA]
@@ -60,7 +60,7 @@ Escopo : [apenas mapear dependencias e tabelas | apenas extrair regras de negoci
 ### 2.4 Eng. reversa de sub-rotina especifica
 
 ```
-@.github/skills/agente-eng-reversa.md
+@.github/agents/agente-eng-reversa.md
 
 Realize a engenharia reversa da sub-rotina abaixo, identificada durante a analise de [ROTINA_PAI].
 Objeto     : [NOME_DA_SUB_ROTINA]
@@ -76,7 +76,7 @@ Referenciado por: [NOME_DA_ROTINA_PAI]
 ### 3.1 Iniciar modelagem DDD completa (DDD + C4 + fluxogramas)
 
 ```
-@.github/skills/agente-ddd.md
+@.github/agents/agente-ddd.md
 
 Inicie a modelagem DDD da rotina abaixo.
 Objeto : [NOME_DA_ROTINA]
@@ -87,7 +87,7 @@ Schema : [SCHEMA]
 ### 3.2 Apenas modelagem DDD (sem diagramas)
 
 ```
-@.github/skills/agente-ddd.md
+@.github/agents/agente-ddd.md
 
 Execute apenas a modelagem DDD da rotina abaixo. Nao gerar diagramas C4 nem fluxogramas neste momento.
 Objeto : [NOME_DA_ROTINA]
@@ -98,7 +98,7 @@ Schema : [SCHEMA]
 ### 3.3 Apenas diagramas C4
 
 ```
-@.github/skills/agente-ddd.md
+@.github/agents/agente-ddd.md
 
 Gere apenas os diagramas C4 da rotina abaixo. A modelagem DDD ja foi concluida.
 Objeto  : [NOME_DA_ROTINA]
@@ -109,7 +109,7 @@ Niveis  : [2 — container | 3 — component | 2 e 3]
 ### 3.4 Gerar codigo inicial refatorado (apos DDD concluido)
 
 ```
-@.github/skills/agente-ddd.md
+@.github/agents/agente-ddd.md
 
 Gere o codigo inicial refatorado da rotina abaixo com base na modelagem DDD ja concluida.
 Objeto : [NOME_DA_ROTINA]
@@ -123,7 +123,7 @@ Schema : [SCHEMA]
 ### 3.5 Revisar modelagem DDD existente com nova orientacao de arquitetura
 
 ```
-@.github/skills/agente-ddd.md
+@.github/agents/agente-ddd.md
 
 Revise toda a modelagem DDD da rotina abaixo considerando as orientacoes de arquitetura
 que passaram a vigorar no projeto.
@@ -171,7 +171,7 @@ Ao concluir:
 ### 3.6 Apenas fluxogramas
 
 ```
-@.github/skills/agente-ddd.md
+@.github/agents/agente-ddd.md
 
 Gere apenas os fluxogramas da rotina abaixo. A modelagem DDD ja foi concluida.
 Objeto  : [NOME_DA_ROTINA]
@@ -186,7 +186,7 @@ Fluxos  : [as-is | to-be | ambos]
 ### 4.1 Analise de impacto e backlog completo
 
 ```
-@.github/skills/agente-backlog.md
+@.github/agents/agente-backlog.md
 
 Inicie a analise de impacto e geracao de backlog da rotina abaixo.
 Objeto : [NOME_DA_ROTINA]
@@ -196,7 +196,7 @@ Schema : [SCHEMA]
 ### 4.2 Apenas analise de impacto
 
 ```
-@.github/skills/agente-backlog.md
+@.github/agents/agente-backlog.md
 
 Execute apenas a analise de impacto da rotina abaixo. Nao gerar backlog neste momento.
 Objeto : [NOME_DA_ROTINA]
@@ -206,7 +206,7 @@ Schema : [SCHEMA]
 ### 4.3 Apenas backlog
 
 ```
-@.github/skills/agente-backlog.md
+@.github/agents/agente-backlog.md
 
 Gere apenas o backlog da rotina abaixo. A analise de impacto ja foi concluida.
 Objeto : [NOME_DA_ROTINA]
@@ -220,7 +220,7 @@ Schema : [SCHEMA]
 ### 5.1 Consultar estado geral do projeto
 
 ```
-@.github/skills/agente-base-conhecimento.md
+@.github/agents/agente-base-conhecimento.md
 
 Apresente o estado atual do projeto: rotinas analisadas, metricas e ultimas atualizacoes.
 ```
@@ -228,7 +228,7 @@ Apresente o estado atual do projeto: rotinas analisadas, metricas e ultimas atua
 ### 5.2 Consultar objeto especifico
 
 ```
-@.github/skills/agente-base-conhecimento.md
+@.github/agents/agente-base-conhecimento.md
 
 O objeto abaixo ja foi analisado? Se sim, qual versao e quais etapas foram concluidas?
 Objeto : [NOME_DO_OBJETO]
@@ -237,13 +237,13 @@ Objeto : [NOME_DO_OBJETO]
 ### 5.3 Listar pendencias abertas
 
 ```
-@.github/skills/agente-base-conhecimento.md
+@.github/agents/agente-base-conhecimento.md
 
 Liste todas as pendencias abertas do projeto.
 ```
 
 ```
-@.github/skills/agente-base-conhecimento.md
+@.github/agents/agente-base-conhecimento.md
 
 Liste as pendencias abertas do tipo [ATENCAO | BLOQUEADO | CRITICO] relacionadas a [NOME_DA_ROTINA].
 ```
@@ -251,7 +251,7 @@ Liste as pendencias abertas do tipo [ATENCAO | BLOQUEADO | CRITICO] relacionadas
 ### 5.4 Listar riscos ANS
 
 ```
-@.github/skills/agente-base-conhecimento.md
+@.github/agents/agente-base-conhecimento.md
 
 Liste todos os riscos ANS identificados no projeto com severidade e status.
 ```
@@ -259,7 +259,7 @@ Liste todos os riscos ANS identificados no projeto com severidade e status.
 ### 5.5 Retroalimentar base apos etapa concluida
 
 ```
-@.github/skills/agente-base-conhecimento.md
+@.github/agents/agente-base-conhecimento.md
 
 Atualize a base de conhecimento com os resultados da etapa abaixo.
 Objeto : [NOME_DA_ROTINA]
@@ -269,7 +269,7 @@ Etapa  : [E1 — eng. reversa | E2 — DDD | E3 — C4 | E4 — fluxos | E5 — impacto | 
 ### 5.6 Resolver pendencia
 
 ```
-@.github/skills/agente-base-conhecimento.md
+@.github/agents/agente-base-conhecimento.md
 
 Marque a pendencia abaixo como resolvida e registre a decisao tomada.
 Pendencia  : [PEND-00N — titulo]
@@ -280,7 +280,7 @@ Resolucao  : [descricao do que foi decidido]
 ### 5.7 Consultar decisoes de design
 
 ```
-@.github/skills/agente-base-conhecimento.md
+@.github/agents/agente-base-conhecimento.md
 
 Quais decisoes de design foram tomadas para [NOME_DA_ROTINA | o dominio X]?
 ```
@@ -292,7 +292,7 @@ Quais decisoes de design foram tomadas para [NOME_DA_ROTINA | o dominio X]?
 ### 6.1 Criar estrutura de nova rotina
 
 ```
-@.github/skills/agente-scripts.md
+@.github/agents/agente-scripts.md
 
 Execute o script de criacao de estrutura para a rotina abaixo.
 Objeto : [NOME_DA_ROTINA]
@@ -302,7 +302,7 @@ Tipo   : [PROCEDURE | FUNCTION | PACKAGE]
 ### 6.2 Validar estrutura de uma versao
 
 ```
-@.github/skills/agente-scripts.md
+@.github/agents/agente-scripts.md
 
 Valide a estrutura de pastas da versao ativa da rotina abaixo.
 Objeto : [NOME_DA_ROTINA]
@@ -311,7 +311,7 @@ Objeto : [NOME_DA_ROTINA]
 ### 6.3 Gerar SVGs de uma rotina
 
 ```
-@.github/skills/agente-scripts.md
+@.github/agents/agente-scripts.md
 
 Gere os SVGs de todos os arquivos .puml da rotina abaixo.
 Objeto : [NOME_DA_ROTINA]
@@ -321,7 +321,7 @@ Escopo : [completo | apenas C4 | apenas fluxos]
 ### 6.4 Gerar relatorio de status do projeto
 
 ```
-@.github/skills/agente-scripts.md
+@.github/agents/agente-scripts.md
 
 Gere o relatorio de status de todas as rotinas do projeto.
 ```
@@ -329,7 +329,7 @@ Gere o relatorio de status de todas as rotinas do projeto.
 ### 6.5 Criar novo script
 
 ```
-@.github/skills/agente-scripts.md
+@.github/agents/agente-scripts.md
 
 Crie um script para [descricao do que o script deve fazer].
 Agente  : [eng-reversa | base-conhecimento | projeto]
@@ -361,7 +361,7 @@ Rotina           : [NOME_DA_ROTINA]
 ### 8.3 Listar pontos de atencao para migracao futura
 
 ```
-@.github/skills/agente-ddd.md
+@.github/agents/agente-ddd.md
 
 Liste todos os pontos sinalizados com [MIGRACAO] na modelagem da rotina abaixo,
 com sugestao de equivalente em microsservico para cada um.
@@ -371,7 +371,7 @@ Objeto : [NOME_DA_ROTINA]
 ### 8.4 Avaliar prontidao para migracao de uma rotina
 
 ```
-@.github/skills/agente-ddd.md
+@.github/agents/agente-ddd.md
 
 Com base nos artefatos existentes, avalie o nivel de prontidao da rotina abaixo
 para uma futura migracao para microsservico. Indique o que ainda precisa ser
