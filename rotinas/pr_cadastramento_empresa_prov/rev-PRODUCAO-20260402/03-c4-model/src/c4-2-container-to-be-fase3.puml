@@ -1,0 +1,64 @@
+@startuml c4-2-container-to-be-fase3
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+
+title C4 Model - Nivel 2 Diagrama de Containers - TO-BE FASE 3 (Modernizacao)
+' Subtitulo: Microservicos .NET 8+ / Azure Cloud-Native / Event-Driven Architecture
+
+Person(corretor, "Corretor / Empresa", "Cadastra proposta via portal web ou app")
+
+' --- Camada de Entrada ---
+System_Boundary(entrada, "Camada de Entrada (Azure)") {
+  Container(apigw, "API Gateway", "Azure API Management", "Roteamento, autenticacao (OAuth2/OIDC)\nRate limiting, telemetria")
+  Container(bff, "BFF Implantacao", ".NET 8 / Azure Container App", "Backend-for-Frontend\nAgrega chamadas dos servicos\nResponde ao portal TAFFIX/BITIX")
+}
+
+' --- Core Domain Services ---
+System_Boundary(core_svc, "Core Domain Services (Azure Container Apps)") {
+  Container(svc_cad_empresa, "CadastramentoEmpresaService", ".NET 8 / Container App", "Orquestra a criacao do contrato\nUSA: SAGA pattern para 40+ escritas\nPublica: CompanyContractCreated\nBC-CAD-01 + BC-CAD-07")
+  Container(svc_precif, "PrecificacaoService", ".NET 8 / Container App", "Gestao de tabela de precos\nModelo atacado x AFFIX\nRN279/309\nBC-CAD-05 + BC-CAD-06")
+  Container(svc_param, "ParametrizacaoService", ".NET 8 / Container App", "Parametros operacionais\nCarencias, grupos, modulos\nFidelizacao, minimo contratual\nBC-CAD-08 + BC-CAD-09")
+}
+
+' --- Supporting Services ---
+System_Boundary(sup_svc, "Supporting Services (Azure Container Apps)") {
+  Container(svc_valid, "ValidacaoPropostaService", ".NET 8 / Container App", "Validacoes de proposta\nVendedor, CNPJ, dados cadastrais\nBC-CAD-02 + BC-CAD-03")
+  Container(svc_pessoa, "PessoaJuridicaService", ".NET 8 / Container App", "Gestao de pessoas juridicas\nValidacao CNPJ/CPF/CAEPF\nBC-CAD-04")
+  Container(svc_acesso, "AcessoInternetService", ".NET 8 / Container App", "Credenciais de acesso ao portal\nSenha segura (BCrypt)\nBC-CAD-10")
+  Container(svc_odonto, "OdontoImplantacaoService", ".NET 8 / Container App", "Super Simples\nRepasse automatico\nBC-CAD-12")
+}
+
+' --- Infraestrutura / Cross-Cutting ---
+System_Boundary(infra, "Infraestrutura / Cross-Cutting (Azure)") {
+  Container(bus, "Event Bus", "Azure Service Bus", "Topics:\n- empresa.contrato.criado\n- empresa.provisioning.concluido\n- empresa.cadastro.falhou\n- empresa.email.boasvindas.enviado")
+  Container(notif_svc, "NotificacaoService", "Azure Communication Services + .NET 8", "Email de boas-vindas\nSem dados sensiveis no corpo\nLink de primeiro acesso seguro\nBC-CAD-11")
+  Container(log_svc, "Observabilidade", "Azure Monitor / App Insights", "Structured logging\nCorrelationId por nu_controle\nAlertas de falha de SAGA")
+  Container(acl, "ACL Legado Oracle", ".NET 8 / Container App", "Anti-Corruption Layer\nIntegra procedures Oracle remanescentes\nFase de transicao ate migracao completa")
+  Container(identity_svc, "Identity Service", "Azure AD B2C / .NET 8", "Gerencia senhas de acesso\nOIDC para portal empresa\nSubstitui fn_encripta Oracle")
+}
+
+' --- Databases ---
+System_Boundary(dbs, "Databases (Database per Service - Azure)") {
+  ContainerDb(db_empresa, "Empresa DB", "Azure SQL / PostgreSQL", "Dados de empresa conveniada\nEntity Framework Core")
+  ContainerDb(db_precif, "Precificacao DB", "Azure SQL / PostgreSQL", "Tabelas de precos\nHistorico de versoes")
+  ContainerDb(oracle_leg, "Oracle Legado", "Oracle 19c HUMASTER", "Dados historicos legados\nAcesso via ACL ate migracao\ncompleta de dados")
+}
+
+Rel(corretor, apigw, "Requisicoes", "HTTPS")
+Rel(apigw, bff, "Roteia e autentica")
+Rel(bff, svc_cad_empresa, "Inicia cadastramento", "REST / gRPC")
+Rel(svc_cad_empresa, svc_valid, "Valida proposta", "gRPC interno")
+Rel(svc_cad_empresa, svc_pessoa, "Cria/busca pessoa", "gRPC interno")
+Rel(svc_cad_empresa, svc_precif, "Solicita precificacao", "Comando")
+Rel(svc_cad_empresa, svc_param, "Solicita parametrizacao", "Comando")
+Rel(svc_cad_empresa, svc_acesso, "Cria acesso internet", "Comando")
+Rel(svc_cad_empresa, bus, "Publica CompanyContractCreated")
+Rel(svc_odonto, bus, "Consome CompanyContractCreated")
+Rel(notif_svc, bus, "Consome ContractProvisioningCompleted")
+Rel(svc_cad_empresa, db_empresa, "Le e escreve", "EF Core")
+Rel(svc_precif, db_precif, "Le e escreve", "EF Core")
+Rel(acl, oracle_leg, "Chama procedures legadas", "Oracle client (.NET)")
+Rel(svc_cad_empresa, log_svc, "Envia metricas e traces")
+Rel(svc_acesso, identity_svc, "Cria credencial segura")
+
+@enduml

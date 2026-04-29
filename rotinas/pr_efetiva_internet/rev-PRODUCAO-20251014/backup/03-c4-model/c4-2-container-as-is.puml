@@ -1,0 +1,87 @@
+@startuml c4-2-container-as-is
+!theme plain
+title C4 — Nível 2: Container (AS-IS) — Arquitetura Monolítica Atual
+caption Diagrama de Container — Situação Atual (monolito 2.290 linhas)
+
+skinparam rectangle {
+    BackgroundColor<<container>> #438DD5
+    FontColor<<container>>       #FFFFFF
+    BackgroundColor<<db>>        #438DD5
+    FontColor<<db>>              #FFFFFF
+    BackgroundColor<<ext>>       #999999
+    FontColor<<ext>>             #FFFFFF
+    BorderColor                  #333333
+    FontSize                     10
+}
+
+!define Container(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n<size:9>[e_techn]</size>\n\n e_descr" <<container>> as e_alias
+!define ContainerDb(e_alias, e_label, e_techn, e_descr) database "==e_label\n<size:9>[e_techn]</size>\n\n e_descr" <<db>> as e_alias
+!define System_Ext(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<ext>> as e_alias
+
+package "Oracle Database — Schema HUMASTER" as oracle {
+
+    Container(job, "DBMS_SCHEDULER JOB", "Oracle Scheduler", "Dispara pr_efetiva_internet\na cada N minutos")
+
+    Container(proc, "pr_efetiva_internet", "PL/SQL Procedure\n(2.290 linhas)", "**MONOLITO**\n---\n• 9 fases sequenciais\n• 13 validações de pendência\n• 25 variáveis globais\n• 50+ WHEN OTHERS THEN NULL\n• ~500 linhas duplicadas saúde/odonto\n• ~120 linhas de log repetido\n• Zero testes unitários")
+
+    Container(cad_emp, "pr_cadastramento\n_empresa_prov", "PL/SQL (4.991 linhas)", "Cria empresa conveniada\ncom contratos e obrigações")
+
+    Container(cad_int2, "pr_cadastramento\n_internet2", "PL/SQL", "Processa titulares\ne dependentes")
+
+    Container(critica, "pr_critica_internet", "PL/SQL", "Executa críticas\nde validação")
+
+    Container(odon_cad, "pr_odon_cad\n_empresa_prov", "PL/SQL", "Cria empresa odonto")
+
+    Container(nat_odon, "PR_NAT_JURIDICA\n_ODON", "PL/SQL", "Pessoa jurídica odonto")
+
+    Container(colig_bitix, "PR_COLIGA_EMPRESA\n_BITIX", "PL/SQL", "Coligada BITIX")
+
+    Container(venda_json, "PK_VENDA_JSON\n.pr_efetiva", "PL/SQL Package", "Efetiva venda JSON")
+
+    Container(colig_sigo, "pr_processa_empresa\n_coligada", "PL/SQL", "Coligada SIGO")
+
+    ContainerDb(tables, "50+ Tabelas", "Oracle Tables", "tb_empresa_internet\ntb_pendencia_empresa_internet\ntb_usuario_titular_internet\ntb_empresa_conveniada\ntb_log_baixa_controle\ntb_proposta_venda\n...")
+}
+
+System_Ext(neoway, "Neoway", "fn_checa_divergencia")
+System_Ext(orcamento, "Orçamento", "fn_vi_checa_orcamento")
+System_Ext(adesao, "Adesão Digital", "fn_efetiva_adesao_digital")
+
+' ==========================================
+' RELACIONAMENTOS
+' ==========================================
+job --> proc : "Executa"
+
+proc --> cad_emp : "Chama diretamente\n(sem ACL)"
+proc --> cad_int2 : "Chama diretamente\n(sem ACL)"
+proc --> critica : "Chama diretamente\n(sem ACL)"
+proc --> odon_cad : "Chama diretamente\n(sem ACL)"
+proc --> nat_odon : "Chama diretamente"
+proc --> colig_bitix : "Chama diretamente"
+proc --> venda_json : "Chama diretamente"
+proc --> colig_sigo : "Chama diretamente"
+proc --> tables : "SELECT, INSERT,\nUPDATE, DELETE\n(SQL inline)"
+
+proc --> neoway : "fn_checa_divergencia"
+proc --> orcamento : "fn_vi_checa_orcamento"
+proc --> adesao : "fn_efetiva_adesao_digital"
+
+cad_emp --> tables
+cad_int2 --> tables
+critica --> tables
+odon_cad --> tables
+
+note right of proc
+  **Problemas identificados:**
+  ? 2.290 linhas em uma única procedure
+  ? 50+ blocos WHEN OTHERS THEN NULL
+  ? ~500 linhas de código duplicado (saúde/odonto)
+  ? ~120 linhas de log repetido
+  ? 25 variáveis globais sem reset automático
+  ? Zero testes unitários
+  ? SQL inline (sem repositories)
+  ? Sem ACL para dependências externas
+  ? Commits intermediários espalhados
+end note
+
+@enduml

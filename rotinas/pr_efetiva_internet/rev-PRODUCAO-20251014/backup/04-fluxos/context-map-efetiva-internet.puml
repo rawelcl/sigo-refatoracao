@@ -1,0 +1,136 @@
+@startuml context-map-efetiva-internet
+!theme plain
+title Context Map — pr_efetiva_internet (Efetivação PIM)
+caption Mapa de Contextos — 14 Bounded Contexts + 17 Dependências Externas
+
+skinparam rectangle {
+    BackgroundColor<<core>>       #FFD700
+    BackgroundColor<<supporting>> #87CEEB
+    BackgroundColor<<generic>>    #D3D3D3
+    BackgroundColor<<external>>   #FFA07A
+    BorderColor                   #333333
+    FontSize                      11
+}
+
+skinparam arrow {
+    Color #555555
+    FontSize 9
+}
+
+' ==========================================
+' BOUNDED CONTEXTS — CORE DOMAIN
+' ==========================================
+rectangle "**BC-EI-01**\nOrquestração\nEfetivação PIM\n---\npk_efetiva_internet" <<core>> as BC01
+
+rectangle "**BC-EI-04**\nCadastro de\nEmpresa PJ\n---\npk_efetivacao_empresa_pim" <<core>> as BC04
+
+rectangle "**BC-EI-05**\nIntegração\nSaúde-Odonto\n---\npk_efetivacao_odonto_pim" <<core>> as BC05
+
+rectangle "**BC-EI-06**\nProcessamento\nde Beneficiários\n---\npk_baixa_beneficiario" <<core>> as BC06
+
+' ==========================================
+' BOUNDED CONTEXTS — SUPPORTING
+' ==========================================
+rectangle "**BC-EI-02**\nValidação de\nPendências\n---\npk_pendencia_pim" <<supporting>> as BC02
+
+rectangle "**BC-EI-03**\nCrítica de\nBeneficiários\n---\npk_critica_pim" <<supporting>> as BC03
+
+rectangle "**BC-EI-07**\nGestão de\nStatus\n---\npk_status_pim" <<supporting>> as BC07
+
+rectangle "**BC-EI-08**\nAuditoria\ne Log\n---\npk_log_baixa_pim" <<supporting>> as BC08
+
+rectangle "**BC-EI-11**\nCarga Automática\nPIM Modelo\n---\npk_carga_modelo_pim" <<supporting>> as BC11
+
+rectangle "**BC-EI-12**\nIndividual/\nFamiliar\n---\npk_individual_pim" <<supporting>> as BC12
+
+rectangle "**BC-EI-13**\nOdonto\nPuro\n---\npk_odonto_puro_pim" <<supporting>> as BC13
+
+rectangle "**BC-EI-14**\nColigada\nBITIX/SIGO\n---\npk_coligada_pim" <<supporting>> as BC14
+
+' ==========================================
+' BOUNDED CONTEXTS — GENERIC
+' ==========================================
+rectangle "**BC-EI-09**\nConfiguração\nde Sistema\n---\npk_config_sistema_pim" <<generic>> as BC09
+
+rectangle "**BC-EI-10**\nIntegração\nExterna\n---\npk_integracao_externa_pim" <<generic>> as BC10
+
+' ==========================================
+' DEPENDÊNCIAS EXTERNAS (Procedures existentes)
+' ==========================================
+rectangle "pr_cadastramento\n_empresa_prov\n(4.991 linhas)" <<external>> as EXT_CAD
+rectangle "pr_cadastramento\n_internet2" <<external>> as EXT_INT2
+rectangle "pr_critica\n_internet" <<external>> as EXT_CRIT
+rectangle "pr_odon_cad\n_empresa_prov" <<external>> as EXT_ODON
+rectangle "PR_NAT_JURIDICA\n_ODON" <<external>> as EXT_NAT
+rectangle "fn_checa\n_divergencia\n(Neoway)" <<external>> as EXT_NEOW
+rectangle "fn_vi_checa\n_orcamento" <<external>> as EXT_ORC
+rectangle "fn_efetiva\n_adesao_digital" <<external>> as EXT_ADES
+rectangle "PR_COLIGA_EMPRESA\n_BITIX" <<external>> as EXT_BITIX
+rectangle "PK_VENDA_JSON\n.pr_efetiva" <<external>> as EXT_VENDA
+rectangle "pr_processa\n_empresa_coligada" <<external>> as EXT_COLIG
+rectangle "pr_odon_obrigacao\n_agregado" <<external>> as EXT_OBRIG
+rectangle "fn_registro\n_sistema" <<external>> as EXT_SYS
+
+' ==========================================
+' RELACIONAMENTOS INTERNOS
+' ==========================================
+' Orquestrador ? Todos
+BC01 -down-> BC02 : "U/D (Conformist)"
+BC01 -down-> BC03 : "U/D (Conformist)"
+BC01 -down-> BC04 : "U/D (Conformist)"
+BC01 -down-> BC05 : "U/D (Conformist)"
+BC01 -down-> BC06 : "U/D (Conformist)"
+BC01 -down-> BC07 : "U/D (Conformist)"
+BC01 -right-> BC08 : "Shared Kernel"
+BC01 -right-> BC09 : "U/D (Conformist)"
+BC01 -right-> BC11 : "U/D (Conformist)"
+BC01 -right-> BC12 : "U/D (Conformist)"
+BC01 -right-> BC13 : "U/D (Conformist)"
+BC01 -right-> BC14 : "U/D (Conformist)"
+
+' Inter-BC
+BC04 --> BC05 : "U/D — empresa saúde\ncriada antes da odonto"
+BC04 --> BC07 : "U/D — atualiza status\napós efetivação"
+BC06 --> BC03 : "U/D — consulta críticas\nantes de autorizar"
+BC02 --> BC10 : "ACL — Neoway,\norçamento"
+BC12 --> BC10 : "ACL — Neoway,\nadesão digital"
+BC13 --> BC03 : "U/D — executa\ncríticas odonto"
+
+' ==========================================
+' RELACIONAMENTOS COM EXTERNOS (ACL)
+' ==========================================
+BC04 ..> EXT_CAD : "<<ACL>>"
+BC05 ..> EXT_ODON : "<<ACL>>"
+BC05 ..> EXT_NAT : "<<ACL>>"
+BC06 ..> EXT_INT2 : "<<ACL>>"
+BC03 ..> EXT_CRIT : "<<ACL>>"
+BC10 ..> EXT_NEOW : "<<ACL>>"
+BC10 ..> EXT_ORC : "<<ACL>>"
+BC10 ..> EXT_ADES : "<<ACL>>"
+BC14 ..> EXT_BITIX : "<<ACL>>"
+BC14 ..> EXT_VENDA : "<<ACL>>"
+BC14 ..> EXT_COLIG : "<<ACL>>"
+BC11 ..> EXT_INT2 : "<<ACL>>"
+BC06 ..> EXT_OBRIG : "<<ACL>>"
+BC09 ..> EXT_SYS : "<<ACL>>"
+
+' ==========================================
+' LEGENDA
+' ==========================================
+legend right
+  |= Cor |= Tipo |
+  | <#FFD700> | Core Domain |
+  | <#87CEEB> | Supporting Subdomain |
+  | <#D3D3D3> | Generic Subdomain |
+  | <#FFA07A> | External Dependency (Legacy) |
+  ---
+  **Notação de Relacionamento:**
+  U/D = Upstream/Downstream
+  ACL = Anti-Corruption Layer
+  SK  = Shared Kernel
+  ---
+  14 BCs | 17 External Dependencies
+  110 Story Points | 5 Features | 18 User Stories
+endlegend
+
+@enduml

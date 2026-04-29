@@ -1,0 +1,143 @@
+@startuml c4-3-component-pr-efetiva-internet-to-be
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+
+title Componente | EfetivarMovimentacoesPIMUseCase (TO-BE) | 8 fases internas\nRevisao: 24/04/2026 | [REF DD-01] [REF DD-05] [REF MIG-16] [REF ADR-18]
+
+Person(job, "Agendador", "DBMS_JOB / DBMS_SCHEDULER\n[MIGRACAO] Azure Function Timer Trigger (ADR-17/ADR-29)")
+
+Container_Boundary(uc, "PK_EFETIVACAO_PIM -- EfetivarMovimentacoesPIMUseCase (HUMASTER)") {
+
+    Component(cfg, "Fase 0: Carga de Configuracao", "PL/SQL Block", "Carrega 5 flags via ConfiguracaoSistemaService (DS08)\n[RN01] FL_CRITICA, FL_LOG, HABILITA_65ANOS,\nCD_EMPRESA_IND_ODON_PURO, CHECA_VENDA_OD_PURO\n[MIGRACAO] IConfiguration + Azure App Config (ADR-34)")
+
+    Component(fase1, "Fase 1: CargaAutomaticaModeloUseCase", "PL/SQL Use Case", "[RN02] Areas de venda com fl_baixa=1 + empresas <= 29 vidas com modelo\nDelega a CargaAutomaticaModeloService (DS10)\n[PADRAO-02 RESOLVIDO] duplicacao eliminada\n[MIGRACAO] Use Case separado com paginacao")
+
+    Component(checa_pim, "Guard: MovimentacaoPIMAutomaticoEnabled", "PL/SQL IF Block", "[RN03] Consulta ConfiguracaoSistemaService (DS08)\nSe desligado: pula Fase 2 (comportamento preservado)\n[ATENCAO] Flag DESLIGADA em producao desde 17/04/2026")
+
+    Component(pre_colig, "Pre-validacao Coligadas SIGO", "PL/SQL Block", "[RN04] Delega a ColigadaSigoService (DS13b) -- fn_valida_coligada_baixa\n[REMOVER-NO-TO-BE RESOLVIDO] Acionamento BITIX migrado para VJ\n[REF MIG-16] [REF DD-05]")
+
+    Component(fase2, "Fase 2: EfetivacaoPropostasPIMUseCase", "PL/SQL FOR Loop (cursor st_e)", "Selecao tb_empresa_internet + pipeline por proposta\n[RN05] dt_cad parametrizavel [MIG-03]\ntp_operacao=1, fl_status IN(0,1,8), fl_sinaliza_ok='S'")
+
+    Component(filtros, "Filtros de Elegibilidade", "PL/SQL Specification", "[RN06] FiltroExClienteSpec + FiltroPME30a99Spec\n[MIGRACAO] ISpecification<PropostaInternet>")
+
+    Component(pend_engine, "AvaliacaoPendenciasService (DS01)", "PL/SQL -> PK_PENDENCIA_PIM", "[RN08..RN18] 13 tipos de pendencia via Specification pattern\nSP01..SP14: NomeSuspeito, LocalidadeLimitrofe, VendedorForaFilial,\nDependenteIdade43+ [ANS], SobrinhoIdade23+ [ANS],\nTitularIdade59+/65+ [ANS], CpfInvalido, VidasForaFaixa,\nDigitacaoTardia, CriticaDirex, DivergenciaNeoway [MIGRACAO ACL04]\n[PADRAO-02 RESOLVIDO] 13 loops duplicados eliminados")
+
+    Component(cidade_vo, "ResolveCidadeContratoService (DS14)", "PL/SQL Block", "[RN-aux] Vendedor nacional -> cidade do contrato; senao cidade da empresa\n[MIGRACAO] Value Object CidadeContrato")
+
+    Component(critica_svc, "CriticaBeneficiarioService (DS02)", "PL/SQL -> PK_CRITICA_BENEFICIARIO", "[RN19] Strategy Saude/Odonto\npr_critica_internet + pr_critica_empresa_internet_1\n[MIGRACAO] IOperadoraStrategy (Saude/Odonto)")
+
+    Component(emp_svc, "EfetivacaoEmpresaService (DS03)", "PL/SQL -> PK_EFETIVACAO_EMPRESA", "[RN20] Delega a PR_CADASTRAMENTO_EMPRESA_PROV\n**Fase 1-2:** assinatura legado (Adapter/Facade) via ACL02\n**Fase 3:** RECORD pk_efetivacao_types.t_resultado_efetivacao (6 campos)\n[DD-01 RESOLVIDO] parsing fragil eliminado (S11/S20/A05)\n[MIGRACAO] CommandHandler Result<CdEmpresa> (ADR-03)")
+
+    Component(odon_svc, "EfetivacaoOdontoService (DS04)", "PL/SQL -> PK_INTEGRACAO_SAUDE_ODONTO", "[RN21] Strategy compartilhada\npr_odon_cad_empresa_prov + PR_NAT_JURIDICA_ODON\nValida: nu_controle_saude E nu_cgc_cpf\n[MIGRACAO] IOperadoraStrategy.OdontoStrategy")
+
+    Component(status_svc, "GestaoStatusService (DS06)", "PL/SQL State Machine", "[RN22] Transicoes 0->8->9; reverter para 1 em erro\nUPDATE tb_empresa_internet, tb_empresa_conveniada\nMigra codigo provisorio -> definitivo (titulares/dependentes)\n[MIGRACAO] State machine explicita (enum + transitions)")
+
+    Component(benef_svc, "BaixaBeneficiarioService (DS05)", "PL/SQL -> PK_BAIXA_BENEFICIARIO", "[RN23] Canal 2 (Middle): dt_inicio\nCanal 1 (PME): BULK COLLECT + FORALL + pr_cadastramento_internet2\n[RN24] Se remanesce fl_status=8: pendencia 9 + reverter empresa\n[MIG-01/MIG-02] cursores N+1 eliminados\n[MIGRACAO] IEnumerable<T> + BulkUpdate (ADR-22)")
+
+    Component(ext_svc, "ValidacaoExternaService (DS09)", "PL/SQL -> ACL Neoway/Orcamento", "Neoway / orcamento cancelado / adesao digital\n[MIGRACAO] HttpClient + Polly (ADR-05)")
+
+    Component(fase3, "Fase 3: OdontoPuroUseCase (DS12)", "PL/SQL Use Case", "[RN25] tb_odon_empresa_internet sem saude <=29 vidas\ndtCorteOdonto parametrizado [MIG-03]\nCritica + efetivacao + carencia 30 dias [ANS]")
+
+    Component(fase4, "Fase 4: InclusoesUseCase", "PL/SQL Use Case", "[RN26] cd_tipo_internet=2 -- delega a BaixaBeneficiarioService (DS05)")
+
+    Component(fase5, "Fase 5: ProcessamentoCompletoUseCase", "PL/SQL Use Case", "[RN27] cd_tipo_internet=1 -- delega a DS05\ncdPendenciaPosBaixa parametrizado [MIG-03]")
+
+    Component(fase6, "Fase 6: IndividualFamiliarUseCase (DS11)", "PL/SQL Use Case", "[RN28] fn_individual_familiar='00100'\nprazoDigitacao parametrizado [MIG-03]")
+
+    Component(fase7, "Fase 7: ObrigacaoAgregadoOdontoUseCase", "PL/SQL Use Case", "[RN29] Delega a OdontoPuroService.processarObrigacaoAgregado() (DS12)")
+
+    Component(fase8, "Fase 8: ColigadaSIGOUseCase (DS13b)", "PL/SQL Use Case", "[RN31] Delega a ColigadaSigoService -- pr_processa_empresa_coligada\nFlag: COLIGADA_EMPRESA (sem logica BITIX)")
+
+    Component(log_svc, "LogBaixaService (DS07)", "PL/SQL -> PK_LOG_BAIXA_PIM", "Registra inicio/criticas/finalizacao\ncd_log via SEQUENCE [MIG-06]\n[MIGRACAO] ILogger estruturado + ULID (ADR-74)")
+
+    Component(events, "DomainEventPublisher", "PL/SQL -> Messaging Adapter", "Publica eventos do fluxo no padrao ADR-18\n(kebab-case EN past-tense, payload camelCase)")
+}
+
+ContainerDb(oracle, "Oracle Database 19c", "Schema HUMASTER", "[MIGRACAO] Acesso via Repository interfaces (ADR-22)")
+Container_Ext(cad_emp_ext, "PR_CADASTRAMENTO_EMPRESA_PROV", "PL/SQL Procedure", "Contrato canonico Opcao D Hibrida [REF DD-01]")
+Container_Ext(cad_int2_ext, "PR_CADASTRAMENTO_INTERNET2", "PL/SQL Procedure", "Efetivacao de beneficiario")
+Container_Ext(odon_ext, "PR_ODON_CAD_EMPRESA_PROV", "PL/SQL Procedure", "Criacao empresa odonto")
+System_Ext(neoway, "Neoway", "Validacao cadastral (via DS09/ACL04)")
+System_Ext(servicebus, "Azure Service Bus", "[MIGRACAO] Broker eventos criticos ADR-18:\nhap-ins-pim-company-created,\nhap-ins-pim-company-creation-failed,\nhap-ins-pim-provisional-code-migrated,\nhap-ins-pim-beneficiary-effected,\nhap-ins-pim-effection-completed")
+System_Ext(vj, "PK_VENDA_JSON (VJ)", "Scheduler proprio (A9)\n[REF MIG-16] BITIX migrado para ca")
+
+Rel(job, cfg, "Dispara periodicamente")
+
+Rel(cfg, fase1, "Flags carregadas")
+Rel(fase1, checa_pim, "Concluida")
+Rel(checa_pim, pre_colig, "Se PIM habilitado")
+Rel(pre_colig, fase2, "")
+Rel(fase2, filtros, "Aplica filtros")
+Rel(filtros, pend_engine, "Proposta elegivel")
+Rel(pend_engine, cidade_vo, "Resolve cidade")
+Rel(pend_engine, ext_svc, "Valida externo", "Neoway / Orcamento")
+Rel(pend_engine, critica_svc, "Sem pendencia + FL_CRITICA=S")
+Rel(critica_svc, emp_svc, "Sem critica -> cadastrar empresa")
+Rel(emp_svc, odon_svc, "Se tem odonto vinculado")
+Rel(emp_svc, status_svc, "Sucesso -- migra codigo")
+Rel(status_svc, benef_svc, "Efetiva beneficiarios")
+Rel(benef_svc, status_svc, "Remanesce status 8 -> reverter")
+
+Rel(fase2, fase3, "")
+Rel(fase3, fase4, "")
+Rel(fase4, fase5, "")
+Rel(fase5, fase6, "")
+Rel(fase6, fase7, "")
+Rel(fase7, fase8, "")
+
+Rel(fase2, log_svc, "Registra log")
+Rel(pend_engine, log_svc, "Log criticas")
+Rel(fase8, log_svc, "Log finalizacao")
+
+Rel(emp_svc, cad_emp_ext, "Fase 1-2: assinatura legado\nFase 3: RECORD t_resultado_efetivacao")
+Rel(benef_svc, cad_int2_ext, "pr_cadastramento_internet2")
+Rel(odon_svc, odon_ext, "pr_odon_cad_empresa_prov")
+Rel(ext_svc, neoway, "HTTP (Polly)")
+
+Rel(emp_svc, events, "EmpresaCriadaComSucesso / EmpresaCriacaoFalhou")
+Rel(status_svc, events, "ProvisionalCodeMigrated")
+Rel(benef_svc, events, "BeneficiarioEfetivado")
+Rel(fase8, events, "EfetivacaoPIMConcluida")
+Rel(events, servicebus, "Publica eventos criticos", "ADR-18 -- hap-ins-pim-*")
+
+Rel(pend_engine, oracle, "Repositorios (ADR-22)")
+Rel(emp_svc, oracle, "Repositorios (ADR-22)")
+Rel(status_svc, oracle, "Repositorios (ADR-22)")
+Rel(benef_svc, oracle, "Repositorios (ADR-22)")
+Rel(log_svc, oracle, "Repositorios (ADR-22)")
+
+Rel_U(pre_colig, vj, "[REMOVIDO-NO-TO-BE] Acionamento BITIX migrou para scheduler VJ", "MIG-16 / DD-05")
+
+note right of emp_svc
+  MELHORIA CRITICA [DD-01]:
+  Contrato canonico Opcao D Hibrida.
+  Fase 1-2: Adapter/Facade (assinatura legado) -- zero breaking change.
+  Fase 3: RECORD pk_efetivacao_types.t_resultado_efetivacao
+  (fl_status, cd_empresa, ds_mensagem, ds_etapa_erro, cd_sqlcode, ds_sqlerrm).
+  Elimina parsing fragil (S11/S20/A05 RESOLVIDO).
+end note
+
+note right of pend_engine
+  MELHORIA ALTA:
+  Substitui 13 loops stp1..stp13 duplicados
+  por Specification pattern (PADRAO-02 RESOLVIDO).
+  SP11 (DivergenciaNeoway) sem clausula 'exceto BITIX'
+  -- origem BITIX nao existe no EI to-be [REF A-TO-BE-02].
+end note
+
+note right of fase8
+  BITIX removida do EI to-be [MIG-16]:
+  - RN30 migra integralmente para PK_VENDA_JSON + scheduler proprio (A9).
+  - Fase 8 cobre SOMENTE RN31 (coligadas SIGO nativas).
+  - Pre-requisito de deploy: scheduler VJ criado antes do cutover.
+end note
+
+note right of events
+  Padrao ADR-18:
+  - Topico kebab-case EN past-tense: hap-ins-pim-<evento>
+  - Payload camelCase EN
+  - Azure Service Bus (nao pode perder)
+  - RabbitMQ para logs/sumarios (ADR-02)
+end note
+
+@enduml

@@ -1,0 +1,484 @@
+/**
+ * ============================================================================
+ * CONTEXT MAP - Refatoração DDD: pr_cadastramento_empresa_prov
+ * ============================================================================
+ * 
+ * Procedure Original: humaster.pr_cadastramento_empresa_prov
+ * Linhas: ~5.000 (monólito procedural)
+ * Responsabilidades identificadas: 14 domínios distintos
+ * 
+ * Estratégia: Strangler Fig Pattern
+ *   Fase 1 - Separar em packages PL/SQL por Bounded Context
+ *   Fase 2 - Expor via APIs REST (ASP.NET Core 8 Minimal APIs)
+ *   Fase 3 - Migrar para serviços independentes (Azure Container Apps)
+ * 
+ * Stack de Modernização (Fase 3):
+ *   Runtime:        .NET 8+ / ASP.NET Core 8 Minimal APIs
+ *   Gateway:        Azure API Management
+ *   Orquestração:   Azure Durable Functions (Saga Pattern)
+ *   Mensageria:     Azure Service Bus (Topics + Subscriptions)
+ *   Autenticação:   Microsoft Entra ID
+ *   Banco de Dados: Azure SQL Database (Database per Service)
+ *   Hosting:        Azure Container Apps
+ *   Frontend:       Blazor WebAssembly ou React + TypeScript
+ *   ORM:            Entity Framework Core
+ *   Validação:      FluentValidation
+ *   Mediator/CQRS:  MediatR
+ *   Observability:  Azure Application Insights + Azure Monitor
+ *   CI/CD:          Azure DevOps Pipelines
+ * 
+ * Data: 2026-02-18
+ * ============================================================================
+ */
+
+/* ???????????????????????????????????????????????????????????????????????????
+   BOUNDED CONTEXTS (Domínios Identificados na Procedure)
+   ??????????????????????????????????????????????????????????????????????????? */
+
+/**
+ * BC-01: Orquestração do Cadastramento
+ * -------------------------------------
+ * Responsabilidade: Coordenar todo o fluxo de criação de empresa conveniada.
+ * É o "Application Service" que orquestra os demais contextos.
+ * 
+ * Canais de Entrada:
+ *   - TAFFIX (Oracle Forms): Tela interna de cadastro
+ *   - BITIX (Ferramenta de Vendas): Plataforma usada pelo vendedor/corretor
+ *   Ambos gravam propostas em tb_empresa_internet
+ * 
+ * Procedure atual: pr_cadastramento_empresa_prov (corpo principal)
+ * Package alvo:    pk_cadastramento_empresa
+ * 
+ * Tabelas: tb_empresa_internet (leitura)
+ * Operação: tp_operacao = '1' (inclusão)
+ */
+BoundedContext OrquestracaoCadastramento {
+    type = APPLICATION
+    domainVisionStatement = "Orquestra o fluxo completo de cadastramento de empresa conveniada, coordenando validações, persistência e integrações entre contextos."
+    
+    responsibilities = "Orquestrar fluxo de inclusão", 
+                       "Gerenciar transação (commit/rollback)", 
+                       "Tratar erros globais e pendências",
+                       "Registrar resultado do processamento"
+    
+    /* Aggregate Root */
+    Aggregate ProcessoCadastramento {
+        Entity ProcessoCadastramento {
+            aggregateRoot
+            - ControleInternet nu_controle
+            - EmpresaConveniada cd_empresa
+            String tp_operacao
+            String fl_status_processamento
+            String p_erro_controle
+        }
+    }
+}
+
+/**
+ * BC-02: Validação de Dados da Proposta
+ * ----------------------------------------
+ * Responsabilidade: Validar todos os campos de entrada da proposta.
+ * Linhas originais: ~600 linhas (críticas de CNPJ, razão social, fantasia,
+ *                   endereço, email, data pagamento, validade contrato, etc.)
+ * 
+ * Package alvo: pk_validacao_proposta
+ * 
+ * PROBLEMA ATUAL: Cada validação tem ~15 linhas de código boilerplate 
+ *                 (log odonto + raise_application_error), repetido 25+ vezes.
+ * SOLUÇÃO: Extrair para procedure genérica de log+erro.
+ */
+BoundedContext ValidacaoProposta {
+    type = CORE_DOMAIN
+    domainVisionStatement = "Centraliza todas as regras de validação de dados de entrada para cadastramento de empresa conveniada."
+    
+    responsibilities = "Validar CNPJ/CPF (pk_administracao.fn_check_cic)",
+                       "Validar CAEPF (fn_check_caepf)",
+                       "Validar dados cadastrais (razão social, fantasia, contato, cargo)",
+                       "Validar endereço (CEP, UF, cidade, bairro, logradouro, complemento)",
+                       "Validar e-mail",
+                       "Validar inscrição estadual",
+                       "Validar data pagamento (1-30)",
+                       "Validar validade do contrato (mínimo 6 meses para não-padrão)",
+                       "Validar vendedor do plano",
+                       "Validar lista negra de CNPJ",
+                       "Validar natureza da empresa (0-9)",
+                       "Validar quantidade de beneficiários"
+}
+
+/**
+ * BC-03: Gestão de Pessoa Jurídica
+ * ----------------------------------
+ * Responsabilidade: CRUD de pessoa (tb_pessoa) vinculada à empresa.
+ * 
+ * Package alvo: pk_pessoa_juridica
+ * 
+ * Tabelas: tb_pessoa
+ * Operações: INSERT ou UPDATE baseado na existência do CNPJ
+ */
+BoundedContext GestaoPessoaJuridica {
+    type = CORE_DOMAIN
+    domainVisionStatement = "Gerencia o ciclo de vida da entidade Pessoa Jurídica no sistema, incluindo criação e atualização de dados cadastrais."
+    
+    responsibilities = "Verificar existência de pessoa por CNPJ",
+                       "Criar nova pessoa (sq_pessoa.nextval + fn_digito_out)",
+                       "Atualizar pessoa existente",
+                       "Determinar tipo pessoa (CPF=1, CNPJ=2) via fn_check_cic"
+
+    Aggregate PessoaJuridica {
+        Entity Pessoa {
+            aggregateRoot
+            - CdPessoa cd_pessoa
+            String nu_cgc_cpf
+            String nm_pessoa_razao_social
+            String nm_fantasia
+            int fl_tipo_pessoa
+            String nu_ident_insc_est
+            int cd_empresa_plano
+        }
+    }
+}
+
+/**
+ * BC-04: Gestão de Endereço e Comunicação
+ * ------------------------------------------
+ * Responsabilidade: Gerenciar endereços, contatos e meios de comunicação.
+ * 
+ * Package alvo: pk_endereco_comunicacao
+ * 
+ * Tabelas: tb_endereco_pessoa, tb_empresa_endereco, 
+ *          tb_contato_pessoa, tb_meio_comunicacao_pessoa
+ * 
+ * Meios: telefone, fax, telex, celular, bip, cx postal, email
+ */
+BoundedContext GestaoEnderecoComunicacao {
+    type = SUPPORTING_DOMAIN
+    domainVisionStatement = "Gerencia endereços de correspondência, contatos empresariais e meios de comunicação (telefone, fax, celular, email, etc.)."
+    
+    responsibilities = "Cadastrar endereço de correspondência (Affix reusa, demais cria novo)",
+                       "Vincular endereço à empresa (tb_empresa_endereco)",
+                       "Cadastrar contato da empresa",
+                       "Cadastrar meios de comunicação (telefone, fax, telex, celular, bip, cx postal, email)",
+                       "Validar CEP via tb_cep_logradouro e tb_cep_localidade"
+}
+
+/**
+ * BC-05: Determinação de Filial e Área de Venda
+ * ------------------------------------------------
+ * Responsabilidade: Resolver a filial correta para o contrato.
+ * 
+ * Package alvo: pk_filial_area_venda
+ * 
+ * Regras: vendedor ? área de venda ? filial
+ *         Sobrescrito por: cd_filial_contrato, tb_emp_internet_filial (TAFFIX)
+ */
+BoundedContext FilialAreaVenda {
+    type = SUPPORTING_DOMAIN
+    domainVisionStatement = "Determina a filial e área de venda correta para o contrato, considerando vendedor, filial do contrato e parametrização TAFFIX."
+    
+    responsibilities = "Recuperar filial via vendedor/área de venda",
+                       "Aplicar override filial_contrato (Sacti 1026849)",
+                       "Aplicar override filial_modelo (tela TAFFIX)",
+                       "Recuperar empresa_plano da filial"
+}
+
+/**
+ * BC-06: Parametrização de Negócio (Modelo de Negócio)
+ * -------------------------------------------------------
+ * Responsabilidade: Buscar parâmetros do modelo de negócio
+ *                   (tb_empresa_neg) com base em filial, natureza, 
+ *                   qtd beneficiários.
+ * 
+ * Package alvo: pk_modelo_negocio
+ * 
+ * Tabelas: tb_empresa_neg, tb_empresa_neg_tabela, tb_empresa_neg_desconto,
+ *          tb_empresa_neg_franquia, tb_empresa_neg_carencia, 
+ *          tb_empresa_neg_grupo, tb_empresa_neg_modulo
+ * 
+ * ATENÇÃO: Lógica SIGO vs BITIX (dois caminhos paralelos)
+ */
+BoundedContext ParametrizacaoNegocio {
+    type = CORE_DOMAIN
+    domainVisionStatement = "Resolve os parâmetros do modelo de negócio aplicável ao contrato, incluindo tabelas de preço, descontos, carências e franquias."
+    
+    responsibilities = "Buscar parâmetros SIGO (cr_empresa_neg)",
+                       "Buscar parâmetros BITIX (cr_empresa_neg_bitix)",
+                       "Resolver total de empregados (coligadas SIGO e BITIX)",
+                       "Determinar modelo de negócio e tabela de saúde",
+                       "Determinar canal de venda (1=até 29, 2=30-99)",
+                       "Determinar flag tabela geral (modelo != 1 com tabela)"
+}
+
+/**
+ * BC-07: Precificação e Tabela de Preços
+ * ------------------------------------------
+ * Responsabilidade: Criar tabelas de preço (titulares e agregados),
+ *                   valores de plano e descontos.
+ * 
+ * Package alvo: pk_precificacao
+ * 
+ * Tabelas: tb_preco_plano, tb_valor_plano, tb_desconto_preco_plano
+ */
+BoundedContext Precificacao {
+    type = CORE_DOMAIN
+    domainVisionStatement = "Gerencia a criação de tabelas de preço, valores de planos (titulares e agregados), e descontos aplicáveis ao contrato."
+    
+    responsibilities = "Criar tabela de preço principal (fn_cd_tb_preco_plano)",
+                       "Criar tabela de preço agregados",
+                       "Inserir valores de plano com fator de desconto (constante_vl)",
+                       "Inserir descontos por faixa de usuários",
+                       "Reusar tabela geral quando modelo != 1 (Affix)"
+}
+
+/**
+ * BC-08: Empresa Conveniada (Contrato)
+ * ----------------------------------------
+ * Responsabilidade: Criação do registro principal da empresa conveniada
+ *                   e suas configurações de contrato.
+ * 
+ * Package alvo: pk_empresa_conveniada
+ * 
+ * Tabelas: tb_empresa_conveniada, tb_empresa_conveniada_unidade,
+ *          tb_parametros_unidade, tb_hist_empresa_conveniada,
+ *          tb_empresa_conveniada_imagem, tb_emp_conveniada_saude_flags,
+ *          tb_natureza_juridica_emp, tb_empresa_breakeven
+ */
+BoundedContext EmpresaConveniada {
+    type = CORE_DOMAIN
+    domainVisionStatement = "Gerencia o ciclo de vida do contrato da empresa conveniada, incluindo unidades, parâmetros, histórico e configurações regulatórias."
+    
+    responsibilities = "Gerar código empresa (fn_empresa_conveniada)",
+                       "Inserir empresa conveniada com todas as parametrizações",
+                       "Criar unidade da empresa",
+                       "Configurar parâmetros de unidade (titulares + agregados)",
+                       "Configurar parâmetros de plano especial (tb_parametros_unidade_pln_esp)",
+                       "Registrar histórico (empresas simples/PME)",
+                       "Configurar flags de saúde",
+                       "Atualizar natureza jurídica",
+                       "Inserir breakeven (valor padrão 70)",
+                       "Configurar RN 279/309 (tabela inativos)"
+}
+
+/**
+ * BC-09: Coparticipação e Fator Empresa
+ * ----------------------------------------
+ * Responsabilidade: Configurar coparticipação, franquia, fator empresa
+ *                   e isenções.
+ * 
+ * Package alvo: pk_coparticipacao
+ * 
+ * Tabelas: tb_controle_fator_empresa, tb_fator_empresa,
+ *          tb_parametro_franquia, tb_copart_internacao_param_pj,
+ *          tb_copart_isnt_tp_benef, tb_copart_tipo_reembolso,
+ *          tb_copart_tab_empresa
+ */
+BoundedContext Coparticipacao {
+    type = CORE_DOMAIN
+    domainVisionStatement = "Gerencia as regras de coparticipação, fatores empresa, isenções por tipo beneficiário, e tabelas de reembolso."
+    
+    responsibilities = "Configurar controle fator empresa",
+                       "Inserir fatores empresa",
+                       "Configurar franquia por plano",
+                       "Configurar coparticipação internação PJ",
+                       "Configurar isenção por tipo beneficiário",
+                       "Configurar tipos de reembolso",
+                       "Configurar tabela de referência coparticipação",
+                       "Isenção de carência (Daniel Evangelista 09/2024)"
+}
+
+/**
+ * BC-10: Carência e Compra de Carência
+ * ----------------------------------------
+ * Responsabilidade: Configurar regras de carência, compra de carência
+ *                   e módulos/grupos de carência.
+ * 
+ * Package alvo: pk_carencia
+ * 
+ * Tabelas: tb_compra_carencia, tb_compra_grupo, tb_compra_modulo,
+ *          tb_odon_empresa_neg_grupo
+ */
+BoundedContext Carencia {
+    type = CORE_DOMAIN
+    domainVisionStatement = "Gerencia as regras de carência contratual, incluindo compra de carência, grupos e módulos de carência, e regras odontológicas."
+    
+    responsibilities = "Criar compras de carência (sq_compra_carencia)",
+                       "Configurar grupos de carência",
+                       "Configurar módulos de carência",
+                       "Configurar grupos odontológicos (Sac 981015)"
+}
+
+/**
+ * BC-11: Fidelização
+ * --------------------
+ * Responsabilidade: Configurar regras de fidelização para contratos Middle.
+ * 
+ * Package alvo: pk_fidelizacao (ou dentro de pk_empresa_conveniada)
+ * 
+ * Tabelas: tb_fidelizacao_empresa
+ * Condição: canal_venda = 2 (Middle: 30-99 beneficiários)
+ */
+BoundedContext Fidelizacao {
+    type = SUPPORTING_DOMAIN
+    domainVisionStatement = "Gerencia regras de fidelização para contratos do segmento Middle Market."
+    
+    responsibilities = "Inserir fidelização para canal Middle (30-99 beneficiários)"
+}
+
+/**
+ * BC-12: Acesso Internet e Controle
+ * ------------------------------------
+ * Responsabilidade: Criar acessos internet, controles de movimentação
+ *                   e atualizar usuários internet.
+ * 
+ * Package alvo: pk_acesso_internet
+ * 
+ * Tabelas: tb_acesso_internet, tb_controle_internet,
+ *          tb_usuario_titular_internet, tb_usuario_dependente_internet,
+ *          tb_emp_limite_acesso_contra
+ */
+BoundedContext AcessoInternet {
+    type = SUPPORTING_DOMAIN
+    domainVisionStatement = "Gerencia acessos internet, controles de movimentação, limites de acesso e atualização de usuários (titulares e dependentes)."
+    
+    responsibilities = "Criar acesso internet (sq_acesso_internet)",
+                       "Criar controles internet por tipo",
+                       "Configurar limite de acesso (contratos Affix)",
+                       "Atualizar titulares/dependentes internet (código provisório ? definitivo)"
+}
+
+/**
+ * BC-13: Integração Odonto / Super Simples
+ * -------------------------------------------
+ * Responsabilidade: Espelhar empresa para odontologia e super simples.
+ * 
+ * Package alvo: pk_integracao_odonto
+ * 
+ * Procedures: pr_odon_param_esp_empresa, Pr_Vcc_Empresa_Super_Simples
+ * Parâmetro: 225 - Automatização de parametrização de espelhamento
+ */
+BoundedContext IntegracaoOdonto {
+    type = SUPPORTING_DOMAIN
+    domainVisionStatement = "Gerencia a integração com o sistema odontológico, incluindo espelhamento de parâmetros e criação de empresa super simples."
+    
+    responsibilities = "Verificar parametrização de espelhamento (param 225)",
+                       "Espelhar empresa para odonto (pr_odon_param_esp_empresa)",
+                       "Criar empresa super simples (Pr_Vcc_Empresa_Super_Simples)",
+                       "Verificar operadora automática"
+}
+
+/**
+ * BC-14: Log e Auditoria
+ * -------------------------
+ * Responsabilidade: Registrar logs de processamento e erros.
+ * 
+ * Package alvo: pk_log_auditoria
+ * 
+ * Tabelas: tb_log_baixa_controle, tb_pendencia_empresa_internet
+ * 
+ * PROBLEMA ATUAL: Código de log repetido 30+ vezes na procedure
+ *                 (boilerplate de ~12 linhas cada)
+ * SOLUÇÃO: Procedure única pr_registra_log(nu_controle, mensagem, status)
+ */
+BoundedContext LogAuditoria {
+    type = GENERIC_SUBDOMAIN
+    domainVisionStatement = "Centraliza o registro de logs de processamento, auditoria e pendências, eliminando duplicação de código de logging."
+    
+    responsibilities = "Registrar log de baixa controle (tb_log_baixa_controle)",
+                       "Registrar pendências (tb_pendencia_empresa_internet)",
+                       "Registrar erros de processamento"
+}
+
+/**
+ * BC-15: Reembolso
+ * ------------------
+ * Responsabilidade: Configurar parâmetros de reembolso por plano.
+ * 
+ * Package alvo: pk_reembolso (ou dentro de pk_coparticipacao)
+ * 
+ * Tabelas: tb_reemb_plano_tabela e relacionadas
+ */
+BoundedContext Reembolso {
+    type = SUPPORTING_DOMAIN
+    domainVisionStatement = "Gerencia configuração de reembolso por plano, incluindo prazos, tipos e composições."
+    
+    responsibilities = "Recuperar prazos de reembolso",
+                       "Recuperar tipos de prazo",
+                       "Recuperar tabelas de reembolso",
+                       "Recuperar composição de reembolso"
+}
+
+/**
+ * BC-16: Mínimo Contratual
+ * --------------------------
+ * Responsabilidade: Configurar mínimo contratual da empresa.
+ * 
+ * Package alvo: pk_minimo_contratual (ou dentro de pk_empresa_conveniada)
+ * 
+ * Tabelas: tb_empresa_minimo_contratual
+ * Sacti: 1684652
+ */
+BoundedContext MinimoContratual {
+    type = SUPPORTING_DOMAIN
+    domainVisionStatement = "Gerencia regras de mínimo contratual, incluindo vigência, multas, faturamento mínimo e quantidade de vidas."
+    
+    responsibilities = "Buscar parâmetros de mínimo contratual",
+                       "Inserir mínimo contratual da empresa (sq_empresa_minimo_contratual)"
+}
+
+/* ???????????????????????????????????????????????????????????????????????????
+   CONTEXT MAP - Relacionamentos entre Bounded Contexts
+   ??????????????????????????????????????????????????????????????????????????? */
+
+ContextMap CadastarEmpresaConveniada {
+    type = SYSTEM_LANDSCAPE
+    state = AS_IS
+
+    contains OrquestracaoCadastramento
+    contains ValidacaoProposta
+    contains GestaoPessoaJuridica
+    contains GestaoEnderecoComunicacao
+    contains FilialAreaVenda
+    contains ParametrizacaoNegocio
+    contains Precificacao
+    contains EmpresaConveniada
+    contains Coparticipacao
+    contains Carencia
+    contains Fidelizacao
+    contains AcessoInternet
+    contains IntegracaoOdonto
+    contains LogAuditoria
+    contains Reembolso
+    contains MinimoContratual
+
+    /* Orquestração coordena todos os contextos (Downstream) */
+    OrquestracaoCadastramento [SK] <-> [SK] ValidacaoProposta
+    OrquestracaoCadastramento [SK] <-> [SK] GestaoPessoaJuridica
+    OrquestracaoCadastramento [SK] <-> [SK] GestaoEnderecoComunicacao
+    OrquestracaoCadastramento [SK] <-> [SK] FilialAreaVenda
+    OrquestracaoCadastramento [SK] <-> [SK] ParametrizacaoNegocio
+    OrquestracaoCadastramento [SK] <-> [SK] Precificacao
+    OrquestracaoCadastramento [SK] <-> [SK] EmpresaConveniada
+    OrquestracaoCadastramento [SK] <-> [SK] Coparticipacao
+    OrquestracaoCadastramento [SK] <-> [SK] Carencia
+    OrquestracaoCadastramento [SK] <-> [SK] Fidelizacao
+    OrquestracaoCadastramento [SK] <-> [SK] AcessoInternet
+    OrquestracaoCadastramento [SK] <-> [SK] IntegracaoOdonto
+    OrquestracaoCadastramento [SK] <-> [SK] LogAuditoria
+    OrquestracaoCadastramento [SK] <-> [SK] Reembolso
+    OrquestracaoCadastramento [SK] <-> [SK] MinimoContratual
+
+    /* Dependências entre contextos */
+    FilialAreaVenda [U] -> [D] ParametrizacaoNegocio
+    ParametrizacaoNegocio [U] -> [D] Precificacao
+    Precificacao [U] -> [D] EmpresaConveniada
+    EmpresaConveniada [U] -> [D] Coparticipacao
+    EmpresaConveniada [U] -> [D] Carencia
+    EmpresaConveniada [U] -> [D] Fidelizacao
+    EmpresaConveniada [U] -> [D] AcessoInternet
+    EmpresaConveniada [U] -> [D] IntegracaoOdonto
+    EmpresaConveniada [U] -> [D] MinimoContratual
+    Coparticipacao [U] -> [D] Reembolso
+
+    /* Log é consumido por todos */
+    ValidacaoProposta [U] -> [D] LogAuditoria
+    GestaoPessoaJuridica [U] -> [D] LogAuditoria
+}

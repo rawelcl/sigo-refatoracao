@@ -1,0 +1,146 @@
+@startuml c4-3-component-orquestrador
+!theme plain
+title C4 — Nível 3: Component — Orquestrador pr_efetiva_internet (TO-BE)
+caption BC-EI-01 — Orquestrador de Efetivação PIM (TO-BE)
+
+skinparam rectangle {
+    BackgroundColor<<component>> #438DD5
+    FontColor<<component>>       #FFFFFF
+    BackgroundColor<<ext>>       #999999
+    FontColor<<ext>>             #FFFFFF
+    BorderColor                  #333333
+    FontSize                     10
+}
+
+skinparam arrow {
+    Color #555555
+    FontSize 9
+}
+
+!define Component(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n<size:9>[e_techn]</size>\n\n e_descr" <<component>> as e_alias
+!define Container_Ext(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<ext>> as e_alias
+
+package "pr_efetiva_internet — Orquestrador (~150 linhas)" as orq {
+
+    Component(init, "Inicialização", "PL/SQL", "pk_config_sistema_pim.fn_carregar()\n? t_config Record Type")
+
+    Component(fase1, "Fase 1\nCarga PIM Modelo", "PL/SQL", "pk_carga_modelo_pim\n.pr_processar(cfg)")
+
+    Component(cursor, "Cursor Principal", "PL/SQL", "cr_propostas_pim(cfg)\nLoop sobre tb_empresa_internet\nfl_status IN (0,1,8)")
+
+    Component(ctx, "Context Factory", "PL/SQL", "fn_ctx_novo()\n? t_ctx_efetivacao\n(reset automático)")
+
+    Component(fase2, "Fase 2\nValidação Pendências", "PL/SQL", "pk_pendencia_pim\n.pr_limpar_pendencias()\n.pr_avaliar_todas()")
+
+    Component(decision, "Decisão\ncount_pendencias = 0?", "PL/SQL", "IF/ELSE principal")
+
+    Component(fase3a, "Fase 3a\nEfetivação Empresa", "PL/SQL", "pk_efetivacao_empresa_pim\n.pr_efetivar()")
+
+    Component(fase3b, "Fase 3b\nEfetivação Odonto", "PL/SQL", "pk_efetivacao_odonto_pim\n.pr_efetivar()")
+
+    Component(fase3c, "Fase 3c\nCríticas", "PL/SQL", "pk_critica_pim\n.pr_executar_criticas()")
+
+    Component(fase3d, "Fase 3d\nBaixa Beneficiário", "PL/SQL", "pk_baixa_beneficiario\n.pr_autorizar_e_efetivar()")
+
+    Component(verify, "Verificação\nNão-Efetivados", "PL/SQL", "pk_status_pim\n.pr_verificar_nao_efetivados()")
+
+    Component(fase4, "Fase 4\nOdonto Puro", "PL/SQL", "pk_odonto_puro_pim\n.pr_processar()")
+
+    Component(fase5, "Fase 5\nInclusão", "PL/SQL", "pk_baixa_beneficiario\n.pr_processar_inclusoes()")
+
+    Component(fase6, "Fase 6\nCompleto", "PL/SQL", "pk_baixa_beneficiario\n.pr_processar_completo()")
+
+    Component(fase7, "Fase 7\nIndividual/Familiar", "PL/SQL", "pk_individual_pim\n.pr_processar()")
+
+    Component(fase89, "Fases 8-9\nObrigação + Coligadas", "PL/SQL", "pr_odon_obrigacao_agregado\npk_coligada_pim.pr_processar()")
+
+    Component(commit, "COMMIT Final", "PL/SQL", "COMMIT + log\nde finalização")
+
+    Component(exc, "Exception Handler", "PL/SQL", "WHEN OTHERS ?\npk_log_baixa_pim\n.pr_registra(error)")
+}
+
+' ==========================================
+' PACKAGES EXTERNOS (chamados pelos componentes)
+' ==========================================
+Container_Ext(pk_cfg, "pk_config_sistema_pim", "BC-EI-09")
+Container_Ext(pk_carga, "pk_carga_modelo_pim", "BC-EI-11")
+Container_Ext(pk_pend, "pk_pendencia_pim", "BC-EI-02")
+Container_Ext(pk_efet_emp, "pk_efetivacao_empresa_pim", "BC-EI-04")
+Container_Ext(pk_efet_odon, "pk_efetivacao_odonto_pim", "BC-EI-05")
+Container_Ext(pk_crit, "pk_critica_pim", "BC-EI-03")
+Container_Ext(pk_baixa, "pk_baixa_beneficiario", "BC-EI-06")
+Container_Ext(pk_status, "pk_status_pim", "BC-EI-07")
+Container_Ext(pk_log, "pk_log_baixa_pim", "BC-EI-08")
+Container_Ext(pk_odon_puro, "pk_odonto_puro_pim", "BC-EI-13")
+Container_Ext(pk_indiv, "pk_individual_pim", "BC-EI-12")
+Container_Ext(pk_colig, "pk_coligada_pim", "BC-EI-14")
+Container_Ext(pk_ext, "pk_integracao_externa_pim", "BC-EI-10")
+
+' ==========================================
+' FLUXO SEQUENCIAL
+' ==========================================
+init --> fase1
+fase1 --> cursor
+cursor --> ctx
+ctx --> fase2
+fase2 --> decision
+
+decision --> fase3a : "0 pendências"
+fase3a --> fase3b
+fase3b --> fase3c
+fase3c --> fase3d : "0 críticas"
+fase3d --> verify
+verify --> cursor : "próxima proposta"
+
+decision --> cursor : "com pendências\n(log + skip)"
+
+cursor --> fase4 : "fim do loop"
+fase4 --> fase5
+fase5 --> fase6
+fase6 --> fase7
+fase7 --> fase89
+fase89 --> commit
+
+commit --> exc : "em caso de erro"
+
+' ==========================================
+' COMPONENTES ? PACKAGES
+' ==========================================
+init ..> pk_cfg
+fase1 ..> pk_carga
+fase2 ..> pk_pend
+fase3a ..> pk_efet_emp
+fase3b ..> pk_efet_odon
+fase3c ..> pk_crit
+fase3d ..> pk_baixa
+verify ..> pk_status
+fase4 ..> pk_odon_puro
+fase5 ..> pk_baixa
+fase6 ..> pk_baixa
+fase7 ..> pk_indiv
+fase89 ..> pk_colig
+exc ..> pk_log
+
+' ==========================================
+' INTEGRAÇÃO EXTERNA (via ACL)
+' ==========================================
+pk_pend ..> pk_ext : "ACL"
+pk_indiv ..> pk_ext : "ACL"
+
+note right of decision
+  **Ponto de decisão central:**
+  
+  count_pendencias = 0?
+  
+  ? SIM ? Efetivação completa
+     (Fases 3a ? 3b ? 3c ? 3d)
+  
+  ? NÃO ? Skip para próxima proposta
+     (Log + próxima iteração)
+  
+  ---
+  13 tipos de pendência avaliados
+  por Specifications em pk_pendencia_pim
+end note
+
+@enduml

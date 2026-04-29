@@ -1,0 +1,201 @@
+@startuml fluxo-execucao-cadastramento
+!theme cerulean-outline
+title **Fluxo de Execucao - pr_cadastramento_empresa_prov**\nOrdem de processamento dos Bounded Contexts\n
+
+|#E1BEE7| BC-01 Orquestracao |
+start
+:Recebe **p_nu_controle**;
+note right
+  Propostas chegam via:
+  - **TAFFIX** (Oracle Forms - tela interna)
+  - **BITIX** (Ferramenta de vendas do vendedor)
+  Ambos gravam em **tb_empresa_internet**
+end note
+:Busca registros em\n**tb_empresa_internet**\n(fl_status_processamento IN 0,8);
+
+repeat :Para cada registro (st_e)
+    :Inicializa variaveis;
+
+    |#C8E6C9| BC-02 Validacao |
+    :Verifica **tp_operacao = '1'** (inclusao);
+    
+    |#BBDEFB| BC-14 Log |
+    :Verifica flag **FL_LOG_BAIXA_CONTROLE**;
+    :Conta controles odonto vinculados;
+
+    |#C8E6C9| BC-02 Validacao |
+    :Critica **vendedor** do plano;
+    :Critica CNPJ na **lista negra**;
+    
+    |#C8E6C9| BC-05 Filial |
+    :Recupera **filial** via vendedor -> area venda;
+    :Override: **cd_filial_contrato**;
+    :Override: **filial_modelo** (TAFFIX);
+    :Recupera **empresa_plano** da filial;
+
+    |#C8E6C9| BC-02 Validacao |
+    :Critica **natureza** empresa (0-9);
+    :Critica **total empregados** > 0;
+    
+    |#FFE0B2| BC-06 Modelo Negocio |
+    :Verifica se e **BITIX**;
+    :Resolve total empregados (**coligadas SIGO**);
+    
+    if (BITIX?) then (Nao - SIGO)
+        :Busca **cr_empresa_neg**\n(modelo, filial, natureza,\ntotal, dt_inicio);
+    else (Sim - BITIX)
+        :Resolve coligadas BITIX;
+        :Busca **cr_empresa_neg_bitix**;
+    endif
+    :Define **modelo_negocio** e **tabela_saude**;
+    :Define **flag tabela geral** (modelo != 1);
+
+    |#C8E6C9| BC-02 Validacao |
+    :Critica **CNPJ/CPF** (fn_check_cic);
+    :Critica **CAEPF**;
+    :Critica **razao social** (obrigatorio, sem espacos duplos);
+    :Critica **nome fantasia**;
+    :Critica **inscricao estadual**;
+    :Critica **CEP** (tb_cep_logradouro);
+    :Critica **UF** (tb_uf);
+    :Critica **UF x CEP** (consistencia);
+    :Critica **cidade** (obrigatorio, sem espacos duplos);
+    :Critica **bairro**;
+    :Critica **tipo logradouro**;
+    :Critica **logradouro** (obrigatorio, sem espacos duplos);
+    :Critica **complemento**;
+    :Critica **e-mail** (espacos, @, .);
+    :Critica **dia pagamento** (1-30);
+    :Critica **validade contrato** (minimo 6 meses);
+    :Critica **nome contato**;
+    :Critica **cargo contato**;
+
+    |#C8E6C9| BC-05 Filial |
+    :Resolve **cd_empresa_plano** (CAEPF)\nvia senha/area/vendedor/filial;
+
+    |#C8E6C9| BC-03 Pessoa |
+    :Verifica existencia tb_pessoa\npor CNPJ + empresa_plano;
+    
+    if (Pessoa existe?) then (Nao)
+        :INSERT **tb_pessoa**\n(sq_pessoa.nextval + fn_digito_out);
+    else (Sim)
+        :UPDATE **tb_pessoa**\n(razao social, fantasia, tipo, insc_est);
+    endif
+
+    |#FFE0B2| BC-07 Precificacao |
+    if (Tabela geral?) then (Sim - modelo != 1)
+        :Reutiliza **tabela existente**\n(lcd_tabela_saude);
+    else (Nao - modelo padrao)
+        :Cria nova **tb_preco_plano**\n(fn_cd_tb_preco_plano);
+        :Insere **tb_valor_plano**\n(por plano/acomodacao com constante_vl);
+    endif
+    :Insere **tb_parametro_franquia**;
+    :Insere **tb_desconto_preco_plano**;
+    
+    if (Agregados?) then (Sim)
+        :Cria tabela preco **agregados**;
+        :Insere valores plano agregados;
+        :Insere descontos agregados;
+    endif
+
+    |#FFE0B2| BC-08 Empresa Conveniada |
+    :Determina **canal de venda**\n(1=ate 29, 2=30-99, null=100+);
+    :Resolve **validade contrato**;
+    :Resolve **faixa etaria ANS**;
+    :Chama **pr_tabela_inativos_rn279**;
+    :INSERT **tb_empresa_conveniada**;
+    :INSERT **tb_empresa_conveniada_unidade**;
+    :INSERT **tb_parametros_unidade**\n(titulares 0,1,2,3,7,8 + agregados 4,5,6);
+    :INSERT **tb_parametros_unidade_pln_esp**;
+    :UPDATE **tb_natureza_juridica_emp**;
+    :INSERT **tb_emp_conveniada_saude_flags**;
+    :INSERT **tb_modelo_reaj_empresa**;
+    :INSERT taxa de adesao (GAP 1179);
+    :INSERT vendedor consultor;
+    :UPDATE **tb_empresa_conveniada_imagem**;
+    :INSERT **tb_empresa_breakeven** (valor=70);
+
+    |#FFE0B2| BC-09 Coparticipacao |
+    if (Coparticipacao?) then (Sim)
+        :INSERT **tb_controle_fator_empresa**;
+        :INSERT **tb_fator_empresa**;
+    endif
+    :UPDATE isencao coparticipacao;
+    :INSERT **tb_copart_internacao_param_pj**;
+    :INSERT **tb_copart_isnt_tp_benef**;
+    :INSERT **tb_copart_tipo_reembolso**;
+    :INSERT **tb_copart_tab_empresa**;
+
+    |#C8E6C9| BC-11 Fidelizacao |
+    if (Canal Middle?) then (Sim - canal=2)
+        :INSERT **tb_fidelizacao_empresa**;
+    endif
+
+    |#C8E6C9| BC-04 Endereco |
+    if (Contrato Affix?) then (Sim)
+        :Reutiliza endereco Affix existente;
+    else (Nao)
+        :INSERT **tb_endereco_pessoa**;
+    endif
+    :INSERT **tb_empresa_endereco**;
+    :INSERT **tb_contato_pessoa**;
+    :INSERT **tb_meio_comunicacao_pessoa**\n(tel, fax, telex, cel, bip,\ncx postal, email);
+    :INSERT **tb_hist_empresa_conveniada**\n(natureza 6 ou 9);
+
+    |#FFE0B2| BC-10 Carencia |
+    :INSERT **tb_compra_carencia**;
+    :INSERT **tb_compra_grupo**;
+    :INSERT **tb_compra_modulo**;
+    :INSERT **tb_odon_empresa_neg_grupo**;
+
+    |#C8E6C9| BC-15 Reembolso |
+    :Recupera e insere config reembolso\npor plano (prazos, tipos, tabelas, composicao);
+
+    |#BBDEFB| BC-12 Acesso Internet |
+    :INSERT **tb_acesso_internet**;
+    :INSERT **tb_controle_internet** (por tipo);
+    :INSERT **tb_emp_limite_acesso_contra** (Affix);
+    :UPDATE **tb_usuario_titular_internet**;
+    :UPDATE **tb_usuario_dependente_internet**;
+
+    |#C8E6C9| BC-16 Minimo Contratual |
+    :INSERT **tb_empresa_minimo_contratual**;
+
+    |#E1BEE7| BC-01 Orquestracao |
+    #90EE90:COMMIT;
+
+    |#C8E6C9| BC-18 Desconto PIM |
+    :Desconto empresa (PIM);
+
+    |#E1BEE7| BC-01 Orquestracao |
+    :Cobranca falta parametros;
+
+    |#BBDEFB| BC-17 Notificacao |
+    :E-mail notificacao;
+
+    |#C8E6C9| BC-13 Integracao Odonto |
+    :Verifica param 225\n(espelhamento automatico);
+    if (Espelhamento ativo?) then (Sim)
+        :pr_odon_param_esp_empresa;
+    endif
+    :Pr_Vcc_Empresa_Super_Simples\n(se nao tem empresa odonto);
+
+    |#E1BEE7| BC-01 Orquestracao |
+    :p_erro_controle :=\n'procedimento efetuado para empresa,' || lcd_empresa;
+
+repeat while (proximo registro?) is (Sim)
+
+stop
+
+legend right
+  |= Cor |= Bounded Context |
+  |<#E1BEE7>| Application Service |
+  |<#FFE0B2>| Core Domain |
+  |<#C8E6C9>| Supporting Domain |
+  |<#BBDEFB>| Generic Subdomain |
+  
+  **Tabelas afetadas: ~30+**
+  **Linhas originais: ~5.000**
+endlegend
+
+@enduml

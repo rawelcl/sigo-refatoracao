@@ -1,0 +1,105 @@
+@startuml c4-2-container-pk-venda-json-to-be-fase3
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title C4 Model - Nivel 2 Container TO-BE FASE 3 -- PK_VENDA_JSON (Modernizacao Cloud-Native)
+
+note as N1
+  Fase 3 -- Modernizacao .NET 8+ / Azure (referencia para migracao futura)
+  Cada Bounded Context identificado na Fase 2 vira um microsservico independente.
+  Padrao Strangler Fig: coexiste com o legado Oracle durante a transicao.
+  [REF ADR-02 -- Event-Driven Architecture] [REF ADR-03 -- CQRS] [REF ADR-04 -- BFF]
+  [REF ADR-05 -- Anti-Corruption Layer]
+end note
+
+' --- Atores ---
+Person(corretor, "Corretor / Representante Comercial", "Cadastra proposta PME via portal digital")
+Person(operador, "Operador Administrativo", "Efetiva manualmente; monitora pendencias")
+
+' --- Camada de Entrada ---
+System_Boundary(entrada, "Camada de Entrada (Azure)") {
+  Container(apigw, "API Gateway", "Azure API Management",
+    "Roteamento, autenticacao OAuth2/JWT,\nrate limiting, versionamento de API")
+  Container(bff_efetivacao, "BFF Efetivacao", ".NET 8 / Azure Container App",
+    "Backend-for-Frontend\nAgrega chamadas para operador e portal")
+}
+
+' --- Core Domain Services ---
+System_Boundary(core_svc, "Core Domain Services (Azure Container Apps)") {
+  Container(svc_acl_bitix, "BITIXAdapterService", ".NET 8 / Container App",
+    "ACL canonico BITIX->SIGO:\n- Desserializa JSON BITIX\n- Verifica idempotencia\n- Persiste staging (SAGA)\n- Retorna criticas ao BITIX\n[REF ADR-05 -- ACL]\nBC-VJ-01 (Recepcao Proposta BITIX)")
+  Container(svc_efetivacao, "EfetivacaoService", ".NET 8 / Container App",
+    "Dominio de efetivacao unificado:\n- pr_efetiva_batch (JOB)\n- pr_efetiva_especifica (manual/auto)\n- StatusFinalService (PRE/POS)\n- GrupoColigadoService\nBC-VJ-03 + BC-VJ-04 + BC-VJ-05")
+  Container(svc_motor_criticas, "MotorCriticasService", ".NET 8 / Container App",
+    "Consulta criticas e pendencias:\n- IAsyncEnumerable<Critica> (CQRS Query)\n- AplicarStatusErroCommand (separado)\n[REF ADR-03 -- CQRS]\nBC-VJ-02 (Validacao e Critica BITIX)")
+}
+
+' --- Supporting Services ---
+System_Boundary(sup_svc, "Supporting Services (Azure Container Apps)") {
+  Container(svc_grupo_coligado, "GrupoColigadoService", ".NET 8 / Container App",
+    "Gestao de grupo de coligadas:\n- Completude do grupo\n- Liberacao para efetivacao\nBC-VJ-06 (Grupo Coligado BITIX)")
+  Container(svc_mapeamento_od, "MapeamentoSaudeOdontoService", ".NET 8 / Container App",
+    "Vinculo 1:1 saude-odonto por beneficiario\nBC-VJ-07 + BC-VJ-10 (Mapeamento + Odonto)")
+  Container(svc_pos, "FluxoPOSService", ".NET 8 / Container App",
+    "Rastreamento de fluxo POS:\nStatus 7 (coligada), 10 (base),\n17 (Neoway), 99 (blocklist)\nBC-VJ-05 (Gestao de Status Final)")
+}
+
+' --- Infraestrutura / Cross-Cutting ---
+System_Boundary(infra, "Infraestrutura / Cross-Cutting (Azure)") {
+  Container(bus, "Event Bus", "Azure Service Bus",
+    "Topics:\n- proposta.bitix.integrada\n- proposta.efetivada\n- proposta.com-critica\n- grupo.coligado.incompleto\n- auto-baixa.pos.acionada\n- divergencia.contador.beneficiario")
+  Container(log_svc, "Log e Auditoria", "Azure Monitor / Application Insights",
+    "Observabilidade centralizada\nSubstitui DBMS_OUTPUT e pkg_log\n[MIGRACAO] DBMS_OUTPUT -> ILogger<T>")
+  Container(acl_legado, "ACL Legado Oracle", ".NET 8 / Container App",
+    "Anti-Corruption Layer transitorio:\nChama procedures Oracle legadas\ndurante coexistencia na fase de transicao\n[REF ADR-05 -- ACL]")
+  Container(job_scheduler, "Job Scheduler", "Azure Functions / Timer Trigger",
+    "Substitui Oracle Scheduler:\nDispara batch de efetivacao\n[MIGRACAO] DBMS_SCHEDULER -> Azure Functions")
+}
+
+' --- Databases ---
+System_Boundary(dbs, "Databases (Database per Service)") {
+  ContainerDb(db_staging, "StagingDB", "Azure SQL / PostgreSQL",
+    "TB_PROPOSTA_VENDA\nTB_EMPRESA_INTERNET\nTB_USUARIO_TITULAR/DEPENDENTE_INTERNET")
+  ContainerDb(db_efetivacao, "EfetivacaoDB", "Azure SQL / PostgreSQL",
+    "TB_EMPRESA_CONVENIADA\nTB_EMPRESA_CNAE\nTB_PENDENCIA_EMPRESA")
+  ContainerDb(db_controle, "ControleDB", "Azure SQL / PostgreSQL",
+    "TB_EMPRESA_COLIGADA_BITX\nTB_PIM_CONTROLE_CPF\nTB_FILE_DOCUMENTO_BITIX")
+  ContainerDb(oracle_leg, "Oracle Legado", "Oracle 19c / HUMASTER",
+    "Dados legados -- acesso via ACL Legado\nat� migracao completa\npr_cadastramento_empresa_prov\npr_cadastramento_internet2")
+}
+
+' --- Sistemas Externos ---
+System_Ext(bitix_ext, "BITIX (NDI Minas)", "Sistema externo de vendas -- envia JSON")
+System_Ext(neoway_ext, "Neoway", "Validacao cadastral externa")
+
+' --- Relacionamentos ---
+Rel(corretor, apigw, "Acessa portal", "HTTPS")
+Rel(operador, apigw, "Efetiva manualmente", "HTTPS")
+Rel(apigw, bff_efetivacao, "Roteia chamadas de operador")
+Rel(bff_efetivacao, svc_efetivacao, "Efetiva proposta especifica", "gRPC / REST")
+Rel(bitix_ext, svc_acl_bitix, "Envia proposta JSON", "REST / HTTPS")
+Rel(job_scheduler, svc_efetivacao, "Dispara batch periodico", "Azure Function -> REST")
+
+Rel(svc_acl_bitix, bus, "Publica proposta.bitix.integrada")
+Rel(svc_acl_bitix, svc_efetivacao, "Auto-baixa POS (sync)", "REST")
+Rel(svc_acl_bitix, db_staging, "Persiste staging", "EF Core")
+
+Rel(svc_efetivacao, svc_motor_criticas, "Consulta criticas (Query)", "gRPC")
+Rel(svc_efetivacao, svc_grupo_coligado, "Valida grupo", "gRPC")
+Rel(svc_efetivacao, svc_mapeamento_od, "Vincula saude-odonto", "gRPC")
+Rel(svc_efetivacao, svc_pos, "Registra fluxo POS", "gRPC")
+Rel(svc_efetivacao, acl_legado, "Cadastra empresa definitiva (legado)", "REST -> Oracle")
+Rel(svc_efetivacao, bus, "Publica proposta.efetivada")
+Rel(svc_efetivacao, db_efetivacao, "Atualiza cadastro definitivo", "EF Core")
+
+Rel(svc_motor_criticas, db_staging, "Consulta criticas/pendencias", "EF Core (read-only)")
+Rel(svc_grupo_coligado, db_controle, "Le e escreve grupo coligado", "EF Core")
+Rel(svc_pos, db_controle, "Le e escreve fluxo POS", "EF Core")
+Rel(svc_mapeamento_od, db_controle, "Le e escreve mapeamento CPF", "EF Core")
+
+Rel(acl_legado, oracle_leg, "Chama procedures legadas", "Oracle Client / ADO.NET")
+Rel(svc_efetivacao, neoway_ext, "Valida divergencias cadastrais", "REST -> Neoway API")
+
+Rel(svc_acl_bitix, log_svc, "Envia metricas e traces", "Azure App Insights SDK")
+Rel(svc_efetivacao, log_svc, "Envia metricas e traces", "Azure App Insights SDK")
+
+@enduml

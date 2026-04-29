@@ -1,0 +1,57 @@
+@startuml c4-1-system-context
+!theme plain
+title C4 — Nível 1: System Context — Efetivação PIM
+caption Diagrama de Contexto — JOB de Efetivação PIM
+
+skinparam rectangle {
+    BackgroundColor<<person>>    #08427B
+    FontColor<<person>>          #FFFFFF
+    BackgroundColor<<system>>    #1168BD
+    FontColor<<system>>          #FFFFFF
+    BackgroundColor<<ext>>       #999999
+    FontColor<<ext>>             #FFFFFF
+    BorderColor                  #333333
+    FontSize                     10
+}
+
+!define Person(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<person>> as e_alias
+!define System(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<system>> as e_alias
+!define System_Ext(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<ext>> as e_alias
+
+Person(vendedor, "Vendedor / Corretor", "Cadastra proposta PIM\nno Portal Internet")
+Person(admin, "Administrador PIM", "Monitora JOB e\ntrata pendências")
+
+System(pim_job, "JOB Efetivação PIM", "Procedure PL/SQL\n(pr_efetiva_internet)\n---\nJOB DBMS_SCHEDULER\nProcessamento automático\nde propostas internet")
+
+System_Ext(portal_pim, "Portal Internet (PIM)", "Aplicação web para\ncadastro de propostas\nempresariais")
+
+System_Ext(oracle_db, "Oracle Database\n(HUMASTER)", "Schema principal\ncom 50+ tabelas\nenvolvidas")
+
+System_Ext(neoway, "Neoway", "Validação cadastral\ne divergência de dados")
+
+System_Ext(orcamento, "Sistema de Orçamento", "Validação de\norçamento (fn_vi_checa_orcamento)")
+
+System_Ext(adesao_dig, "Adesão Digital", "Efetivação de adesão\ndigital (fn_efetiva_adesao_digital)")
+
+System_Ext(coligada_bitix, "Coligada BITIX", "Processamento de\nempresas coligadas BITIX")
+
+System_Ext(coligada_sigo, "Coligada SIGO", "Processamento de\nempresas coligadas SIGO")
+
+System_Ext(odonto, "Sistema Odonto", "Cadastro de empresa\nodonto (pr_odon_cad_empresa_prov)")
+
+' ==========================================
+' RELACIONAMENTOS
+' ==========================================
+vendedor --> portal_pim : "Cadastra proposta"
+portal_pim --> oracle_db : "Grava em\ntb_empresa_internet"
+admin --> oracle_db : "Monitora via\ntb_log_baixa_controle"
+
+pim_job --> oracle_db : "Lê propostas,\ngrava empresas,\nprocessa beneficiários"
+pim_job --> neoway : "Valida divergência\ncadastral"
+pim_job --> orcamento : "Checa orçamento\naprovado"
+pim_job --> adesao_dig : "Efetiva adesão\ndigital"
+pim_job --> coligada_bitix : "Processa coligadas\nBITIX"
+pim_job --> coligada_sigo : "Processa coligadas\nSIGO"
+pim_job --> odonto : "Cria empresa\nodonto vinculada"
+
+@enduml

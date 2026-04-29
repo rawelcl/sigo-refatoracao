@@ -1,0 +1,161 @@
+@startuml fluxo-pk-venda-json-to-be
+!theme plain
+title Fluxo de Execucao -- PK_VENDA_JSON (TO-BE)
+
+note right
+  Melhorias aplicadas em relacao ao AS-IS:
+  1. [S04] Estado global eliminado: variaveis locais por chamada
+  2. [S02/S07] Rotina central unica pr_efetiva_core() substitui 3 copias
+  3. [S12] MotorCriticasQuery separado de AplicarStatusErroCommand
+  4. [S03] Contrato tipado elimina parsing fragil de pr_cadastramento_empresa_prov
+  5. [S05] BULK COLLECT elimina N+1 no loop de titulares
+  6. [S01] Excecoes registradas em log estruturado; silencio eliminado
+  7. [S09] CodigoProvisorioEmpresa encapsulado como Value Object
+  8. [S08] OrigemEfetivacao como constante tipada, sem hardcode
+  9. [RN04/S12] fn_get_criticas_pendencias: apenas leitura sem side effect
+  10. Auto-baixa POS como servico explicito (AutoBaixaPOSService)
+end note
+
+' ============================================================
+' GRUPO 1: ACL BITIX (BITIXAdapterService)
+' ============================================================
+partition "BITIXAdapterService.receberProposta(p_json CLOB) : RetornoIntegracaoBitix" {
+
+  start
+
+  :Recebe JSON CLOB\nVariaveis locais (sem estado global de package);
+
+  :Desserializar JSON local:\nv_status, v_fl_commit, v_coligada,\nv_total_beneficiario, v_cod_operadora;
+
+  if (IdempotenciaIntegracaoSpec.satisfeita(v_status)?) then (Sim)
+    :Retornar RetornoIntegracaoBitix(jaIntegrado=true, nu_controle);
+    stop
+  endif
+
+  :PropostaEmpresaFactory.criar():\nGera nu_controle e nu_controle_od via sequences;
+
+  :EmpresaInternetFactory.desserializar(p_json):\nCria struct TB_EMPRESA_INTERNET%ROWTYPE;
+
+  :EmpresaInternetRepository.insert(saude)\nEmpresaInternetRepository.insert(odonto) -- atomico [RN15];
+
+  :BeneficiarioInternetRepository.inserirDoJson(json_beneficiarios)\nTitulares + Dependentes;
+
+  :MapeamentoSaudeOdontoService.mapear(nu_controle, nu_controle_od)\nTB_PIM_CONTROLE_CPF [RN10];
+
+  if (NOT ContadorBeneficiariosOkSpec.satisfeita(nu_controle, v_total_beneficiario)?) then (Sim)
+    :DomainEvent: DivergenciaContadorBeneficiario disparado [RN16]\nPendenciaEmpresaRepository.registrar(cd_pendencia=9);
+  endif
+
+  :ValidacaoEmpresaService.executar(nu_controle)\npr_cadastramento_empresa_baixa -- criticas de empresa;
+
+  :ValidacaoBeneficiarioService.executar(nu_controle)\npr_critica_internet por titular;
+
+  if (RN12: canal POS E FL_COMMIT='S' E V_COLIGADA='S'?) then (Sim)
+    :FluxoPOSRepository.registrar(nu_controle, FluxoPOS.COLIGADA)\n[RN12] impede status 10 apos efetivacao;
+  endif
+
+  if (AutoBaixaPOSElegivelSpec: canal POS E FL_COMMIT='S' E V_COLIGADA='N'?) then (Sim)
+    :MotorCriticasQuery.contar(nu_controle, Modo.TODAS);\nif (count = 0?);
+    if (SemBlocklistSpec.satisfeita(nu_controle) E SemPendenciaNeowaySpec.satisfeita(nu_controle)?) then (Sim)
+      :AutoBaixaPOSService.executar(nu_controle)\n-> EfetivacaoService.efetivarEspecifico(nu_controle, OrigemEfetivacao.BAIXA_POS) [RN08];
+      :DomainEvent: AutoBaixaAcionada disparado;
+    else (Nao)
+      :FluxoPOSRepository.registrar(fluxo=17 ou 99);
+    endif
+  endif
+
+  :Retornar RetornoIntegracaoBitix(nu_controle, criticas, mensagem);
+
+  stop
+}
+
+' ============================================================
+' GRUPO 2: EFETIVACAO BATCH (EfetivacaoBatchService)
+' ============================================================
+partition "EfetivacaoBatchService.executarBatch() -- JOB" {
+
+  start
+
+  :Configuracao carregada: fn_registro_sistema (sem global de package);
+
+  if (RN01: parametro CTE_ATIVADO = 'S'?) then (Fluxo CTE)
+    :PropostaVendaRepository.findBatch():\nCTE com grupos completos UNION nao-coligadas;
+  else (Fluxo Legado)
+    :PropostaVendaRepository.findElegiveis(status=6, naoColigadas)\nPropostaVendaRepository.findGruposColigadosCompletos();
+  endif
+
+  while (Tem proposta elegivel? [RN02]) is (Sim)
+
+    if (GrupoColigadoCompletoSpec.satisfeita(nu_controle)?) then (Sim)
+      :EfetivacaoService.efetivarEspecifico(nu_controle, OrigemEfetivacao.JOB);
+    else (Nao)
+      :DomainEvent: GrupoColigadoIncompleto -- aguarda proximo ciclo [RN03];
+    endif
+
+  endwhile (Nao)
+
+  stop
+}
+
+' ============================================================
+' GRUPO 3: EFETIVACAO ESPECIFICA (rotina central unica)
+' ============================================================
+partition "EfetivacaoService.efetivarEspecifico(nu_controle, origem) -- Rotina Central Unica" {
+
+  start
+
+  note right
+    Substitui as 3 rotinas duplicadas:
+    pr_efetiva_baixa_manual
+    pr_efetiva_baixa_manual_emp
+    (porcao de efetivacao de pr_efetiva)
+    Variaveis locais -- SEM estado global
+  end note
+
+  :PropostaVendaRepository.findByControle(nu_controle)\nObtem nu_controle_od, fl_status;
+
+  :v_count_criticas := MotorCriticasQuery.contar(nu_controle, modo)\nApenas leitura -- SEM side effect [S12 eliminado];
+
+  if (PropostaSemCriticasSpec: v_count_criticas = 0?) then (Sim)
+
+    :EmpresaConveniadaFactory.cadastrar(nu_controle)\npr_cadastramento_empresa_prov(nu_controle, p_cd_empresa OUT, p_status OUT)\nContrato tipado -- SEM parsing de string [S03 eliminado];
+
+    :v_cd_empresa := p_cd_empresa;
+
+    if (v_cd_empresa IS NOT NULL?) then (Sim)
+
+      if (nu_controle_od IS NOT NULL?) then (Sim)
+        :IntegracaoOdontoService.cadastrarEmpresa(nu_controle_od, v_cd_empresa)\nContrato tipado;
+      endif
+
+      :EmpresaInternetRepository.atualizarCdEmpresa(nu_controle, v_cd_empresa);
+      :InsercaoCNAEService.inserir(v_cd_empresa);
+      :PendenciaEmpresaRepository.recriar(v_cd_empresa);
+
+      note right
+        RN11: ConfiguracaoCobrancaMiddle VO
+        encapsula logica de Middle 30-99:
+        Constante COD_EMPRESA_PAI_MIDDLE_SEM_CONTA
+        (elimina '-999' magico)
+      end note
+
+      :EfetivacaoBeneficiariosService.efetivar(v_cd_empresa):\n  BULK COLLECT titulares [S05 eliminado]\n  Para cada titular: critica + efetivacao\n  Log estruturado em caso de falha [S01 eliminado];
+
+      :v_status_final := StatusFinalService.decidir(nu_controle, origem):\n  fn_get_confopera_emp + FluxoPOSRepository\n  Retorna StatusProposta.EFETIVADO (7) ou StatusProposta.POS_ANALISE (10) [RN07];
+
+      :PropostaVendaRepository.updateStatus(nu_controle, v_status_final, v_cd_empresa);
+      :DomainEvent: PropostaEfetivada disparado;
+      :COMMIT;
+
+    else (Nao -- empresa nao criada)
+      :Log estruturado: 'Empresa nao criada para nu_controle=' || nu_controle\nSEM falha silenciosa [S01 / S03 eliminados];
+    endif
+
+  else (Nao -- ha criticas)
+    :AplicarStatusErroCommand.executar(nu_controle)\nUPDATE fl_status=9 (separado do MotorCriticasQuery) [S12 eliminado];
+    :DomainEvent: EmpresaComCritica disparado;
+  endif
+
+  stop
+}
+@enduml

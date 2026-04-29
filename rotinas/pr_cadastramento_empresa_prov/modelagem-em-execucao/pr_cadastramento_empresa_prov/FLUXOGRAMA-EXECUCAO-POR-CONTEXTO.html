@@ -1,0 +1,912 @@
+<!DOCTYPE html><html><head>
+      <title>FLUXOGRAMA-EXECUCAO-POR-CONTEXTO</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      <link rel="stylesheet" href="file:///c:\Users\thiagorc\.vscode\extensions\shd101wyy.markdown-preview-enhanced-0.8.20\crossnote\dependencies\katex\katex.min.css">
+      
+      
+      <script type="text/javascript" src="file:///c:\Users\thiagorc\.vscode\extensions\shd101wyy.markdown-preview-enhanced-0.8.20\crossnote\dependencies\mermaid\mermaid.min.js" charset="UTF-8"></script>
+      
+      
+      <style>
+      code[class*=language-],pre[class*=language-]{color:#333;background:0 0;font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.4;-moz-tab-size:8;-o-tab-size:8;tab-size:8;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}pre[class*=language-]{padding:.8em;overflow:auto;border-radius:3px;background:#f5f5f5}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal;background:#f5f5f5}.token.blockquote,.token.comment{color:#969896}.token.cdata{color:#183691}.token.doctype,.token.macro.property,.token.punctuation,.token.variable{color:#333}.token.builtin,.token.important,.token.keyword,.token.operator,.token.rule{color:#a71d5d}.token.attr-value,.token.regex,.token.string,.token.url{color:#183691}.token.atrule,.token.boolean,.token.code,.token.command,.token.constant,.token.entity,.token.number,.token.property,.token.symbol{color:#0086b3}.token.prolog,.token.selector,.token.tag{color:#63a35c}.token.attr-name,.token.class,.token.class-name,.token.function,.token.id,.token.namespace,.token.pseudo-class,.token.pseudo-element,.token.url-reference .token.variable{color:#795da3}.token.entity{cursor:help}.token.title,.token.title .token.punctuation{font-weight:700;color:#1d3e81}.token.list{color:#ed6a43}.token.inserted{background-color:#eaffea;color:#55a532}.token.deleted{background-color:#ffecec;color:#bd2c00}.token.bold{font-weight:700}.token.italic{font-style:italic}.language-json .token.property{color:#183691}.language-markup .token.tag .token.punctuation{color:#333}.language-css .token.function,code.language-css{color:#0086b3}.language-yaml .token.atrule{color:#63a35c}code.language-yaml{color:#183691}.language-ruby .token.function{color:#333}.language-markdown .token.url{color:#795da3}.language-makefile .token.symbol{color:#795da3}.language-makefile .token.variable{color:#183691}.language-makefile .token.builtin{color:#0086b3}.language-bash .token.keyword{color:#0086b3}pre[data-line]{position:relative;padding:1em 0 1em 3em}pre[data-line] .line-highlight-wrapper{position:absolute;top:0;left:0;background-color:transparent;display:block;width:100%}pre[data-line] .line-highlight{position:absolute;left:0;right:0;padding:inherit 0;margin-top:1em;background:hsla(24,20%,50%,.08);background:linear-gradient(to right,hsla(24,20%,50%,.1) 70%,hsla(24,20%,50%,0));pointer-events:none;line-height:inherit;white-space:pre}pre[data-line] .line-highlight:before,pre[data-line] .line-highlight[data-end]:after{content:attr(data-start);position:absolute;top:.4em;left:.6em;min-width:1em;padding:0 .5em;background-color:hsla(24,20%,50%,.4);color:#f4f1ef;font:bold 65%/1.5 sans-serif;text-align:center;vertical-align:.3em;border-radius:999px;text-shadow:none;box-shadow:0 1px #fff}pre[data-line] .line-highlight[data-end]:after{content:attr(data-end);top:auto;bottom:.4em}html body{font-family:'Helvetica Neue',Helvetica,'Segoe UI',Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ol,html body>ul{margin-bottom:16px}html body ol,html body ul{padding-left:2em}html body ol.no-list,html body ul.no-list{padding:0;list-style-type:none}html body ol ol,html body ol ul,html body ul ol,html body ul ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;background-color:#f0f0f0;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:700;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:700}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::after,html body code::before{letter-spacing:-.2em;content:'\00a0'}html body pre>code{padding:0;margin:0;word-break:normal;white-space:pre;background:0 0;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:after,html body pre code:before,html body pre tt:after,html body pre tt:before{content:normal}html body blockquote,html body dl,html body ol,html body p,html body pre,html body ul{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body code,html body pre{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview ul{list-style:disc}.markdown-preview ul ul{list-style:circle}.markdown-preview ul ul ul{list-style:square}.markdown-preview ol{list-style:decimal}.markdown-preview ol ol,.markdown-preview ul ol{list-style-type:lower-roman}.markdown-preview ol ol ol,.markdown-preview ol ul ol,.markdown-preview ul ol ol,.markdown-preview ul ul ol{list-style-type:lower-alpha}.markdown-preview .newpage,.markdown-preview .pagebreak{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center!important}.markdown-preview:not([data-for=preview]) .code-chunk .code-chunk-btn-group{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .status{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .output-div{margin-bottom:16px}.markdown-preview .md-toc{padding:0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link div,.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}.markdown-preview .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0;min-height:100vh}@media screen and (min-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px + 2em)}}@media screen and (max-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{font-size:14px!important;padding:1em}}@media print{html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc{padding:0 16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link div,html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% - 300px);padding:2em calc(50% - 457px - 300px / 2);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+
+      </style>
+      <!-- The content below will be included at the end of the <head> element. --><script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    // your code here
+  });
+</script></head><body for="html-export">
+    
+    
+      <div class="crossnote markdown-preview  ">
+      
+<h1 id="fluxograma-de-execucao-por-contexto-delimitado">Fluxograma de Execucao por Contexto Delimitado </h1>
+<h2 id="humasterpr_cadastramento_empresa_prov--fluxo-completo"><code>humaster.pr_cadastramento_empresa_prov</code> � Fluxo Completo </h2>
+<blockquote>
+<p><strong>Referencia:</strong> <code>REGRAS-DE-NEGOCIO-POR-CONTEXTO.md</code><br>
+<strong>Data:</strong> 2026-03-11<br>
+<strong>Procedure analisada:</strong> <code>humaster.pr_cadastramento_empresa_prov</code> (~5.000 linhas PL/SQL)</p>
+</blockquote>
+<hr>
+<h2 id="indice-dos-diagramas">Indice dos Diagramas </h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Diagrama</th>
+<th>Escopo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1A</td>
+<td>Entrada e Pre-condicoes</td>
+<td><code>pr_efetiva_internet</code> (externo)</td>
+</tr>
+<tr>
+<td>1B</td>
+<td>Validacoes Camada 4</td>
+<td>BC-02 + BC-05 + BC-06</td>
+</tr>
+<tr>
+<td>1C</td>
+<td>Cadastro da Pessoa e Endereco</td>
+<td>BC-03 + BC-04</td>
+</tr>
+<tr>
+<td>1D</td>
+<td>Precificacao e Contrato</td>
+<td>BC-07 + BC-08</td>
+</tr>
+<tr>
+<td>1E-A</td>
+<td>Coparticipacao e Fatores</td>
+<td>BC-09</td>
+</tr>
+<tr>
+<td>1E-B</td>
+<td>Carencia, Fidelizacao e Termos</td>
+<td>BC-10 + BC-11 + BC-15 + BC-16</td>
+</tr>
+<tr>
+<td>1F</td>
+<td>Acesso, COMMIT e Pos-COMMIT</td>
+<td>BC-12 + BC-14 + BC-17 + BC-18 + BC-13</td>
+</tr>
+<tr>
+<td>2A</td>
+<td>BC-02 detalhe (parte 1)</td>
+<td>Validacoes V01 a V17 � Vendedor, CNPJ, Textos, CEP/UF</td>
+</tr>
+<tr>
+<td>2B</td>
+<td>BC-02 detalhe (parte 2)</td>
+<td>Validacoes V18 a V34 � Endereco, Email, Contato</td>
+</tr>
+<tr>
+<td>3</td>
+<td>BC-06 detalhe</td>
+<td>Resolucao do Modelo de Negocio SIGO x BITIX</td>
+</tr>
+<tr>
+<td>4</td>
+<td>BC-01 detalhe</td>
+<td>Tratamento de Erros e Rollback</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2 id="diagrama-1a--entrada-e-pre-condicoes-pr_efetiva_internet">Diagrama 1A � Entrada e Pre-condicoes (pr_efetiva_internet) </h2>
+<blockquote>
+<p>Escopo externo � executado antes de chamar <code>pr_cadastramento_empresa_prov</code>.</p>
+</blockquote>
+<div class="mermaid">flowchart LR
+    classDef cls-ini fill:#2c3e50,color:#fff,stroke:#2c3e50
+    classDef cls-val fill:#2980b9,color:#fff,stroke:#2980b9
+    classDef cls-dec fill:#f39c12,color:#fff,stroke:#f39c12
+    classDef cls-erro fill:#c0392b,color:#fff,stroke:#c0392b
+    classDef cls-ok fill:#27ae60,color:#fff,stroke:#27ae60
+
+    INICIO(["pr_efetiva_internet"]):::cls-ini
+    C1["Camada 1\nFiltro do Cursor"]:::cls-val
+    C1_OK{"Elegivel?"}:::cls-dec
+    IGNORADA(["Ignorada"]):::cls-erro
+    C2["Camada 2\n13 Pendencias"]:::cls-val
+    C2_OK{"Zero pendencias?"}:::cls-dec
+    PEND(["Pendencia / STOP"]):::cls-erro
+    C3["Camada 3\nGate de Criticas"]:::cls-val
+    C3_OK{"Sem criticas?"}:::cls-dec
+    CRIT(["Critica pendente / STOP"]):::cls-erro
+    PROXIMO(["Diagrama 1B"]):::cls-ok
+
+    INICIO --&gt; C1 --&gt; C1_OK
+    C1_OK -- "Nao" --&gt; IGNORADA
+    C1_OK -- "Sim" --&gt; C2 --&gt; C2_OK
+    C2_OK -- "Pendencia" --&gt; PEND
+    C2_OK -- "OK" --&gt; C3 --&gt; C3_OK
+    C3_OK -- "Criticas" --&gt; CRIT
+    C3_OK -- "OK" --&gt; PROXIMO
+</div><hr>
+<h2 id="diagrama-1b--validacoes-bc-02-bc-05-bc-06">Diagrama 1B � Validacoes (BC-02, BC-05, BC-06) </h2>
+<blockquote>
+<p>Inicio da <code>pr_cadastramento_empresa_prov</code>. Validacoes Camada 4 + Filial + Modelo.</p>
+</blockquote>
+<div class="mermaid">flowchart LR
+    classDef cls-ini fill:#2c3e50,color:#fff,stroke:#2c3e50
+    classDef cls-val fill:#2980b9,color:#fff,stroke:#2980b9
+    classDef cls-dec fill:#f39c12,color:#fff,stroke:#f39c12
+    classDef cls-erro fill:#c0392b,color:#fff,stroke:#c0392b
+    classDef cls-ok fill:#27ae60,color:#fff,stroke:#27ae60
+
+    INICIO(["pr_cadastramento_empresa_prov"]):::cls-ini
+    SP02["Vendedor existe?\n~L248"]:::cls-val
+    SP01A["CNPJ lista negra?\n~L282"]:::cls-val
+    BC05["Resolve Filial\n~L312 BC-05"]:::cls-val
+    SP04["Natureza obrigatoria\n~L380"]:::cls-val
+    SP05["Empregados &gt; 0\n~L420"]:::cls-val
+    BC06{"Modelo SIGO/BITIX\n~L440 BC-06"}:::cls-dec
+    SP01B["CNPJ + Digito + CAEPF\n~L618"]:::cls-val
+    TEXTOS["Razao + Fantasia + IE\n~L690"]:::cls-val
+    ENDERECO["CEP + UF + Cidade\nBairro + Logradouro\n~L800"]:::cls-val
+    EMAIL["Email valido\n~L1095"]:::cls-val
+    RESTO["Dia pag + Validade\nVigencia + Contato\n~L1160"]:::cls-val
+    ERRO(["ERRO / ROLLBACK"]):::cls-erro
+    PROXIMO(["Diagrama 1C"]):::cls-ok
+
+    INICIO --&gt; SP02
+    SP02 -- "Falha" --&gt; ERRO
+    SP02 -- "OK" --&gt; SP01A
+    SP01A -- "Bloqueado" --&gt; ERRO
+    SP01A -- "OK" --&gt; BC05
+    BC05 -- "Falha" --&gt; ERRO
+    BC05 -- "OK" --&gt; SP04
+    SP04 -- "Falha" --&gt; ERRO
+    SP04 -- "OK" --&gt; SP05
+    SP05 -- "Falha" --&gt; ERRO
+    SP05 -- "OK" --&gt; BC06
+    BC06 -- "Nao encontrado" --&gt; ERRO
+    BC06 -- "OK" --&gt; SP01B
+    SP01B -- "Falha" --&gt; ERRO
+    SP01B -- "OK" --&gt; TEXTOS
+    TEXTOS -- "Falha" --&gt; ERRO
+    TEXTOS -- "OK" --&gt; ENDERECO
+    ENDERECO -- "Falha" --&gt; ERRO
+    ENDERECO -- "OK" --&gt; EMAIL
+    EMAIL -- "Falha" --&gt; ERRO
+    EMAIL -- "OK" --&gt; RESTO
+    RESTO -- "Falha" --&gt; ERRO
+    RESTO -- "OK" --&gt; PROXIMO
+</div><hr>
+<h2 id="diagrama-1c--cadastro-de-pessoa-e-endereco-bc-03-bc-04">Diagrama 1C � Cadastro de Pessoa e Endereco (BC-03, BC-04) </h2>
+<blockquote>
+<p>Inicio do bloco transacional. PJ + endereco + comunicacao.</p>
+</blockquote>
+<div class="mermaid">flowchart LR
+    classDef cls-ini fill:#2c3e50,color:#fff,stroke:#2c3e50
+    classDef cls-val fill:#2980b9,color:#fff,stroke:#2980b9
+    classDef cls-dec fill:#f39c12,color:#fff,stroke:#f39c12
+    classDef cls-ok fill:#27ae60,color:#fff,stroke:#27ae60
+
+    INICIO(["BC-03 Pessoa Juridica"]):::cls-ini
+    PJ_EXISTE{"tb_pessoa\nexiste?"}:::cls-dec
+    PJ_INSERT["INSERT tb_pessoa"]:::cls-val
+    PJ_UPDATE["UPDATE tb_pessoa"]:::cls-val
+    AFFIX_END{"Contrato AFFIX?"}:::cls-dec
+    END_REUSO["Reutiliza endereco\nexistente"]:::cls-val
+    END_INSERT["INSERT tb_endereco_pessoa\n(tipo 2 - comercial)"]:::cls-val
+    END_VINCULO["INSERT tb_empresa_endereco\n(tipo 1 - fatura)"]:::cls-val
+    CONTATO["INSERT tb_contato_pessoa"]:::cls-val
+    MEIOS["INSERT tb_meio_comunicacao_pessoa\nfone/fax/celular/email/..."]:::cls-val
+    PROXIMO(["Diagrama 1D"]):::cls-ok
+
+    INICIO --&gt; PJ_EXISTE
+    PJ_EXISTE -- "Nao" --&gt; PJ_INSERT --&gt; AFFIX_END
+    PJ_EXISTE -- "Sim" --&gt; PJ_UPDATE --&gt; AFFIX_END
+    AFFIX_END -- "Sim" --&gt; END_REUSO --&gt; END_VINCULO
+    AFFIX_END -- "Nao" --&gt; END_INSERT --&gt; END_VINCULO
+    END_VINCULO --&gt; CONTATO --&gt; MEIOS --&gt; PROXIMO
+</div><hr>
+<h2 id="diagrama-1d--precificacao-e-contrato-bc-07-bc-08">Diagrama 1D � Precificacao e Contrato (BC-07, BC-08) </h2>
+<blockquote>
+<p>Criacao da tabela de precos e do registro principal da empresa conveniada.</p>
+</blockquote>
+<div class="mermaid">flowchart LR
+    classDef cls-ini fill:#2c3e50,color:#fff,stroke:#2c3e50
+    classDef cls-val fill:#2980b9,color:#fff,stroke:#2980b9
+    classDef cls-dec fill:#f39c12,color:#fff,stroke:#f39c12
+    classDef cls-ok fill:#27ae60,color:#fff,stroke:#27ae60
+
+    INICIO(["BC-07 Precificacao"]):::cls-ini
+    TAB_GERAL{"Tabela geral\ncompartilhada?"}:::cls-dec
+    TAB_REUSO["Reutiliza tabela AFFIX"]:::cls-val
+    TAB_CRIA["INSERT tb_preco_plano"]:::cls-val
+    TAB_AGREG{"Tem agregados?"}:::cls-dec
+    TAB_AGR["INSERT tb_preco_plano\n(agregados)"]:::cls-val
+    TAB_VAL["INSERT tb_valor_plano"]:::cls-val
+    TAB_DESC{"Tem descontos?"}:::cls-dec
+    TAB_DESC_I["INSERT tb_desconto_preco_plano"]:::cls-val
+    TAB_FRAN["INSERT tb_parametro_franquia"]:::cls-val
+    RN279["pr_tabela_inativos_rn279\nRN 279/309 ANS"]:::cls-val
+    CANAL["Calcula canal de venda\n1=PIM / 2=Middle / NULL=Grandes"]:::cls-val
+    BITIX_DT{"BITIX e dt_inicio\n&lt;= sysdate?"}:::cls-dec
+    EMP_B["INSERT tb_empresa_conveniada\n(BITIX: datas = SYSDATE)"]:::cls-val
+    EMP_N["INSERT tb_empresa_conveniada\n(datas originais)"]:::cls-val
+    EMP_CONF["INSERT unidade + parametros\n+ flags + reajuste + implantacao"]:::cls-val
+    EMP_COM["INSERT tb_empresa_conveniada_com\n(comissao consultor)"]:::cls-val
+    AFFIX_CNPJ{"Contrato AFFIX?"}:::cls-dec
+    EMP_CNPJ["INSERT tb_empresa_cnpj_contratante"]:::cls-val
+    NAT69{"Natureza 6 ou 9?\nPME/Simples"}:::cls-dec
+    EMP_HIST["INSERT tb_hist_empresa_conveniada\n(assunto 130 - Empresa Nova)"]:::cls-val
+    EMP_IMG["UPDATE tb_empresa_conveniada_imagem"]:::cls-val
+    PROXIMO(["Diagrama 1E-A"]):::cls-ok
+
+    INICIO --&gt; TAB_GERAL
+    TAB_GERAL -- "Sim" --&gt; TAB_REUSO --&gt; RN279
+    TAB_GERAL -- "Nao" --&gt; TAB_CRIA --&gt; TAB_AGREG
+    TAB_AGREG -- "Sim" --&gt; TAB_AGR --&gt; TAB_VAL
+    TAB_AGREG -- "Nao" --&gt; TAB_VAL
+    TAB_VAL --&gt; TAB_DESC
+    TAB_DESC -- "Sim" --&gt; TAB_DESC_I --&gt; TAB_FRAN --&gt; RN279
+    TAB_DESC -- "Nao" --&gt; TAB_FRAN --&gt; RN279
+    RN279 --&gt; CANAL --&gt; BITIX_DT
+    BITIX_DT -- "Sim" --&gt; EMP_B --&gt; EMP_CONF
+    BITIX_DT -- "Nao" --&gt; EMP_N --&gt; EMP_CONF
+    EMP_CONF --&gt; EMP_COM --&gt; AFFIX_CNPJ
+    AFFIX_CNPJ -- "Sim" --&gt; EMP_CNPJ --&gt; NAT69
+    AFFIX_CNPJ -- "Nao" --&gt; NAT69
+    NAT69 -- "Sim" --&gt; EMP_HIST --&gt; EMP_IMG
+    NAT69 -- "Nao" --&gt; EMP_IMG
+    EMP_IMG --&gt; PROXIMO
+</div><hr>
+<h2 id="diagrama-1e-a--coparticipacao-e-fatores-bc-09">Diagrama 1E-A � Coparticipacao e Fatores (BC-09) </h2>
+<blockquote>
+<p>Configuracao de coparticipacao, fatores, terapias e parametros de internacao.</p>
+</blockquote>
+<div class="mermaid">flowchart LR
+    classDef cls-ini fill:#2c3e50,color:#fff,stroke:#2c3e50
+    classDef cls-val fill:#2980b9,color:#fff,stroke:#2980b9
+    classDef cls-dec fill:#f39c12,color:#fff,stroke:#f39c12
+    classDef cls-ok fill:#27ae60,color:#fff,stroke:#27ae60
+
+    INICIO(["BC-09 Coparticipacao"]):::cls-ini
+    AFFIX_CP{"Contrato AFFIX?"}:::cls-dec
+    CP_AFFIX["INSERT tb_controle_fator_empresa\n(variante AFFIX)"]:::cls-val
+    CP_NORM["INSERT tb_controle_fator_empresa\n(variante normal)"]:::cls-val
+    CP_FATOR["INSERT tb_fator_empresa\n(faixas etarias)"]:::cls-val
+    TERAPIAS{"Isenta terapias?"}:::cls-dec
+    TER_INS["INSERT tb_terapias_espec_empresa"]:::cls-val
+    CP_ISENC["UPDATE isencao copart"]:::cls-val
+    CP_INTERN["INSERT tb_copart_internacao_param_pj"]:::cls-val
+    FLAG_INT{"Cobra internacao?"}:::cls-dec
+    CP_FLAG["UPDATE fl_cobra_internacao = S"]:::cls-val
+    CP_TP_BEN["INSERT tb_copart_isnt_tp_benef"]:::cls-val
+    CP_REEMB["INSERT tb_copart_tipo_reembolso"]:::cls-val
+    CP_TAB["INSERT tb_copart_tab_empresa"]:::cls-val
+    PROXIMO(["Diagrama 1E-B"]):::cls-ok
+
+    INICIO --&gt; AFFIX_CP
+    AFFIX_CP -- "Sim" --&gt; CP_AFFIX --&gt; CP_FATOR
+    AFFIX_CP -- "Nao" --&gt; CP_NORM --&gt; CP_FATOR
+    CP_FATOR --&gt; TERAPIAS
+    TERAPIAS -- "Sim" --&gt; TER_INS --&gt; CP_ISENC
+    TERAPIAS -- "Nao" --&gt; CP_ISENC
+    CP_ISENC --&gt; CP_INTERN --&gt; FLAG_INT
+    FLAG_INT -- "Sim" --&gt; CP_FLAG --&gt; CP_TP_BEN
+    FLAG_INT -- "Nao" --&gt; CP_TP_BEN
+    CP_TP_BEN --&gt; CP_REEMB --&gt; CP_TAB --&gt; PROXIMO
+</div><hr>
+<h2 id="diagrama-1e-b--carencia-fidelizacao-e-termos-bc-10-bc-11-bc-15-bc-16">Diagrama 1E-B � Carencia, Fidelizacao e Termos (BC-10, BC-11, BC-15, BC-16) </h2>
+<blockquote>
+<p>Compra de carencia, fidelizacao por canal, reembolso e breakeven.</p>
+</blockquote>
+<div class="mermaid">flowchart LR
+    classDef cls-ini fill:#2c3e50,color:#fff,stroke:#2c3e50
+    classDef cls-val fill:#2980b9,color:#fff,stroke:#2980b9
+    classDef cls-dec fill:#f39c12,color:#fff,stroke:#f39c12
+    classDef cls-ok fill:#27ae60,color:#fff,stroke:#27ae60
+
+    INICIO(["BC-10 Carencia"]):::cls-ini
+    CAR_SEQ["INSERT tb_compra_carencia"]:::cls-val
+    CAR_FILHOS["INSERT grupos + modulos\n+ odonto grupos"]:::cls-val
+    FID_CANAL{"BC-11: Canal = 2\nMiddle Market?"}:::cls-dec
+    FID_INS["INSERT tb_fidelizacao_empresa"]:::cls-val
+    FID_SKIP["Sem fidelizacao\n(PIM ou Grandes Contas)"]:::cls-val
+    REEMB{"BC-15: Livre\nEscolha?"}:::cls-dec
+    REEMB_OP["DELETE+INSERT reembolso\n(prazo/tabela/composicao)"]:::cls-val
+    REEMB_SKIP["Sem reembolso"]:::cls-val
+    BRKV["BC-16: INSERT tb_empresa_breakeven\n(70% hardcoded)"]:::cls-val
+    PROXIMO(["Diagrama 1F"]):::cls-ok
+
+    INICIO --&gt; CAR_SEQ --&gt; CAR_FILHOS --&gt; FID_CANAL
+    FID_CANAL -- "Sim" --&gt; FID_INS --&gt; REEMB
+    FID_CANAL -- "Nao" --&gt; FID_SKIP --&gt; REEMB
+    REEMB -- "Sim" --&gt; REEMB_OP --&gt; BRKV
+    REEMB -- "Nao" --&gt; REEMB_SKIP --&gt; BRKV
+    BRKV --&gt; PROXIMO
+</div><hr>
+<h2 id="diagrama-1f--acesso-commit-e-pos-commit-bc-12-bc-16-bc-14-bc-17-bc-18-bc-13">Diagrama 1F � Acesso, COMMIT e Pos-COMMIT (BC-12, BC-16, BC-14, BC-17, BC-18, BC-13) </h2>
+<blockquote>
+<p>Acesso internet, log final, COMMIT e integracoes autonomas.</p>
+</blockquote>
+<div class="mermaid">flowchart LR
+    classDef cls-ini fill:#2c3e50,color:#fff,stroke:#2c3e50
+    classDef cls-val fill:#2980b9,color:#fff,stroke:#2980b9
+    classDef cls-dec fill:#f39c12,color:#fff,stroke:#f39c12
+    classDef cls-erro fill:#c0392b,color:#fff,stroke:#c0392b
+    classDef cls-ok fill:#27ae60,color:#fff,stroke:#27ae60
+
+    INICIO(["BC-12 Acesso Internet"]):::cls-ini
+
+    ACC_SEQ["INSERT tb_acesso_internet\n(tipo 5, senha encriptada)"]:::cls-val
+
+    AFFIX_ACC{"Contrato AFFIX?"}:::cls-dec
+
+    ACC_COPY["Copia limites AFFIX\n(tb_emp_limite_acesso_contra)"]:::cls-val
+
+    ACC_CTRL["INSERT tb_controle_internet\n(servicos 7,12,14,16)"]:::cls-val
+
+    BITIX_UP{"BITIX e\ndt_inicio &lt;= sysdate?"}:::cls-dec
+
+    ACC_TIT_B["UPDATE titular + dependente\n(BITIX: provisorio -&gt; definitivo)"]:::cls-val
+
+    ACC_TIT_N["UPDATE titular + dependente\n(provisorio -&gt; definitivo)"]:::cls-val
+
+    MIN{"BC-16: Minimo\nContratual existe?"}:::cls-dec
+
+    MIN_INS["INSERT tb_empresa_minimo_contratual"]:::cls-val
+
+    MIN_SKIP["Sem minimo contratual"]:::cls-val
+
+    LOG["BC-14: INSERT tb_log_baixa_controle\n(fl_status = 9)"]:::cls-val
+
+    COMMIT_OK(["COMMIT ~L4856"]):::cls-ok
+
+    PIM{"BC-18: Desconto PIM\nFL_ATIVA_PIM_ADM = S?"}:::cls-dec
+
+    PIM_EXEC["pr_desconto_empresa\npr_cobranca_falta_param"]:::cls-ok
+
+    PIM_SKIP["Desconto PIM desabilitado"]:::cls-val
+
+    EMAIL{"BC-17: Email\ncd_empresa_plano?"}:::cls-dec
+
+    EMAIL_RN["pr_send_mail_html_rn\n(plano RN Saude = 7)"]:::cls-ok
+
+    EMAIL_HAP["pr_send_mail\n(plano Hapvida != 14)"]:::cls-ok
+
+    EMAIL_SKIP["Sem email\n(plano NDI SP = 14)"]:::cls-val
+
+    ODON_P{"BC-13: Odontologia\nParametro 225 = 1?"}:::cls-dec
+
+    ODON_A{"Operacao automatica?"}:::cls-dec
+
+    ODON_ESP["pr_odon_param_esp_empresa\n(saude -&gt; odonto)"]:::cls-ok
+
+    ODON_SS{"Sem plano odonto?"}:::cls-dec
+
+    ODON_SUPER["Pr_Vcc_Empresa_Super_Simples\n(config minima odonto)"]:::cls-ok
+
+    FIM(["FIM\ncd_empresa = lcd_empresa"]):::cls-ok
+
+    INICIO --&gt; ACC_SEQ --&gt; AFFIX_ACC
+    AFFIX_ACC -- "Sim" --&gt; ACC_COPY --&gt; ACC_CTRL
+    AFFIX_ACC -- "Nao" --&gt; ACC_CTRL
+    ACC_CTRL --&gt; BITIX_UP
+    BITIX_UP -- "Sim" --&gt; ACC_TIT_B --&gt; MIN
+    BITIX_UP -- "Nao" --&gt; ACC_TIT_N --&gt; MIN
+    MIN -- "Sim" --&gt; MIN_INS --&gt; LOG
+    MIN -- "Nao" --&gt; MIN_SKIP --&gt; LOG
+    LOG --&gt; COMMIT_OK
+    COMMIT_OK --&gt; PIM
+    PIM -- "Sim" --&gt; PIM_EXEC --&gt; EMAIL
+    PIM -- "Nao" --&gt; PIM_SKIP --&gt; EMAIL
+    EMAIL -- "= 7" --&gt; EMAIL_RN --&gt; ODON_P
+    EMAIL -- "!= 7 e != 14" --&gt; EMAIL_HAP --&gt; ODON_P
+    EMAIL -- "= 14" --&gt; EMAIL_SKIP --&gt; ODON_P
+    ODON_P -- "Sim" --&gt; ODON_A
+    ODON_P -- "Nao" --&gt; FIM
+    ODON_A -- "Sim" --&gt; ODON_ESP --&gt; ODON_SS
+    ODON_A -- "Nao" --&gt; ODON_SS
+    ODON_SS -- "Sim" --&gt; ODON_SUPER --&gt; FIM
+    ODON_SS -- "Nao" --&gt; FIM
+</div><hr>
+<h2 id="diagrama-2a--bc-02-validacoes-v01-a-v17-camada-4--parte-1">Diagrama 2A � BC-02: Validacoes V01 a V17 (Camada 4 � parte 1) </h2>
+<blockquote>
+<p>Fail-fast: primeira falha dispara ERRO. Continua no Diagrama 2B.</p>
+</blockquote>
+<div class="mermaid">flowchart TD
+    classDef cls-ini fill:#2c3e50,color:#fff,stroke:#2c3e50
+    classDef cls-val fill:#2980b9,color:#fff,stroke:#2980b9
+    classDef cls-dec fill:#f39c12,color:#fff,stroke:#f39c12
+    classDef cls-erro fill:#c0392b,color:#fff,stroke:#c0392b
+    classDef cls-ok fill:#27ae60,color:#fff,stroke:#27ae60
+
+    START(["INICIO: 33 validacoes fail-fast"]):::cls-ini
+    ERRO(["ERRO: raise_application_error\nROLLBACK + Pendencia"]):::cls-erro
+
+    V01["V01 ~L248: Vendedor existe?"]:::cls-val
+    V02["V02 ~L282: CNPJ lista negra?"]:::cls-val
+    V03["V03 ~L312: Filial resolvida?"]:::cls-val
+    V04A["V04a ~L380: fl_natureza NOT NULL"]:::cls-val
+    V04B["V04b ~L395: fl_natureza IN(0..9)"]:::cls-val
+    V05["V05 ~L420: empregados &gt; 0"]:::cls-val
+    V20{"V06 ~L440: Modelo SIGO/BITIX\nencontrado?"}:::cls-dec
+    V06["V07 ~L618: CNPJ NOT NULL"]:::cls-val
+    V07["V08 ~L632: digito verificador OK"]:::cls-val
+    V08["V09 ~L660: CAEPF valido?"]:::cls-val
+    V09["V10 ~L690: razao social NOT NULL"]:::cls-val
+    V10["V11 ~L710: razao sem espacos duplos"]:::cls-val
+    V11["V12 ~L730: fantasia NOT NULL"]:::cls-val
+    V12["V13 ~L750: fantasia sem espacos duplos"]:::cls-val
+    V13A{"IE preenchida?"}:::cls-dec
+    V13["V14 ~L770: IE sem espacos simples"]:::cls-val
+    V14A{"CEP preenchido?"}:::cls-dec
+    V14["V15 ~L800: CEP valido"]:::cls-val
+    V15["V16 ~L830: UF NOT NULL"]:::cls-val
+    V16["V17 ~L850: UF cadastrada em tb_uf"]:::cls-val
+    V17A{"CEP FOUND?"}:::cls-dec
+    V17["V17b ~L880: UF igual ao CEP"]:::cls-val
+    PROXIMO(["PROXIMO: Diagrama 2B\nV18 a V34"]):::cls-ok
+
+    START --&gt; V01
+    V01 -- "Falha" --&gt; ERRO
+    V01 -- "OK" --&gt; V02
+    V02 -- "Bloqueado" --&gt; ERRO
+    V02 -- "OK" --&gt; V03
+    V03 -- "Falha" --&gt; ERRO
+    V03 -- "OK" --&gt; V04A
+    V04A -- "NULL" --&gt; ERRO
+    V04A -- "OK" --&gt; V04B
+    V04B -- "Invalido" --&gt; ERRO
+    V04B -- "OK" --&gt; V05
+    V05 -- "Zero" --&gt; ERRO
+    V05 -- "OK" --&gt; V20
+    V20 -- "Nao encontrado" --&gt; ERRO
+    V20 -- "OK" --&gt; V06
+    V06 -- "NULL" --&gt; ERRO
+    V06 -- "OK" --&gt; V07
+    V07 -- "Invalido" --&gt; ERRO
+    V07 -- "OK" --&gt; V08
+    V08 -- "Invalido" --&gt; ERRO
+    V08 -- "OK" --&gt; V09
+    V09 -- "NULL" --&gt; ERRO
+    V09 -- "OK" --&gt; V10
+    V10 -- "Espaco" --&gt; ERRO
+    V10 -- "OK" --&gt; V11
+    V11 -- "NULL" --&gt; ERRO
+    V11 -- "OK" --&gt; V12
+    V12 -- "Espaco" --&gt; ERRO
+    V12 -- "OK" --&gt; V13A
+    V13A -- "Sim" --&gt; V13 --&gt; V14A
+    V13A -- "Nao" --&gt; V14A
+    V13 -- "Falha" --&gt; ERRO
+    V14A -- "Sim" --&gt; V14 --&gt; V15
+    V14A -- "Nao" --&gt; V15
+    V14 -- "Falha" --&gt; ERRO
+    V15 -- "NULL" --&gt; ERRO
+    V15 -- "OK" --&gt; V16
+    V16 -- "Falha" --&gt; ERRO
+    V16 -- "OK" --&gt; V17A
+    V17A -- "Sim" --&gt; V17 --&gt; PROXIMO
+    V17A -- "Nao" --&gt; PROXIMO
+    V17 -- "Difere" --&gt; ERRO
+</div><hr>
+<h2 id="diagrama-2b--bc-02-validacoes-v18-a-v34-camada-4--parte-2">Diagrama 2B � BC-02: Validacoes V18 a V34 (Camada 4 � parte 2) </h2>
+<blockquote>
+<p>Continuacao do Diagrama 2A. Endereco completo + contato.</p>
+</blockquote>
+<div class="mermaid">flowchart TD
+    classDef cls-ini fill:#2c3e50,color:#fff,stroke:#2c3e50
+    classDef cls-val fill:#2980b9,color:#fff,stroke:#2980b9
+    classDef cls-dec fill:#f39c12,color:#fff,stroke:#f39c12
+    classDef cls-erro fill:#c0392b,color:#fff,stroke:#c0392b
+    classDef cls-ok fill:#27ae60,color:#fff,stroke:#27ae60
+
+    START(["CONTINUA de 2A\nV18 a V34"]):::cls-ini
+    ERRO(["ERRO: raise_application_error\nROLLBACK + Pendencia"]):::cls-erro
+
+    V18["V18 ~L920: Cidade NOT NULL"]:::cls-val
+    V19["V19 ~L940: Cidade sem espacos duplos"]:::cls-val
+    V21A{"Bairro preenchido?"}:::cls-dec
+    V21["V20 ~L960: Bairro sem espacos duplos"]:::cls-val
+    V22["V21 ~L985: Tipo logradouro cadastrado"]:::cls-val
+    V23["V22 ~L1020: Logradouro NOT NULL"]:::cls-val
+    V24["V23 ~L1040: Logradouro sem espacos duplos"]:::cls-val
+    V25A{"Complemento\npreenchido?"}:::cls-dec
+    V25["V24 ~L1070: Complemento sem espacos duplos"]:::cls-val
+    V26A{"Email preenchido?"}:::cls-dec
+    V26["V25 ~L1095: Email sem espacos"]:::cls-val
+    V27["V26 ~L1115: Email contem @"]:::cls-val
+    V28["V27 ~L1135: Email contem ."]:::cls-val
+    V29["V28 ~L1160: Dia pag BETWEEN 1 AND 30"]:::cls-val
+    V30["V29 ~L1190: Validade NOT NULL"]:::cls-val
+    V31A{"nat=1 e modelo!=1?"}:::cls-dec
+    V31["V30 ~L1220: Vigencia &gt;= 6 meses"]:::cls-val
+    V32["V31 ~L1260: Contato NOT NULL"]:::cls-val
+    V33["V32 ~L1280: Contato sem espacos duplos"]:::cls-val
+    V34A{"Cargo preenchido?"}:::cls-dec
+    V34["V33 ~L1300: Cargo sem espacos duplos"]:::cls-val
+    FIM_VAL(["33 Validacoes OK\nProssegue para efetivacao"]):::cls-ok
+
+    START --&gt; V18
+    V18 -- "NULL" --&gt; ERRO
+    V18 -- "OK" --&gt; V19
+    V19 -- "Espaco" --&gt; ERRO
+    V19 -- "OK" --&gt; V21A
+    V21A -- "Sim" --&gt; V21 --&gt; V22
+    V21A -- "Nao" --&gt; V22
+    V21 -- "Espaco" --&gt; ERRO
+    V22 -- "Falha" --&gt; ERRO
+    V22 -- "OK" --&gt; V23
+    V23 -- "NULL" --&gt; ERRO
+    V23 -- "OK" --&gt; V24
+    V24 -- "Espaco" --&gt; ERRO
+    V24 -- "OK" --&gt; V25A
+    V25A -- "Sim" --&gt; V25 --&gt; V26A
+    V25A -- "Nao" --&gt; V26A
+    V25 -- "Espaco" --&gt; ERRO
+    V26A -- "Sim" --&gt; V26
+    V26A -- "Nao" --&gt; V29
+    V26 -- "Espaco" --&gt; ERRO
+    V26 -- "OK" --&gt; V27
+    V27 -- "Sem @" --&gt; ERRO
+    V27 -- "OK" --&gt; V28
+    V28 -- "Sem ." --&gt; ERRO
+    V28 -- "OK" --&gt; V29
+    V29 -- "Fora faixa" --&gt; ERRO
+    V29 -- "OK" --&gt; V30
+    V30 -- "NULL" --&gt; ERRO
+    V30 -- "OK" --&gt; V31A
+    V31A -- "Sim" --&gt; V31 --&gt; V32
+    V31A -- "Nao" --&gt; V32
+    V31 -- "&lt; 6m" --&gt; ERRO
+    V32 -- "NULL" --&gt; ERRO
+    V32 -- "OK" --&gt; V33
+    V33 -- "Espaco" --&gt; ERRO
+    V33 -- "OK" --&gt; V34A
+    V34A -- "Sim" --&gt; V34 --&gt; FIM_VAL
+    V34A -- "Nao" --&gt; FIM_VAL
+    V34 -- "Espaco" --&gt; ERRO
+</div><hr>
+<h2 id="diagrama-3--bc-06-resolucao-do-modelo-de-negocio">Diagrama 3 � BC-06: Resolucao do Modelo de Negocio </h2>
+<blockquote>
+<p>Bifurcacao SIGO x BITIX, coligada e calculo de canal de venda.</p>
+</blockquote>
+<div class="mermaid">flowchart LR
+    classDef cls-ini fill:#2c3e50,color:#fff,stroke:#2c3e50
+    classDef cls-val fill:#2980b9,color:#fff,stroke:#2980b9
+    classDef cls-dec fill:#f39c12,color:#fff,stroke:#f39c12
+    classDef cls-erro fill:#c0392b,color:#fff,stroke:#c0392b
+    classDef cls-ok fill:#27ae60,color:#fff,stroke:#27ae60
+
+    START(["BC-06: Resolver Modelo de Negocio"]):::cls-ini
+
+    BITIX_CH{"cd_operados\n= BITIX?"}:::cls-dec
+
+    SIGO_COL["SIGO: Busca cod_contrato_mae\ntb_empresa_coligada"]:::cls-val
+    SIGO_TOT{"Total coligada\nSIGO &gt; 0?"}:::cls-dec
+    SIGO_SOMA["nu_total = SUM(grupo SIGO)"]:::cls-val
+    SIGO_IND["nu_total = individual"]:::cls-val
+    SIGO_CUR["cursor cr_empresa_neg\n(filial, natureza, faixa)"]:::cls-val
+    SIGO_OK{"cr_empresa_neg\n%FOUND?"}:::cls-dec
+
+    BITIX_COL["BITIX: Busca cd_proposta_mae\ntb_empresa_coligada_bitx"]:::cls-val
+    BITIX_TOT{"Total coligada\nBITIX &gt; 0?"}:::cls-dec
+    BITIX_SOMA["nu_total = SUM(grupo BITIX)"]:::cls-val
+    BITIX_IND["nu_total = individual"]:::cls-val
+    BITIX_CUR["cursor cr_empresa_neg_bitix\n(filial, natureza, faixa, dt_assinatura)"]:::cls-val
+    BITIX_OK{"cr_empresa_neg_bitix\n%FOUND?"}:::cls-dec
+
+    ERRO(["ERRO: fl_status=15\nnao encontrado parametros\nnatureza/filial/beneficiarios"]):::cls-erro
+
+    CARGA["Carrega ~15 tabelas filhas\npor lnu_controle"]:::cls-val
+
+    TAB_GER{"Tabela geral?\nmodelo != 1"}:::cls-dec
+    TAB_S["lcd_tabela = lcd_tabela_saude\n(tabela compartilhada AFFIX)"]:::cls-val
+    TAB_N["Nova tabela\n(criada em BC-07)"]:::cls-val
+
+    CANAL["Calcula cd_canal_venda:\n1-29 -&gt; PIM\n30-99 -&gt; Middle Market\n&gt;= 100 -&gt; Grandes Contas"]:::cls-val
+
+    CANAL_COL{"Coligada\nexiste?"}:::cls-dec
+    CANAL_R["Recalcula canal pelo\ntotal consolidado do grupo"]:::cls-val
+
+    FIM(["Modelo resolvido\nlnu_controle + lcd_tabela\n+ wcd_canal_venda"]):::cls-ok
+
+    START --&gt; BITIX_CH
+    BITIX_CH -- "Nao (SIGO)" --&gt; SIGO_COL --&gt; SIGO_TOT
+    SIGO_TOT -- "Sim" --&gt; SIGO_SOMA --&gt; SIGO_CUR
+    SIGO_TOT -- "Nao" --&gt; SIGO_IND --&gt; SIGO_CUR
+    SIGO_CUR --&gt; SIGO_OK
+    SIGO_OK -- "Nao" --&gt; ERRO
+    SIGO_OK -- "Sim" --&gt; CARGA
+    BITIX_CH -- "Sim (BITIX)" --&gt; BITIX_COL --&gt; BITIX_TOT
+    BITIX_TOT -- "Sim" --&gt; BITIX_SOMA --&gt; BITIX_CUR
+    BITIX_TOT -- "Nao" --&gt; BITIX_IND --&gt; BITIX_CUR
+    BITIX_CUR --&gt; BITIX_OK
+    BITIX_OK -- "Nao" --&gt; ERRO
+    BITIX_OK -- "Sim" --&gt; CARGA
+    CARGA --&gt; TAB_GER
+    TAB_GER -- "Sim" --&gt; TAB_S --&gt; CANAL
+    TAB_GER -- "Nao" --&gt; TAB_N --&gt; CANAL
+    CANAL --&gt; CANAL_COL
+    CANAL_COL -- "Sim" --&gt; CANAL_R --&gt; FIM
+    CANAL_COL -- "Nao" --&gt; FIM
+</div><hr>
+<h2 id="diagrama-4--bc-01-tratamento-de-erros-e-rollback">Diagrama 4 � BC-01: Tratamento de Erros e Rollback </h2>
+<blockquote>
+<p>Exception handler global, rollback, pendencia e erros pos-COMMIT.</p>
+</blockquote>
+<div class="mermaid">flowchart LR
+    classDef cls-ini fill:#2c3e50,color:#fff,stroke:#2c3e50
+    classDef cls-val fill:#2980b9,color:#fff,stroke:#2980b9
+    classDef cls-dec fill:#f39c12,color:#fff,stroke:#f39c12
+    classDef cls-erro fill:#c0392b,color:#fff,stroke:#c0392b
+    classDef cls-ok fill:#27ae60,color:#fff,stroke:#27ae60
+
+    PROC(["pr_cadastramento_empresa_prov"]):::cls-ini
+
+    EXEC["Execucao normal\nBC-02 ate BC-16"]:::cls-val
+
+    COMMIT_B(["COMMIT ~L4856"]):::cls-ok
+
+    POS["Pos-COMMIT autonomo:\nPIM + Email + Odontologia\n(WHEN OTHERS NULL em cada)"]:::cls-ok
+
+    POS_ERR["Erro pos-COMMIT\n(falha silenciosa)"]:::cls-dec
+
+    FIM(["FIM com sucesso\np_erro_controle = OK"]):::cls-ok
+
+    RB["ROLLBACK\n(desfaz transacao principal)"]:::cls-erro
+
+    EMP_OK{"lcd_empresa foi\nparcialmente criada?"}:::cls-dec
+
+    MSG_EMP["p_erro_controle :=\nprocesso..., empresa gerada"]:::cls-val
+
+    MSG_ERR["p_erro_controle :=\nsubstr(SQLERRM, 1, 1024)"]:::cls-val
+
+    PEND["INSERT tb_pendencia_empresa_internet\n(cd_pendencia = 9)"]:::cls-erro
+
+    PEND_CMT["COMMIT da pendencia"]:::cls-dec
+
+    CON_CRIT["pr_con_emp_prov\nCriticas pos-baixa"]:::cls-dec
+
+    REPROCESS(["Proposta em tb_pendencia\npara reprocessamento"]):::cls-erro
+
+    PROC --&gt; EXEC
+    EXEC -- "EXCEPTION" --&gt; RB
+    EXEC -- "OK" --&gt; COMMIT_B --&gt; POS
+    POS -- "Excecao" --&gt; POS_ERR --&gt; FIM
+    POS -- "OK" --&gt; FIM
+    RB --&gt; EMP_OK
+    EMP_OK -- "Sim" --&gt; MSG_EMP --&gt; PEND
+    EMP_OK -- "Nao" --&gt; MSG_ERR --&gt; PEND
+    PEND --&gt; PEND_CMT --&gt; CON_CRIT --&gt; REPROCESS
+</div><hr>
+<h2 id="resumo-ordem-de-execucao-por-bc-e-linha-aproximada">Resumo: Ordem de Execucao por BC e Linha Aproximada </h2>
+<table>
+<thead>
+<tr>
+<th>Ordem</th>
+<th>BC</th>
+<th>Nome</th>
+<th>Linha Aprox.</th>
+<th>Subtipo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>BC-01</td>
+<td>Geracao de lcd_empresa</td>
+<td>~241</td>
+<td>Core</td>
+</tr>
+<tr>
+<td>2</td>
+<td>BC-02 / BC-05</td>
+<td>Vendedor + Filial</td>
+<td>~248-376</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td>3</td>
+<td>BC-02</td>
+<td>Natureza e Empregados</td>
+<td>~380-440</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td>4</td>
+<td>BC-06</td>
+<td>Modelo de Negocio (SIGO ou BITIX)</td>
+<td>~440-618</td>
+<td>Core</td>
+</tr>
+<tr>
+<td>5</td>
+<td>BC-02</td>
+<td>CNPJ, Digito, CAEPF</td>
+<td>~618-690</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td>6</td>
+<td>BC-02</td>
+<td>Validacoes textuais e endereco</td>
+<td>~690-1320</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td>7</td>
+<td>BC-03</td>
+<td>Pessoa Juridica: tb_pessoa</td>
+<td>~1420-1490</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td>8</td>
+<td>BC-07</td>
+<td>Precificacao: tabelas de preco</td>
+<td>~1495-1760</td>
+<td>Core</td>
+</tr>
+<tr>
+<td>9</td>
+<td>BC-04</td>
+<td>Endereco e Comunicacao</td>
+<td>~3210-3520</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td>10</td>
+<td>BC-08</td>
+<td>Empresa Conveniada (~60 colunas)</td>
+<td>~1950-2450</td>
+<td>Core</td>
+</tr>
+<tr>
+<td>11</td>
+<td>BC-08</td>
+<td>Unidade, Parametros, Flags, Reajuste</td>
+<td>~2450-2800</td>
+<td>Core</td>
+</tr>
+<tr>
+<td>12</td>
+<td>BC-09</td>
+<td>Coparticipacao e Fatores</td>
+<td>~2800-4320</td>
+<td>Core</td>
+</tr>
+<tr>
+<td>13</td>
+<td>BC-10</td>
+<td>Carencia e Compra de Carencia</td>
+<td>~3730-3950</td>
+<td>Core</td>
+</tr>
+<tr>
+<td>14</td>
+<td>BC-11</td>
+<td>Fidelizacao (somente canal Middle)</td>
+<td>~3170-3200</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td>15</td>
+<td>BC-15</td>
+<td>Reembolso / Livre Escolha</td>
+<td>~4155-4320</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td>16</td>
+<td>BC-16</td>
+<td>Breakeven (70% hardcoded)</td>
+<td>~4599</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td>17</td>
+<td>BC-12</td>
+<td>Acesso Internet / Portal</td>
+<td>~4376-4650</td>
+<td>Generic</td>
+</tr>
+<tr>
+<td>18</td>
+<td>BC-16</td>
+<td>Minimo Contratual</td>
+<td>~4823-4855</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td>19</td>
+<td>BC-14</td>
+<td>Log de Sucesso (fl_status=9)</td>
+<td>~4847</td>
+<td>Generic</td>
+</tr>
+<tr>
+<td>20</td>
+<td>�</td>
+<td><strong>COMMIT</strong></td>
+<td>~4856</td>
+<td>�</td>
+</tr>
+<tr>
+<td>21</td>
+<td>BC-18</td>
+<td>Desconto PIM (pos-COMMIT)</td>
+<td>~4770-4781</td>
+<td>Supporting</td>
+</tr>
+<tr>
+<td>22</td>
+<td>BC-17</td>
+<td>Notificacao Email (pos-COMMIT)</td>
+<td>~4676-4760</td>
+<td>Generic</td>
+</tr>
+<tr>
+<td>23</td>
+<td>BC-13</td>
+<td>Integracao Odontologica (pos-COMMIT)</td>
+<td>~4862-4920</td>
+<td>Supporting</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<p><em>Fluxograma gerado em: 2026-03-11</em><br>
+<em>Baseado em: <code>REGRAS-DE-NEGOCIO-POR-CONTEXTO.md</code> (18 BCs, 152 regras, ~5.000 linhas PL/SQL)</em></p>
+
+      </div>
+      
+      
+    
+    
+    <script type="module">
+// TODO: If ZenUML gets integrated into mermaid in the future,
+//      we can remove the following lines.
+
+
+var MERMAID_CONFIG = ({"startOnLoad":false});
+if (typeof MERMAID_CONFIG !== 'undefined') {
+  MERMAID_CONFIG.startOnLoad = false
+  MERMAID_CONFIG.cloneCssStyles = false
+  MERMAID_CONFIG.theme = "default"
+}
+
+mermaid.initialize(MERMAID_CONFIG || {})
+if (typeof(window['Reveal']) !== 'undefined') {
+  function mermaidRevealHelper(event) {
+    var currentSlide = event.currentSlide
+    var diagrams = currentSlide.querySelectorAll('.mermaid')
+    for (var i = 0; i < diagrams.length; i++) {
+      var diagram = diagrams[i]
+      if (!diagram.hasAttribute('data-processed')) {
+        mermaid.init(null, diagram, ()=> {
+          Reveal.slide(event.indexh, event.indexv)
+        })
+      }
+    }
+  }
+  Reveal.addEventListener('slidetransitionend', mermaidRevealHelper)
+  Reveal.addEventListener('ready', mermaidRevealHelper)
+  await mermaid.run({
+    nodes: document.querySelectorAll('.mermaid')
+  })
+} else {
+  await mermaid.run({
+    nodes: document.querySelectorAll('.mermaid')
+  })
+}
+</script>
+    
+    
+    
+  
+    </body></html>

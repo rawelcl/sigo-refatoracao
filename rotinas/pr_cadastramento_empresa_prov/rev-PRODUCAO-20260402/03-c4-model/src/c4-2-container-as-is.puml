@@ -1,0 +1,32 @@
+@startuml c4-2-container-as-is
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+
+title C4 Model - Nivel 2 Diagrama de Containers - AS-IS (Estado Atual)
+' Subtitulo: Monolito PL/SQL: PR_CADASTRAMENTO_EMPRESA_PROV
+
+Person(corretor, "Corretor / Empresa", "Cadastra proposta via TAFFIX (PIM) ou BITIX")
+Person(operador_adm, "Operador Administrativo", "Monitora e resolve pendencias")
+
+System_Boundary(sistema_atual, "SIGO - Implantacao de Empresa - MONOLITO ATUAL") {
+
+  Container(proc, "PR_CADASTRAMENTO_EMPRESA_PROV", "PL/SQL Procedure, ~5.025 linhas", "16 fases, 23 regras de negocio\nValidacoes, precificacao, contrato\nAcesso Internet, Odonto, email\nSmells: WHEN OTHERS NULL (80+)")
+
+  ContainerDb(oracle, "Oracle Database 19c", "Oracle 19c", "Schema HUMASTER\n~40 tabelas acopladas\ntb_empresa_conveniada, tb_empresa_internet\ntb_preco_plano, tb_valor_plano")
+
+}
+
+System_Ext(pr_efetiva, "PR_EFETIVA_INTERNET", "Chamador principal -- aciona esta procedure para empresas PIM")
+System_Ext(pk_pim, "PK_PIM", "Package que aciona via jobs automatizados")
+System_Ext(coligadas, "PR_BAIXA_EMPRESA_COLIGADA / PR_EFETIVA_BAIXA_COLIGADA", "Procedures que acionam para empresas coligadas")
+System_Ext(email_smtp, "Servidor SMTP", "pr_send_mail / pr_send_mail_html_rn")
+System_Ext(odonto_ext, "Modulo Odonto (HUMASTER)", "pr_vcc_empresa_super_simples\npr_odon_param_esp_empresa")
+
+Rel(pr_efetiva, proc, "Chama apos validar pendencias", "PL/SQL CALL")
+Rel(pk_pim, proc, "Aciona via JOB automatizado", "PL/SQL CALL")
+Rel(coligadas, proc, "Aciona para cadastrar empresa coligada", "PL/SQL CALL")
+Rel(proc, oracle, "Le staging, cria contrato e parametros", "~40 tabelas")
+Rel(proc, email_smtp, "Envia email de boas-vindas", "SMTP (condicional por operadora)")
+Rel(proc, odonto_ext, "Replica para odonto (se sem plano odonto)", "PL/SQL CALL")
+
+@enduml

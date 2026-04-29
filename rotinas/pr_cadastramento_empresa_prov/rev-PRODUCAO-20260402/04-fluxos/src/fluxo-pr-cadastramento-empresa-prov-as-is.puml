@@ -1,0 +1,181 @@
+@startuml fluxo-pr-cadastramento-empresa-prov-as-is
+!theme plain
+title Fluxo de Execucao -- PR_CADASTRAMENTO_EMPRESA_PROV (AS-IS)
+
+start
+
+:Entrada\np_nu_controle IN NUMBER;
+
+:Verificar parametro de log\n(fn_registro_sistema 'FL_LOG_BAIXA_CONTROLE')\n[MIGRACAO] fn_registro_sistema = acoplamento Oracle;
+
+:Abrir cursor cr_empresa_internet\nWHERE nu_controle = p_nu_controle\nAND fl_status_processamento IN (0, 8);
+note right: RN01 -- Selecao de propostas\n[MIGRACAO] CURSOR Oracle
+
+while (Tem registro no cursor?) is (Sim)
+
+  if (tp_operacao = '1'?) then (Sim -- inclusao)
+  note right: RN02 -- Apenas inclusao\n[ATENCAO] Outras operacoes ignoradas
+
+    :FASE 1 -- Geracao de codigo de empresa\nloop fn_empresa_conveniada()\nate 10.001 tentativas;
+    note right: RN03 -- [ATENCAO] Sem tratamento se NULL apos 10001
+
+    :FASE 1 -- Validar vendedor ativo\nSELECT de tb_vendedor_plano;
+    if (Vendedor encontrado?) then (Nao)
+      :raise_application_error -20201;
+      stop
+    else (Sim)
+    endif
+
+    :FASE 1 -- Verificar CNPJ na lista negra\nSELECT tb_pessoa_lista_negra;
+    note right: RN05
+    if (CNPJ restrito?) then (Sim)
+      :raise_application_error -20201;
+      stop
+    else (Nao)
+    endif
+
+    :FASE 1 -- Resolver filial\n1) via vendedor + area_venda\n2) override TAFFIX (tb_emp_internet_filial)\n3) override cd_filial_contrato;
+    note right: RN06 -- Hierarquia de 3 niveis
+
+    :FASE 2 -- Detectar canal SIGO ou BITIX\nVerificar cd_operados = 'BITIX';
+    note right: RN08
+
+    if (Empresa SIGO coligada?) then (Sim)
+      :Consolidar vidas (tb_empresa_coligada)\nSUM nu_total_empregado;
+      note right: RN07
+    else (Nao / BITIX)
+    endif
+
+    if (Canal BITIX?) then (Sim)
+      :Abrir cr_empresa_neg_bitix\nUSA dt_assinatura\nconsolida vidas BITIX;
+    else (SIGO)
+      :Abrir cr_empresa_neg\nUSA dt_inicio;
+    endif
+    :Fechar cursor negociacao\n=> lnu_controle definido;
+
+    :FASE 3 -- Validacao tripla de documento\npk_administracao.fn_check_cic\nfn_check_caepf (se CPF);
+    note right: RN09
+
+    if (Documento invalido?) then (Sim)
+      :raise_application_error -20201;
+      stop
+    else (Valido)
+    endif
+
+    :FASE 3 -- Validacoes cadastrais (~18 campos)\nRazao social, natureza, empregados\nCEP, UF, cidade, logradouro, numero\nPlano, data inicio, sem cancelamento;
+    note right: RN10
+
+    :FASE 4 -- Resolver cd_empresa_plano\n(via senha, area_venda, vendedor, filial);
+
+    :FASE 5 -- Gestao de Pessoa\nVerificar se CNPJ ja tem cd_pessoa\nSe nao: sq_pessoa + fn_digito_out\nINSERT/UPDATE tb_pessoa;
+    note right: [MIGRACAO] sq_pessoa = Sequence Oracle
+
+    :FASE 5 -- Calcular canal de venda\n1-29 = canal 1 (PME)\n30-99 = canal 2 (Middle)\n>=100 = NULL;
+    note right: RN11
+
+    :FASE 6 -- Definir tabela de precos;
+    if (modelo_negocio != 1 E tabela_saude nao nula?) then (Sim -- AFFIX)
+      :Reutilizar tabela compartilhada\nwfl_tabela_geral = 'S';
+      note right: RN12 -- [ATENCAO] SACTI 449802
+    else (Atacado)
+      :Criar nova tabela exclusiva\nfn_cd_tb_preco_plano()\nINSERT tb_preco_plano\nwfl_tabela_geral = 'N';
+    endif
+
+    :FASE 6 -- Copiar tb_valor_plano\nFiltrar por fl_coparticipacao (RN195);
+    note right: RN13 -- [ANS] Coparticipacao
+
+    :FASE 6 -- Copiar franquias e descontos;
+
+    :FASE 7 -- Calcular flag faixa etaria ANS\nAFFIX OU canal IN (1,2) OU 100 vidas;
+    note right: RN15 -- [ANS] RN195\n[ATENCAO] 100 vidas EXATO
+
+    :FASE 7 -- pr_tabela_inativos_rn279\nSe encontrada: fn_copia_tabela_preco;
+    note right: RN14 -- [ANS] RN279/309
+
+    :FASE 7 -- Calcular validade contrato\n12 meses (atacado) ou herda da mae (AFFIX);
+    note right: RN17
+
+    :FASE 7 -- Verificar prorrogacao\nfn_verifica_prorrogacao_vigencia;
+    note right: RN16
+
+    if (dt_inicio <= sysdate E prorrogacao?) then (Sim)
+      :INSERT tb_empresa_conveniada\n-- Branch 1: usa V_DT_PROCESSAMENTO\ndt_assinatura = trunc(sysdate);
+      note right: [ATENCAO] V_COUNT_DT_ASSINATURA=1 => dt_assinatura NULL (A03)
+    else (Nao)
+      :INSERT tb_empresa_conveniada\n-- Branch 2: usa dt_inicio original;
+    endif
+    note right: RN16 -- Dois branches
+
+    :FASE 8 -- UPDATE tb_empresa_internet\n(datas de inicio e pagamento);
+
+    :FASE 8 -- INSERT tabelas de contexto\ntb_natureza_juridica_emp, tb_emp_conveniada_saude_flags\ntb_modelo_reaj_empresa, tb_implantacao_emp\ntb_empresa_conveniada_com, tb_empresa_cnpj_contratante\ntb_empresa_conveniada_unidade, tb_empresa_conveniada_imagem;
+
+    :FASE 9 -- Ajuste fl_tipo_faixa em tb_valor_plano;
+
+    :FASE 9 -- Parametrizacao operacional\nINSERT tb_parametros_unidade (por plano)\nINSERT tb_controle_fator_empresa\nINSERT tb_terapias_espec_empresa\nINSERT tb_fator_empresa (faixas etarias)\nINSERT tb_fidelizacao_empresa\n(dt_fim = dt_inicio + 1000 dias);
+    note right: RN21 [ATENCAO] 1000 dias hardcoded (A08)
+
+    :FASE 10 -- Enderecos e contatos\nINSERT/UPDATE tb_empresa_endereco\nINSERT tb_endereco_pessoa\nINSERT tb_contato_pessoa\nINSERT tb_meio_comunicacao_pessoa;
+
+    :FASE 11 -- Historico e carencias\nINSERT tb_hist_empresa_conveniada\nINSERT tb_compra_carencia\nINSERT tb_compra_grupo\nINSERT tb_compra_modulo\nINSERT tb_odon_compra_grupo;
+
+    :FASE 12 -- Coparticipacao\nUPDATE tb_controle_fator_empresa\nINSERT tb_copart_internacao_param_pj\nINSERT tb_copart_isnt_tp_benef\nINSERT tb_copart_tipo_reembolso\nINSERT tb_copart_tab_empresa;
+
+    :FASE 13 -- Reembolso\n(para cada plano de livre escolha)\nINSERT tb_reemb_empresa_prazo_pag\nINSERT tb_reemb_empresa_prazo_pag_tip\nINSERT tb_reemb_empresa_tabela\nINSERT tb_reemb_empresa_composicao;
+
+    :FASE 14 -- Acesso Internet\nINSERT tb_acesso_internet\n(senha = ultimos 6 digitos cd_pessoa criptografados)\nINSERT tb_controle_internet (4 servicos: 7,12,14,16)\nUPDATE tb_usuario_titular_internet\nUPDATE tb_usuario_dependente_internet;
+    note right: RN18 [CRITICO] Senha previsivel (S10)\nRN19 dia_limite por dt_dia_pagamento
+
+    :FASE 15 -- Finalizacao\nINSERT tb_empresa_breakeven (valor=70)\nINSERT tb_acesso_dados_empresa;
+    note right: [ATENCAO] vl_breakeven=70 hardcoded (A07)
+
+    :FASE 15 -- Email boas-vindas;
+    note right: [CRITICO] CNPJ + senha no email (S09)
+    if (ds_endereco_eletronico nao nulo?) then (Sim)
+      if (cd_empresa_plano = 7 (RN Saude)?) then (Sim)
+        :pr_send_mail_html_rn;
+      else (Nao)
+        if (cd_empresa_plano != 14 (NDI SP)?) then (Sim)
+          :pr_send_mail (Hapvida);
+        else (NDI SP -- sem email)
+        endif
+      endif
+    else (Sem email)
+    endif
+    note right: RN20 -- Template por operadora
+
+    :FASE 15 -- INSERT tb_log_envio_kit;
+
+    :FASE 15 -- COMMIT;
+
+    :FASE 15 -- Post-processamento pos-commit\npr_desconto_empresa (se FL_ATIVA_PIM_ADM)\npr_cobranca_falta_param\npr_con_emp_prov\npr_odon_param_esp_empresa (se param 225=1);
+
+    :Verificar se empresa tem odonto vinculado;
+    if (count tb_odon_empresa_internet = 0?) then (Sem odonto)
+      :Pr_Vcc_Empresa_Super_Simples\n(RN22 -- Super Simples automatico);
+    else (Com odonto)
+    endif
+
+  else (Nao -- tp_operacao != 1)
+    note right: RN02 -- [ATENCAO] Execucao vazia sem erro
+  endif
+
+  :Proximo registro do cursor;
+
+endwhile (Sem mais registros)
+
+stop
+
+' --- Handler de excecao global ---
+note
+[CRITICO] WHEN OTHERS:
+ROLLBACK
+p_erro_controle := SQLERRM (temporario)
+INSERT tb_log_baixa_controle (se FL_LOG='S')
+Verificar se empresa foi criada
+INSERT tb_pendencia_empresa_internet (cd_pendencia=9)
+p_erro_controle := NULL  [MASCARAMENTO DE ERRO -- S04]
+COMMIT
+-- Chamador recebe NULL e interpreta como SUCESSO
+end note
+@enduml

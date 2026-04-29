@@ -1,0 +1,162 @@
+@startwbs
+' ============================================================
+' Estrutura DDD - PK_VENDA_JSON
+' Tipo: Work Breakdown Structure (organograma por camadas)
+' Baseado em: ddd-modelagem-dominio.md (rev-PRODUCAO-20260402)
+' Data: 20/04/2026
+' ATENCAO: arquivo ASCII puro (sem acentos) para compatibilidade
+' ============================================================
+
+<style>
+wbsDiagram {
+  node {
+    BackgroundColor #f1f3f5
+    LineColor #ced4da
+    FontColor #212529
+    FontSize 9
+    Padding 5
+    Margin 2
+    RoundCorner 5
+  }
+  :depth(1) {
+    BackgroundColor #1d3557
+    FontColor white
+    FontSize 13
+    FontStyle bold
+    Padding 10
+    RoundCorner 8
+  }
+  :depth(2) {
+    BackgroundColor #457b9d
+    FontColor white
+    FontSize 11
+    FontStyle bold
+    Padding 8
+    RoundCorner 6
+  }
+  :depth(3) {
+    BackgroundColor #a8dadc
+    FontColor #1d3557
+    FontSize 10
+    FontStyle bold
+    Padding 6
+  }
+  :depth(4) {
+    BackgroundColor #e9ecef
+    FontColor #343a40
+    FontSize 9
+    Padding 5
+  }
+  :depth(5) {
+    BackgroundColor #ffffff
+    LineColor #adb5bd
+    FontColor #495057
+    FontSize 8
+    Padding 4
+  }
+}
+</style>
+
+* PK_VENDA_JSON\nPACKAGE SPEC + BODY | Schema HUMASTER\nrev-PRODUCAO-20260402 | 6.334 linhas
+
+** BOUNDED CONTEXTS (10)
+*** Core Domain\n[diferencial competitivo Hapvida]
+**** BC-VJ-01\nRecepcao de Proposta BITIX
+**** BC-VJ-03\nEfetivacao Empresa BITIX
+**** BC-VJ-04\nEfetivacao Beneficiarios BITIX
+**** BC-VJ-08\nAuto-baixa POS
+*** Supporting Domain\n[necessario, nao e diferencial]
+**** BC-VJ-02\nValidacao e Critica BITIX
+**** BC-VJ-05\nGestao de Status Final
+**** BC-VJ-06\nGrupo Coligado BITIX
+**** BC-VJ-07\nMapeamento Saude-Odonto
+**** BC-VJ-10\nIntegracao Odonto
+*** Generic Domain\n[commodidade]
+**** BC-VJ-09\nConfiguracao de Sistema
+
+** AGREGADOS (2)
+*** PropostaEmpresaBitix\nAggregate Root: NU_CONTROLE\n[TB_PROPOSTA_VENDA + TB_EMPRESA_INTERNET]
+**** Entidades (4)
+***** EmpresaInternet\n[TB_EMPRESA_INTERNET]
+***** OdonEmpresaInternet\n[TB_ODON_EMPRESA_INTERNET]
+***** PendenciaEmpresaBitix\n[TB_PENDENCIA_EMPRESA_INTERNET]
+***** StatusCadastroBitix\n[TB_STATUS_PROPOSTA_CADASTRO]
+**** Value Objects (7)
+***** StatusProposta\n{0,1,2,3,4,6,7,8,9,10}
+***** OrigemEfetivacao\n{T229B | JOB | BITIX | BAIXAPOS | BPR}
+***** GrupoColigada\n{cd_proposta_mae + tprovisorio[]}
+***** FluxoPOSRastreamento\n{7=coligada | 10=base | 17=Neoway | 99=blocklist}
+***** ConfiguracaoCobrancaMiddle\n{Middle 30-99 sem conta conjunta}
+***** ControleProvisorio\n{SQ_EMPRESA_INTERNET.nextval}
+***** ControleProvOdonto\n{nullable se sem plano odonto}
+*** BeneficiarioBitix\nAggregate Root: NU_CONTROLE beneficiario\n[TB_USUARIO_*_INTERNET]
+**** Entidades (4)
+***** TitularInternet\n[TB_USUARIO_TITULAR_INTERNET]
+***** DependenteInternet\n[TB_USUARIO_DEPENDENTE_INTERNET]
+***** CriticaBeneficiario\n[TB_USUARIO_CRITICA_INTERNET]
+***** MapeamentoSaudeOdonto\n[TB_PIM_CONTROLE_CPF]
+**** Value Objects (3)
+***** CodigoProvisorioEmpresa\n{'T' || nu_controle_empresa}
+***** StatusProcessamentoBenef\n{0|1|2|8|9|17=Neoway bloqueante}
+***** ControleOdontoTitular\n{nu_controle_tit_od | nullable}
+
+** DOMAIN SERVICES (9)
+*** IntegracaoBitixService\nRecebe JSON BITIX, desserializa, persiste staging\n>> pr_pim_insere_cnpj
+*** EfetivacaoBatchService\nLoop JOB sobre propostas FL_STATUS=6\n>> pr_efetiva
+*** EfetivacaoEspecificaService\nEfetiva proposta individual por origem\n>> pr_efetiva_baixa_manual [S02: cod triplicado]
+*** MotorCriticasService [CRITICO]\nContagem criticas/pendencias 3 modos (N/E/S)\n>> fn_get_criticas_pendencias\n[S12: UPDATE colateral dentro de FUNCTION]
+*** GrupoColigadoService\nVerifica completude grupo coligado\n>> [inline em pr_efetiva]
+*** AutoBaixaPOSService\n4 checks POS + aciona efetivacao automatica\n>> [inline em pr_pim_insere_cnpj]
+*** MapeamentoSaudeOdontoService\nCria/consulta vinculo 1:1 saude-odonto\n>> pr_control_internet + pr_set_usuario_od
+*** StatusFinalService\nDecide status 7 ou 10 apos efetivacao\n>> [replicado em 3 rotinas - S07]
+*** PendenciaUsuarioService\nAtualiza pendencias apos efetivacao\n>> pr_pim_pendencia [S01: WHEN OTHERS THEN NULL]
+
+** DOMAIN EVENTS (8)
+*** PropostaIntegradaBitix\n[staging concluido FL_COMMIT=N ou S]
+*** AutoBaixaAcionada\n[POS + sem coligada + sem criticas/Neoway/blocklist]
+*** PropostaEfetivada\n[pr_efetiva_baixa_manual conclui com empresa criada]
+*** EmpresaComCritica\n[motor > 0 com p_valida_nao_coligada=S]
+*** GrupoColigadoIncompleto\n[COUNT_NAO_APTA_BAIXA > 0 no loop]
+*** ColigadaRegistradaComFluxoPOS\n[POS + FL_COMMIT=S + V_COLIGADA=S]
+*** PropostaDevolvida\n[motor > 0 + sem POS + nao coligada]
+*** DivergenciaContadorBeneficiario\n[V_AUX != G_COUNT_BENEFIIFIM]
+
+** REPOSITORIES (11)
+*** PropostaVendaRepository\n[TB_PROPOSTA_VENDA]\nfindByStatus | updateStatus | updateCdEmpresa
+*** EmpresaInternetRepository\n[TB_EMPRESA_INTERNET + TB_ODON_EMPRESA_INTERNET]\ninsert | update | selectByControle
+*** ColigadaBitixRepository\n[TB_EMPRESA_COLIGADA_BITX]\nfindByMae | countNaoApta | insert | delete
+*** FluxoPOSRepository\n[TB_PIM_FLUXO_POS]\nsetFluxo | getFluxo
+*** StatusCadastroRepository\n[TB_STATUS_PROPOSTA_CADASTRO]\ninsert
+*** PendenciaEmpresaRepository\n[TB_PENDENCIA_EMPRESA_INTERNET]\ninsert | selectByControle
+*** BeneficiarioInternetRepository\n[TB_USUARIO_TITULAR + DEPENDENTE_INTERNET]\nfindByEmpresa | updateStatus
+*** CriticaBeneficiarioRepository\n[TB_USUARIO_CRITICA_INTERNET]\ncountByControle | selectByControle
+*** MapeamentoControleRepository\n[TB_PIM_CONTROLE_CPF]\nfindByControleTit | insert | update
+*** BlocklistRepository\n[TB_FILE_DOCUMENTO_BITIX]\ncountBlocklistByControle
+*** PendenciaUsuarioRepository\n[TB_PENDENCIA_USUARIO]\ndeleteByUsuario | insertByUsuario
+
+** SPECIFICATIONS (8)
+*** PropostaElegivelSpec\n[RN02] FL_STATUS = 6
+*** GrupoColigadoCompletoSpec\n[RN03] COUNT(status invalido) = 0
+*** PropostaSemCriticasSpec\n[RN04] motor retorna 0
+*** IdempotenciaIntegracaoSpec\n[RN09] proposta ja integrada nao reprocessa
+*** SemBlocklistSpec\n[RN13] fn_get_blocklist_emp = 0
+*** SemPendenciaNeowaySpec\n[RN14] fn_get_pend_neoway = 0
+*** ContadorBeneficiariosOkSpec\n[RN16] COUNT(staging) = G_TOTAL_BENEFICIARIO
+*** AutoBaixaPOSElegivelSpec\n[RN08] composicao de 6 specs\n{POS + FL_COMMIT=S + sem coligada +\nsem criticas + sem blocklist + sem Neoway}
+
+** FACTORIES (3)
+*** PropostaEmpresaFactory\nGera NU_CONTROLE (saude) + NU_CONTROLE_OD (odonto)\n[2x SQ_EMPRESA_INTERNET.nextval]
+*** EmpresaInternetFactory\nDesserializa JSON para TB_EMPRESA_INTERNET%ROWTYPE\n+ replica odonto >> fn_set_empresa_internet
+*** ControleOdontoTitularFactory\nReutiliza de TB_PIM_CONTROLE_CPF ou gera novo\n[RN10: SQ_CONTROLE_INTERNET.nextval]
+
+** ANTI-CORRUPTION LAYER
+*** BITIXAdapterService [TO-BE]\nIsolamento do ACL canonico BITIX -> SIGO\n[ADR-05]
+**** Entrada\nJSON BITIX (pr_pim_insere_cnpj)
+***** Campo FL_COMMIT\n>> Flag staging vs efetivacao imediata
+***** Campo COD_OPERADORA\n>> Hardcode 'BITIX' [ATENCAO A06]
+***** Estrutura empresa JSON\n>> TB_EMPRESA_INTERNET%ROWTYPE
+***** Estrutura beneficiarios JSON\n>> TB_USUARIO_*_INTERNET
+***** Estrutura odonto JSON\n>> TB_ODON_EMPRESA_INTERNET
+**** Saida\nContrato tipado [TO-BE]\n{nu_controle, status, mensagem, motivos}
+
+@endwbs

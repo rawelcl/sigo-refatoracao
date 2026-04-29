@@ -1,0 +1,183 @@
+@startuml fluxo-execucao-efetiva-internet
+!theme plain
+title Fluxo de Execução — pr_efetiva_internet (9 Fases)
+caption Orquestrador PIM — Efetivação Automática de Propostas Internet
+
+|Orquestrador|
+start
+:Carregar configurações do sistema
+(fn_registro_sistema × 5);
+note right
+  FL_CRITICA_SAUDE_ODONTO
+  FL_LOG_BAIXA_CONTROLE
+  CD_EMPRESA_INDIVIDUAL_ODONTO_PURO
+  CHECA_VENDA_OD_PURO_FINALIZADA
+  HABILITA_65ANOS
+end note
+
+|#FFD700|Fase 1 — Carga PIM Modelo|
+:pk_carga_modelo_pim.pr_processar();
+note right
+  Loop: áreas de venda com fl_baixa_automatica=1
+  Loop: empresas ?29 vidas em tb_empresa_digitada
+  ? pr_cadastramento_internet2 por titular
+  ? UPDATE cd_tipo_internet=0
+end note
+:COMMIT;
+
+|#87CEEB|Fase 2-3 — Loop Principal PIM|
+:Abrir cursor sobre tb_empresa_internet
+(fl_status IN (0,1,8), tp_operacao=1);
+
+while (Próxima proposta?) is (Sim)
+  :Inicializar contexto
+  (fn_ctx_novo);
+
+  |#87CEEB|Fase 2 — Validação de Pendências|
+  :pk_pendencia_pim.pr_limpar_pendencias();
+  :pk_pendencia_pim.pr_avaliar_todas();
+  note right
+    13 tipos de pendência (stp1..stp13):
+    1. Nome inválido
+    2. Vendedor/Filial
+    3. Localidade limítrofe
+    4. Vidas excedentes (>6 dias)
+    5. Idade sobrinho >23
+    6. Titular ?59 (ou ?65)
+    7. CPF inválido
+    8. DIREX crítica
+    9. Críticas de beneficiário
+    10. Neoway divergência
+    11. Orçamento pendente
+    12. Adesão digital pendente
+    13. Qtd vidas incompatível
+  end note
+
+  if (count_pendencias = 0?) then (? Sem pendências)
+
+    |#FFD700|Fase 3 — Efetivação|
+    :pk_efetivacao_empresa_pim.pr_efetivar();
+    note right
+      Ex-cliente ? reativar empresa
+      Nova empresa ? pr_cadastramento_empresa_prov
+    end note
+
+    if (Empresa odonto vinculada?) then (Sim)
+      :pk_efetivacao_odonto_pim.pr_efetivar();
+      note right
+        pr_odon_cad_empresa_prov
+        PR_NAT_JURIDICA_ODON
+      end note
+    else (Não)
+    endif
+
+    :pk_status_pim.pr_atualizar_staging();
+    note right
+      Migrar código provisório ? definitivo
+      UPDATE tb_empresa_internet
+    end note
+
+    :pk_critica_pim.pr_executar_criticas();
+    note right
+      pr_critica_internet por titular
+      (saúde + odonto)
+    end note
+
+    if (Críticas encontradas?) then (Sim)
+      :Inserir pendência 9
+      + log de críticas;
+    else (? Sem críticas)
+      :pk_baixa_beneficiario
+      .pr_autorizar_e_efetivar();
+      note right
+        Canal 1: fl_status=8 + internet2
+        Canal 2: apenas dt_inicio
+      end note
+    endif
+
+    :pk_status_pim
+    .pr_verificar_nao_efetivados();
+    note right
+      Se existem titulares fl_status=8:
+      reverter empresa para pendente
+    end note
+
+  else (? Com pendências)
+    :Re-checar limites de idade;
+    :pk_log_baixa_pim.pr_registra
+    (status='PENDENTE');
+  endif
+
+  :COMMIT proposta;
+endwhile (Não)
+
+|#D3D3D3|Fase 4 — Odonto Puro|
+:pk_odonto_puro_pim.pr_processar();
+note right
+  Loop: tb_odon_empresa_internet
+  (fl_status=9, ?29 vidas, sem saúde)
+  ? pr_critica_internet por titular
+  ? SE ok: autorizar + internet2
+  ? SE erro: rollback + crítica '999-ERRO'
+  ? UPDATE compra_carencia dias_adm=30
+end note
+
+|#D3D3D3|Fase 5 — Inclusão|
+:pk_baixa_beneficiario.pr_processar_inclusoes();
+note right
+  cd_tipo_internet=2
+  Titulares pendentes + dependentes
+  ? pr_cadastramento_internet2
+end note
+
+|#D3D3D3|Fase 6 — Processamento Completo|
+:pk_baixa_beneficiario.pr_processar_completo();
+note right
+  cd_tipo_internet=1
+  ? pr_critica_internet (pós-efetivação)
+  ? SE sem crítica: autorizar + internet2
+  ? SE com crítica: cd_pendencia=499
+end note
+
+|#D3D3D3|Fase 7 — Individual/Familiar|
+:pk_individual_pim.pr_processar();
+note right
+  fn_individual_familiar='00100'
+  ? Validações Neoway + adesão digital
+  ? pr_critica_internet
+  ? SE ok: autorizar + internet2
+  ? SE erro: rollback + crítica '999-ERRO'
+end note
+
+|#D3D3D3|Fase 8 — Obrigação Odonto|
+:pr_odon_obrigacao_agregado();
+
+|#D3D3D3|Fase 9 — Coligadas|
+:pk_coligada_pim.pr_processar();
+note right
+  SE COLIGADA_EMPRESA_BITIX=1:
+    PR_COLIGA_EMPRESA_BITIX
+    PK_VENDA_JSON.pr_efetiva
+  SE COLIGADA_EMPRESA=1:
+    pr_processa_empresa_coligada
+end note
+
+|Orquestrador|
+:COMMIT final;
+stop
+
+legend right
+  |= Cor |= Fase |= Tipo |
+  | <#FFD700> | Fases 1, 3 | Core Domain |
+  | <#87CEEB> | Fase 2 | Supporting |
+  | <#D3D3D3> | Fases 4-9 | Fases auxiliares |
+  ---
+  **Métricas da Procedure Legada:**
+  • 2.290 linhas ? ~150 linhas (orquestrador)
+  • 9 fases ? 14 packages PL/SQL
+  • 13 tipos de pendência
+  • 17 procedures externas
+  • 50+ WHEN OTHERS THEN NULL
+endlegend
+
+@enduml

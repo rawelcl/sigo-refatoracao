@@ -1,0 +1,57 @@
+@startuml c4-2-container-as-is
+!include <C4/C4_Container>
+
+LAYOUT_WITH_LEGEND()
+
+title [C4 Model - Nivel 2] Diagrama de Containers - **AS-IS** (Estado Atual)\nMonolito PL/SQL: pr_cadastramento_empresa_prov
+
+' -----------------------------------
+' ATORES
+' -----------------------------------
+
+Person(vendedor, "Vendedor / Corretor")
+Person(operador, "Operador ADM")
+
+' -----------------------------------
+' BOUNDARY DO SISTEMA ATUAL (MONOLITO)
+' -----------------------------------
+
+System_Boundary(sistema_atual, "Sistema de Cadastramento - MONOLITO ATUAL") {
+
+    Container(procedure, "pr_cadastramento_empresa_prov", "PL/SQL Procedure, ~5.000 linhas", "Procedure monolitica que faz TUDO:\n- 25+ validacoes\n- CRUD de 30+ tabelas\n- Logica SIGO + BITIX\n- 70+ variaveis locais\n- 30+ blocos de log repetidos\n\n[!] Risco alto de manutencao\n[!] Sem testes unitarios\n[!] Tratamento de erro inconsistente")
+
+    ContainerDb(oracle_db, "Oracle Database\n(Schema HUMASTER)", "Oracle 19c+", "30+ tabelas:\ntb_empresa_internet\ntb_empresa_conveniada\ntb_pessoa\ntb_preco_plano\ntb_valor_plano\ntb_endereco_pessoa\ntb_compra_carencia\ntb_controle_fator_empresa\ntb_acesso_internet\n...")
+
+    Container(taffix, "Tela TAFFIX", "Oracle Forms / Web", "Interface de cadastro\ninterna de propostas\nempresariais\n(tb_empresa_internet)")
+
+    Container(bitix, "BITIX\n(Ferramenta de Vendas)", "Web Application", "Plataforma de vendas\nusada pelo vendedor/corretor\npara cadastrar propostas\n(tb_empresa_internet)")
+
+    Container(job_processamento, "Job de Processamento", "Oracle DBMS_JOB / Scheduler", "Executa a procedure\nperiodicamente para\nprocessar propostas\npendentes")
+}
+
+' -----------------------------------
+' SISTEMAS EXTERNOS
+' -----------------------------------
+
+System_Ext(odonto, "Sistema Odontologico")
+System_Ext(super_simples, "VCC Super Simples")
+System_Ext(pim, "Sistema PIM")
+System_Ext(cobranca_sys, "Controle de Cobranca")
+
+' -----------------------------------
+' RELACIONAMENTOS
+' -----------------------------------
+
+Rel(vendedor, taffix, "Cadastra proposta\n(tela interna)")
+Rel(vendedor, bitix, "Cadastra proposta\n(plataforma de vendas)")
+Rel(operador, taffix, "Reprocessa pendencias")
+Rel(taffix, oracle_db, "INSERT tb_empresa_internet", "SQL")
+Rel(bitix, oracle_db, "INSERT tb_empresa_internet", "SQL")
+Rel(job_processamento, procedure, "Executa", "PL/SQL")
+Rel(procedure, oracle_db, "Le/Grava 30+ tabelas", "SQL / DML")
+Rel(procedure, odonto, "Espelha empresa", "PL/SQL call")
+Rel(procedure, super_simples, "Replica empresa", "PL/SQL call")
+Rel(procedure, pim, "Desconto empresa", "PL/SQL call")
+Rel(procedure, cobranca_sys, "Verifica parametros", "PL/SQL call")
+
+@enduml

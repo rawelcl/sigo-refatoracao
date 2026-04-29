@@ -1,0 +1,63 @@
+@startuml c4-2-container-pk-venda-json-as-is
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Container -- PK_VENDA_JSON (AS-IS)
+
+' Atores externos
+Person(operador, "Operador T229B", "Efetiva proposta manualmente via tela T229B")
+Person(job, "JOB Oracle", "Executa pr_efetiva em batch periodicamente")
+
+' Sistema externo
+System_Ext(bitix, "BITIX (NDI Minas)", "Sistema externo de vendas -- envia proposta como JSON CLOB")
+
+' Sistema legado
+System_Ext(sigo_core, "SIGO Core", "PR_EFETIVA_INTERNET chama PK_VENDA_JSON.pr_efetiva (Fase 9 coligadas)")
+
+System_Boundary(sigo, "SIGO -- Oracle 19c / Schema HUMASTER") {
+
+  ContainerDb(oracle_staging, "Staging Internet", "Oracle 19c Tables", "TB_PROPOSTA_VENDA\nTB_EMPRESA_INTERNET\nTB_ODON_EMPRESA_INTERNET\nTB_USUARIO_TITULAR_INTERNET\nTB_USUARIO_DEPENDENTE_INTERNET")
+
+  ContainerDb(oracle_definitivo, "Cadastro Definitivo", "Oracle 19c Tables", "TB_EMPRESA_CONVENIADA\nTB_EMPRESA_CNAE\nTB_PENDENCIA_EMPRESA")
+
+  ContainerDb(oracle_controle, "Controle e Log", "Oracle 19c Tables", "TB_EMPRESA_COLIGADA_BITX\nTB_PIM_CONTROLE_CPF\nTB_STATUS_PROPOSTA_CADASTRO\nTB_FILE_DOCUMENTO_BITIX\nTB_PENDENCIA_USUARIO")
+
+  Container(pkg_venda, "PK_VENDA_JSON", "PL/SQL Package\nHUMASTER", "Package central:\npr_pim_insere_cnpj (ACL BITIX)\npr_efetiva (batch JOB)\npr_efetiva_baixa_manual (manual/auto)\nfn_get_criticas_pendencias (motor)")
+
+  Container(sub_cadastro_emp, "pr_cadastramento_empresa_prov", "PL/SQL Procedure\nHUMASTER", "Cadastra empresa definitiva;\nretorna cd_empresa via string parsing [CRITICO]")
+
+  Container(sub_critica_int, "pr_critica_internet", "PL/SQL Procedure\nHUMASTER", "Executa criticas de beneficiario titular")
+
+  Container(sub_cad_internet2, "pr_cadastramento_internet2", "PL/SQL Procedure\nHUMASTER", "Efetiva beneficiario individual")
+
+  Container(sub_odon, "pr_odon_cad_empresa_prov\npr_set_usuario_od", "PL/SQL Procedures\nHUMASTER", "Cadastra empresa odonto e beneficiarios odonto")
+
+  Container(sub_validacoes, "FN_VALIDA_COLIGADA\nPR_VALIDA_BAIXA_COLIGADA_BITIX\npr_cadastramento_empresa_baixa", "PL/SQL Functions/Procedures\nHUMASTER", "Validacoes especializadas de coligada e empresa")
+
+  Container(sub_neoway, "PR_VE_DIVERGENCIA_NEOWAY\nPR_CRITICA_65_ANOS", "PL/SQL Procedures\nHUMASTER", "Validacoes Neoway e limite de idade")
+
+  Container(fn_registro, "fn_registro_sistema", "PL/SQL Function\nHUMASTER", "Retorna parametros de configuracao do sistema")
+
+  Container(pk_json_ext, "pk_json_ext", "PL/SQL Package\nHUMASTER", "Parser JSON: get_string, get_json")
+}
+
+' Relacoes externas
+Rel(bitix, pkg_venda, "Envia proposta JSON", "pr_pim_insere_cnpj(p_json CLOB)")
+Rel(job, pkg_venda, "Dispara batch", "pr_efetiva()")
+Rel(operador, pkg_venda, "Efetiva manualmente", "pr_efetiva_baixa_manual(nu_controle, 'N', 'T229B')")
+Rel(sigo_core, pkg_venda, "Chama para coligadas BITIX", "pr_efetiva() -- Fase 9")
+
+' Relacoes internas: pkg_venda com sub-rotinas
+Rel(pkg_venda, sub_cadastro_emp, "Cadastra empresa definitiva", "pr_cadastramento_empresa_prov(nu_controle, w_erro OUT)")
+Rel(pkg_venda, sub_critica_int, "Revalida criticas de beneficiario", "pr_critica_internet(nu_controle, 1, 'N')")
+Rel(pkg_venda, sub_cad_internet2, "Efetiva beneficiario", "pr_cadastramento_internet2(nu_controle)")
+Rel(pkg_venda, sub_odon, "Cadastra empresa/beneficiarios odonto", "pr_odon_cad_empresa_prov / pr_set_usuario_od")
+Rel(pkg_venda, sub_validacoes, "Valida coligada e empresa", "FN_VALIDA_COLIGADA / PR_VALIDA_BAIXA_COLIGADA_BITIX")
+Rel(pkg_venda, sub_neoway, "Valida Neoway e idade", "PR_VE_DIVERGENCIA_NEOWAY / PR_CRITICA_65_ANOS")
+Rel(pkg_venda, fn_registro, "Consulta flags de sistema", "fn_registro_sistema('PK_VENDA_JSON_PR_EFETIVA_01')")
+Rel(pkg_venda, pk_json_ext, "Desserializa JSON", "pk_json_ext.get_string / get_json")
+
+' Relacoes de persistencia
+Rel(pkg_venda, oracle_staging, "Le e escreve staging", "SELECT/INSERT/UPDATE\nFL_STATUS, CD_EMPRESA, etc.")
+Rel(pkg_venda, oracle_definitivo, "Atualiza cadastro definitivo", "UPDATE/INSERT\napos efetivacao")
+Rel(pkg_venda, oracle_controle, "Le e escreve controle/log", "TB_EMPRESA_COLIGADA_BITX\nTB_PIM_CONTROLE_CPF\nTB_STATUS_PROPOSTA_CADASTRO")
+@enduml

@@ -1,0 +1,37 @@
+@startuml c4-1-system-context
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+title C4 Model - Nivel 1 Diagrama de Contexto do Sistema -- SIGO / Efetivacao PIM-BITIX
+
+' --- Atores ---
+Person(corretor, "Corretor / Representante Comercial", "Cadastra proposta PME via canal digital (PIM ou BITIX)")
+Person(operador, "Operador Administrativo", "Efetiva proposta manualmente via tela T229B; monitora pendencias")
+Person(job, "JOB Oracle (Agendado)", "Executa pr_efetiva e PK_VENDA_JSON.pr_efetiva em batch periodicamente")
+
+' --- Sistema Principal ---
+System_Boundary(sigo, "SIGO -- Sistema de Gestao de Operadora de Planos de Saude") {
+  System(efetivacao_pim, "Modulo de Efetivacao PIM", "Processa propostas PME (<=29 vidas) do canal PIM:\npr_efetiva_internet, PR_CADASTRAMENTO_EMPRESA_PROV,\npr_cadastramento_internet2")
+  System(efetivacao_bitix, "Modulo de Efetivacao BITIX", "Processa propostas PME do canal BITIX:\nPK_VENDA_JSON (pr_pim_insere_cnpj, pr_efetiva)")
+}
+
+' --- Sistemas Externos ---
+System_Ext(bitix, "BITIX (NDI Minas)", "Sistema externo de vendas corporativas.\nEnvia propostas de empresa via API JSON CLOB.\nFluxo POSBAIXA (conferencia documental pos-efetivacao) e PRE (conferencia antes).")
+System_Ext(neoway, "Neoway", "Servico externo de validacao cadastral de pessoas fisicas.\nRetorna divergencias que bloqueiam efetivacao (status 17).")
+System_Ext(oracle_jobs, "Oracle Scheduler", "Agendador de jobs Oracle que dispara a efetivacao em batch.\nIntervalo configuravel por parametro de sistema.")
+
+' --- Relacionamentos ---
+Rel(corretor, sigo, "Cadastra proposta PME", "Portal PIM (tela) / API BITIX (JSON)")
+Rel(operador, sigo, "Efetiva manualmente e monitora pendencias", "Tela T229B / Consulta interna")
+Rel(job, sigo, "Dispara efetivacao em batch", "Oracle Scheduler -> pr_efetiva / PK_VENDA_JSON.pr_efetiva")
+Rel(bitix, efetivacao_bitix, "Envia proposta JSON (pr_pim_insere_cnpj)", "PL/SQL call via sinonimo HUMASTER")
+Rel(efetivacao_pim, neoway, "Consulta divergencias cadastrais", "PL/SQL -> PR_VE_DIVERGENCIA_NEOWAY")
+Rel(efetivacao_bitix, neoway, "Verifica pendencia Neoway (status 17)", "PL/SQL -> PR_VE_DIVERGENCIA_NEOWAY")
+
+note right of sigo
+  Rotinas analisadas:
+  - PR_EFETIVA_INTERNET (rev-PRODUCAO-20251014)
+  - PK_VENDA_JSON (rev-PRODUCAO-20260402)
+  - PR_CADASTRAMENTO_EMPRESA_PROV (rev-PRODUCAO-20260402)
+end note
+
+@enduml

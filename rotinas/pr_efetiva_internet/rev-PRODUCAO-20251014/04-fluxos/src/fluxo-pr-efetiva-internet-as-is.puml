@@ -1,0 +1,289 @@
+@startuml fluxo-pr-efetiva-internet-as-is
+!theme plain
+title Fluxo de Execucao | PR_EFETIVA_INTERNET (AS-IS) | rev-PRODUCAO-20251014
+
+start
+
+:Inicializa flags do sistema;
+note right
+  [RN01] fn_registro_sistema:
+  - FL_CRITICA_SAUDE_ODONTO
+  - FL_LOG_BAIXA_CONTROLE
+  - CD_EMPRESA_IND_ODON_PURO
+  - CHECA_VENDA_OD_PURO_FINALIZADA
+  - HABILITA_65ANOS
+end note
+
+partition "Fase 1: Carga Automatica PIM Modelo [RN02]" {
+  :Loop areas de venda com fl_baixa_automatica=1;
+  while (Tem area de venda?) is (Sim)
+    :Verifica fl_baixa no modelo E na area de venda;
+    note right: [ATENCAO] Dupla consulta -- segundo sobrescreve primeiro
+    while (Tem empresa <= 29 vidas com titular pendente?) is (Sim)
+      :Exclui titulares/dependentes acima de 43 anos;
+      :Exclui titulares/dependentes acima de 59 anos;
+      :Autoriza titular (fl_status=8);
+      :pr_cadastramento_internet2(nu_controle);
+      :UPDATE tb_empresa_conveniada SET cd_tipo_internet = 0;
+      :COMMIT;
+    endwhile (Nao)
+  endwhile (Nao)
+}
+
+partition "Verificacao PIM Automatico [RN03]" {
+  :Conta MOVIMENTACAO_PIM_AUTOMATICO = 'NAO';
+  if (PIM desligado?) then (wVerificaPim > 0)
+    note right
+      [CRITICO] Em producao (17/04/2026):
+      MOVIMENTACAO_PIM_AUTOMATICO = 'NAO'
+      Bloco PIM PULADO completamente
+    end note
+    :Pula bloco PIM (goto Fase 3);
+  else (wVerificaPim = 0)
+  endif
+}
+
+partition "Pre-validacao Coligadas [RN04]" {
+  :Loop tb_empresa_coligada com FL_STATUS_PROCESSO=1;
+  while (Tem coligada pendente?) is (Sim)
+    :fn_valida_coligada_baixa(V_PROPOSTA_MAE=NULL);
+    note right: [ATENCAO] V_PROPOSTA_MAE sempre NULL -- codigo possivelmente incompleto
+  endwhile (Nao)
+}
+
+partition "Fase 2: Loop Principal PIM [RN05..RN24]" {
+  :Loop tb_empresa_internet;
+  note right
+    [RN05] Filtros:
+    - dt_cadastramento > 01/11/2012 [ATENCAO hardcode]
+    - tp_operacao = 1
+    - fl_status IN (0, 1, 8)
+    - Fl_Sinaliza_Vidas_Ok = 'S'
+  end note
+  while (Tem proposta PIM?) is (Sim)
+    :Reset de ~25 variaveis de controle;
+    :Calcula canal de venda (1-29=PME, 30-99=Middle);
+    note right: [RN07] CanalVenda -- define se efetiva no ato ou so dt_inicio
+    :Busca proposta odonto vinculada (nu_controle_saude);
+    :DELETE pendencias anteriores desta proposta;
+
+    if ([RN06] Ex-cliente OU PME 30-99?) then (Sim)
+      note right: [ATENCAO] Exclui ex-cliente APENAS se HABILITA_65ANOS != 0
+      :Ignora empresa neste ciclo;
+    else (Nao)
+
+      :DELETE TB_PENDENCIA_EMPRESA_INTERNET onde nu_controle = st_e.nu_controle;
+
+      if ([RN08] Nome suspeito?) then (Sim -- ASSOC,SIND,etc.)
+        :INSERT pendencia 1 (saude);
+        if (Tem odonto vinculado?) then (Sim)
+          :INSERT pendencia 1 (odonto);
+        endif
+      endif
+
+      :Resolve cidade do contrato;
+      note right: Vendedor nacional: usa filial do contrato; Outros: usa nm_cidade_endereco
+
+      :Conta vidas (titulares + dependentes nao cancelados);
+      :Conta vidas odonto (se existe proposta odonto);
+      :Conta vidas digitadas mais de 6 dias apos cadastro empresa;
+
+      if ([RN09] Cidade em localidade limitrofe?) then (Sim)
+        :INSERT pendencia 2;
+        if (Tem odonto?) then (Sim)
+          :INSERT pendencia 2 (odonto);
+        endif
+      endif
+
+      if ([RN10] Vendedor fora da filial?) then (Sim -- exceto vendedor 2704)
+        note right: [ATENCAO] Hardcode vendedor 2704 como excecao
+        :INSERT pendencia 3;
+      endif
+
+      if ([RN11] Dependente > 43 anos sem agregado?) then (Sim)
+        :INSERT pendencia 4; '[ANS]'
+      endif
+
+      if ([RN12] Sobrinho (tipo 14) > 23 anos?) then (Sim)
+        :INSERT pendencia 5; '[ANS]'
+      endif
+
+      if ([RN13] Titular/dep >= 59 anos? (ou 65 se HABILITA_65ANOS)) then (Sim)
+        :INSERT pendencia 6 ou 13; '[ANS]'
+      endif
+
+      if ([RN14] CPF invalido?) then (Sim)
+        :INSERT pendencia 7 (saude + odonto);
+      endif
+
+      if ([RN15] Vidas fora de [1,29]?) then (Sim)
+        :INSERT pendencia 8;
+      endif
+
+      if ([RN16] Vidas digitadas apos 6 dias?) then (Sim)
+        :INSERT pendencia 10 (saude + odonto);
+      endif
+
+      if ([RN17] Pendencia 11 ativa?) then (Sim)
+        :pr_critica_empresa_internet_1;
+        note right: Pode inserir pendencia 11 (DIREX)
+      endif
+
+      if ([RN18] Divergencia Neoway? (empresa nao BITIX)) then (Sim)
+        :fn_checa_divergencia;
+        if (Divergencia = 'S'?) then (Sim)
+          :INSERT pendencia 12;
+        endif
+      endif
+
+      :COMMIT pendencias;
+
+      if (COUNT_PENDENCIAS = 0?) then (Sim -- sem pendencias)
+
+        if (Empresa ja tem cd_empresa?) then (Sim -- ex-cliente/reativacao)
+          :UPDATE tb_empresa_conveniada SET fl_status=2 (reativar);
+          :Goto efetivacao beneficiarios;
+        else (Nao -- empresa nova)
+
+          if ([RN19] FL_CRITICA='S' E empresa nova E tem odonto?) then (Sim)
+            :pr_critica_internet (saude + odonto);
+            :Conta criticas em tb_usuario_critica_internet;
+            if (Tem criticas?) then (Sim)
+              :UPDATE tb_proposta_venda SET fl_status=9;
+              :INSERT pendencia 9 (CRITICA NA DIGITACAO);
+              :Goto proximo do loop;
+            endif
+          endif
+
+          :[RN20] pr_cadastramento_empresa_prov(nu_controle, p_return);
+          :l_cd_empresa = substr(p_return, instr(p_return, ',') + 1);
+          note right
+            [CRITICO] S11: Parsing fragil de string.
+            Qualquer virgula extra => cd_empresa invalido.
+            Detecta erro via instr(p_return,'ORA-') > 0
+          end note
+
+          if (cd_empresa extraido com sucesso?) then (Sim)
+            :[RN21] Verifica proposta odonto vinculada;
+            if (Tem odonto com mesmo CGC e nu_controle_saude?) then (Sim)
+              if (Odonto ja tem cd_empresa?) then (Sim)
+                :UPDATE tb_empresa_conveniada SET fl_status=2 (reativar odonto);
+              else (Nao)
+                :pr_odon_cad_empresa_prov(nu_controle_odon, cd_empresa_saude);
+                :PR_NAT_JURIDICA_ODON(nu_controle_saude);
+              endif
+            endif
+
+            :[RN22] Migracao codigo provisorio -> definitivo;
+            :UPDATE tb_empresa_internet SET CD_EMPRESA=def, FL_STATUS=9;
+            :UPDATE tb_empresa_conveniada SET FL_EMPRESA_NOVA='S';
+            :DELETE tb_pendencia_empresa;
+            :INSERT tb_pendencia_empresa (pendencia 1);
+            :UPDATE tb_usuario_titular_internet SET cd_empresa = cd_empresa_definitivo;
+            :UPDATE tb_usuario_dependente_internet SET cd_empresa = cd_empresa_definitivo;
+            :COMMIT;
+
+          endif
+        endif
+
+        :[RN23] Efetivacao por canal de venda;
+        if (Canal = 2 (Middle)?) then (Sim)
+          :UPDATE titulares: SET dt_inicio = (dt_cadastramento empresa);
+          note right: Middle: NAO efetiva no ato -- apenas atualiza dt_inicio
+        else (Canal 1 (PME))
+          :UPDATE titulares: SET fl_status=8 (autorizado), dt_inicio;
+          while (Tem titular nao efetivado?) is (Sim)
+            :pr_cadastramento_internet2(nu_controle);
+            note right: [PADRAO-01] WHEN OTHERS THEN NULL em cada chamada
+          endwhile (Nao)
+          :COMMIT;
+        endif
+
+        :[RN24] Conta titulares com fl_status=8 ainda;
+        if (qt_usuario_n_efetivados > 0?) then (Sim)
+          :INSERT pendencia 9 (CRITICA NA DIGITACAO DAS VIDAS);
+          :UPDATE tb_empresa_conveniada SET fl_status=1 (pendente);
+          :UPDATE tb_usuario_titular_internet SET observacao 'NAO PASSOU PELA BAIXA AUTOMATICA DO PIM';
+          :UPDATE tb_usuario_dependente_internet idem;
+          :Loop tb_usuario: SET fl_status_usuario=1 (SACTI 1907523);
+          :COMMIT;
+        endif
+
+      else (Nao -- tem pendencias)
+        note right: Empresa permanece pendente para revisao manual
+      endif
+    endif
+  endwhile (Nao)
+}
+
+partition "Fase 3: Odonto Puro [RN25]" {
+  :Loop tb_odon_empresa_internet com fl_status=9, fl_sinaliza_vidas_ok='S';
+  note right: Vendedor deve estar em tb_odon_param_vendedor_pim; data > 16/05/2017 [ATENCAO hardcode]
+  while (Tem empresa odonto puro?) is (Sim)
+    if (Total vidas entre 1 e 29?) then (Sim)
+      :pr_critica_internet(nu_controle, 1, 'N');
+      if (Sem criticas?) then (Sim)
+        :Autoriza titular (fl_status=8);
+        :pr_cadastramento_internet2(nu_controle);
+        :UPDATE tb_compra_carencia SET dias_adm_especial=30; '[ANS]'
+      else (Com criticas)
+        :Reverte titular para fl_status=1 (pendente);
+      endif
+    endif
+  endwhile (Nao)
+}
+
+partition "Fase 4: Inclusoes (cd_tipo_internet=2) [RN26]" {
+  :Loop empresas com cd_tipo_internet=2 e titulares pendentes;
+  while (Tem titular pendente?) is (Sim)
+    :Autoriza (fl_status=8);
+    :pr_cadastramento_internet2;
+  endwhile (Nao)
+}
+
+partition "Fase 5: Completo (cd_tipo_internet=1) [RN27]" {
+  :Loop empresas com cd_tipo_internet=1 e titulares pendentes;
+  while (Tem titular pendente?) is (Sim)
+    :Autoriza (fl_status=8);
+    :pr_cadastramento_internet2;
+    if (Tem criticas pos-baixa?) then (Sim)
+      :Reverte titular: fl_status=1, cd_pendencia=499;
+      note right: [ATENCAO] Hardcode cd_pendencia=499 sem descricao conhecida
+    endif
+  endwhile (Nao)
+}
+
+partition "Fase 6: Individual/Familiar [RN28]" {
+  :Loop titulares com fn_individual_familiar='00100', auto='S', digitados nos ultimos 30 dias;
+  while (Tem titular individual?) is (Sim)
+    :pr_critica_internet(nu_controle);
+    if (Sem criticas?) then (Sim)
+      :Autoriza (fl_status=8);
+      :pr_cadastramento_internet2(nu_controle);
+    else (Com criticas)
+      :Reverte fl_status=1 (pendente);
+    endif
+  endwhile (Nao)
+}
+
+partition "Fase 7: Obrigacao Agregado Odonto [RN29]" {
+  :pr_odon_Obrigacao_Agregado;
+}
+
+partition "Fase 8: BITIX [RN30]" {
+  if (COLIGADA_EMPRESA_BITIX = 1?) then (Sim)
+    :PR_COLIGA_EMPRESA_BITIX;
+    :PK_VENDA_JSON.pr_efetiva;
+  endif
+}
+
+partition "Fase 9: Coligadas SIGO [RN31]" {
+  if (COLIGADA_EMPRESA = 1?) then (Sim)
+    :pr_processa_empresa_coligada;
+  endif
+}
+
+:COMMIT final;
+
+stop
+@enduml

@@ -1,0 +1,1144 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refatoracao DDD - pr_cadastramento_empresa_prov</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-purple: #8b5cf6;
+            --accent-orange: #f97316;
+            --accent-pink: #ec4899;
+            --gradient-1: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            --gradient-2: linear-gradient(135deg, #06b6d4, #10b981);
+            --gradient-3: linear-gradient(135deg, #f59e0b, #ef4444);
+            --border: #334155;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .slide-container { width: 100vw; height: 100vh; position: relative; }
+
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 100px;
+            position: absolute;
+            top: 0; left: 0;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .slide.active { display: flex; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1 { font-size: 3rem; font-weight: 800; line-height: 1.1; margin-bottom: 16px; letter-spacing: -0.02em; }
+        h2 { font-size: 2.2rem; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.01em; }
+        h3 { font-size: 1.4rem; font-weight: 600; margin-bottom: 10px; color: var(--accent-cyan); }
+        p, li { font-size: 1.15rem; line-height: 1.7; color: var(--text-secondary); }
+
+        .subtitle { font-size: 1.3rem; color: var(--text-muted); font-weight: 400; margin-bottom: 30px; }
+        .highlight { color: var(--accent-cyan); font-weight: 600; }
+
+        .gradient-text {
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .big-number { font-size: 4rem; font-weight: 900; line-height: 1; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 30px; }
+        .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 20px; margin-top: 30px; }
+        .mt-20 { margin-top: 20px; }
+        .mt-30 { margin-top: 30px; }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-2px); }
+        .card-accent-blue { border-left: 4px solid var(--accent-blue); }
+        .card-accent-cyan { border-left: 4px solid var(--accent-cyan); }
+        .card-accent-green { border-left: 4px solid var(--accent-green); }
+        .card-accent-yellow { border-left: 4px solid var(--accent-yellow); }
+        .card-accent-red { border-left: 4px solid var(--accent-red); }
+        .card-accent-purple { border-left: 4px solid var(--accent-purple); }
+        .card-accent-orange { border-left: 4px solid var(--accent-orange); }
+
+        .stat-card { text-align: center; padding: 24px; }
+        .stat-card .big-number { margin-bottom: 8px; }
+        .stat-card .label { font-size: 0.9rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        code, .code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(59, 130, 246, 0.1);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            color: var(--accent-cyan);
+        }
+
+        .code-block {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            color: #c9d1d9;
+            margin-top: 16px;
+        }
+        .code-block .keyword { color: #ff7b72; }
+        .code-block .string { color: #a5d6ff; }
+        .code-block .comment { color: #8b949e; font-style: italic; }
+        .code-block .function { color: #d2a8ff; }
+        .code-block .type { color: #79c0ff; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.95rem; }
+        th {
+            background: var(--bg-card); color: var(--accent-cyan); text-align: left;
+            padding: 12px 16px; font-weight: 600; font-size: 0.85rem;
+            text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--border);
+        }
+        td { padding: 10px 16px; border-bottom: 1px solid rgba(51, 65, 85, 0.5); color: var(--text-secondary); }
+        tr:hover td { background: rgba(59, 130, 246, 0.05); }
+
+        .badge {
+            display: inline-block; padding: 4px 12px; border-radius: 20px;
+            font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .badge-core { background: rgba(239, 68, 68, 0.15); color: var(--accent-red); }
+        .badge-supporting { background: rgba(245, 158, 11, 0.15); color: var(--accent-yellow); }
+        .badge-generic { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+        .badge-blue { background: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+        .badge-purple { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+
+        ul { list-style: none; padding: 0; }
+        ul li { padding: 6px 0; padding-left: 24px; position: relative; }
+        ul li::before { content: '>'; position: absolute; left: 4px; color: var(--accent-cyan); font-weight: bold; }
+
+        .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+        .section-tag {
+            display: inline-block; font-size: 0.75rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-blue);
+            margin-bottom: 12px; padding: 4px 14px; border: 1px solid var(--accent-blue); border-radius: 20px;
+        }
+
+        .flow-step { display: flex; align-items: flex-start; gap: 16px; padding: 12px 0; }
+        .flow-step .step-num {
+            width: 32px; height: 32px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+            background: var(--gradient-1); color: white;
+        }
+        .flow-step .step-content { flex: 1; }
+        .flow-step .step-content strong { color: var(--text-primary); }
+
+        .progress-bar { height: 8px; background: var(--bg-secondary); border-radius: 4px; overflow: hidden; margin: 8px 0; }
+        .progress-bar .fill { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+
+        .comparison { display: grid; grid-template-columns: 1fr 40px 1fr; gap: 0; align-items: center; margin-top: 20px; }
+        .comparison .arrow { text-align: center; font-size: 2rem; color: var(--accent-green); }
+
+        .glow-box { border: 1px solid rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.05); border-radius: 12px; padding: 20px 24px; margin-top: 16px; }
+        .glow-box-green { border: 1px solid rgba(16, 185, 129, 0.3); background: rgba(16, 185, 129, 0.05); }
+        .glow-box-red { border: 1px solid rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.05); }
+
+        .nav-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%; height: 56px;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 40px; z-index: 100;
+        }
+        .nav-bar button {
+            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-primary);
+            padding: 8px 20px; border-radius: 8px; font-family: 'Inter', sans-serif;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.2s;
+        }
+        .nav-bar button:hover { background: var(--accent-blue); border-color: var(--accent-blue); }
+        .nav-bar button:disabled { opacity: 0.3; cursor: default; }
+        .nav-bar button:disabled:hover { background: var(--bg-card); border-color: var(--border); }
+        .slide-counter { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
+
+        .progress-track { position: fixed; top: 0; left: 0; width: 100%; height: 3px; background: var(--bg-secondary); z-index: 100; }
+        .progress-fill { height: 100%; background: var(--gradient-1); transition: width 0.4s ease; }
+
+        .cover-slide {
+            justify-content: center; align-items: center; text-align: center;
+            background: radial-gradient(ellipse at 20% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+                        var(--bg-primary);
+        }
+        .cover-slide h1 { font-size: 3.5rem; margin-bottom: 20px; }
+        .cover-slide .subtitle { font-size: 1.5rem; }
+
+        .section-slide {
+            justify-content: center; align-items: center; text-align: center;
+            background: radial-gradient(ellipse at 50% 50%, rgba(6, 182, 212, 0.06) 0%, transparent 60%), var(--bg-primary);
+        }
+        .section-slide .section-number {
+            font-size: 6rem; font-weight: 900;
+            background: var(--gradient-1); -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; background-clip: text;
+            opacity: 0.3; line-height: 1; margin-bottom: 10px;
+        }
+        .section-slide h1 { font-size: 3rem; }
+
+        .icon { font-size: 2rem; margin-bottom: 12px; display: block; }
+
+        .slide-scrollable { overflow-y: auto; max-height: calc(100vh - 120px); padding-right: 20px; }
+
+        /* Escudo Hapvida centralizado no topo */
+        .hapvida-shield {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        .hapvida-shield:hover { opacity: 1; }
+        .hapvida-shield img { height: 220px; width: auto; }
+
+        /* Barra de rodape com marca */
+        .brand-footer {
+            position: fixed;
+            bottom: 58px;
+            left: 40px;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            opacity: 0.4;
+            letter-spacing: 0.06em;
+            z-index: 90;
+        }
+
+        @media (max-width: 1200px) {
+            .slide { padding: 40px 60px; }
+            h1 { font-size: 2.4rem; }
+            h2 { font-size: 1.8rem; }
+            .grid-2 { grid-template-columns: 1fr; }
+            .hapvida-shield img { height: 150px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Escudo Hapvida (centralizado no topo) -->
+<div class="hapvida-shield">
+    <img src="logo-hapvida-2048.png" alt="Hapvida" />
+</div>
+
+<!-- Rodape com marca -->
+<div class="brand-footer">HAPVIDA &bull; Confidencial &bull; Diretoria de Tecnologia</div>
+
+<div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+<div class="slide-container" id="slideContainer">
+
+<!-- ============================================================= -->
+<!-- SLIDE 1: COVER -->
+<!-- ============================================================= -->
+<div class="slide cover-slide active" id="slide-1">
+    <div class="section-tag" style="margin-bottom: 24px;">Arquitetura &amp; Refatoracao</div>
+    <h1><span class="gradient-text">Refatoracao DDD</span></h1>
+    <h2 style="font-weight: 400; color: var(--text-secondary); font-size: 1.6rem;">pr_cadastramento_empresa_prov</h2>
+    <div class="divider" style="width: 120px; margin: 30px auto; background: var(--gradient-1); height: 3px; border-radius: 2px;"></div>
+    <p style="color: var(--text-muted); font-size: 1rem; margin-top: 10px;">Especialista: Thiago Rawel - Fevereiro 2026</p>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 6px;">Hapvida - Diretoria de Tecnologia</p>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 2: AGENDA -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-2">
+    <div class="section-tag">Agenda</div>
+    <h1>Roteiro da Apresentacao</h1>
+    <p class="subtitle">~70 minutos + Q&amp;A</p>
+
+    <div class="grid-2" style="margin-top: 20px;">
+        <div>
+            <div class="flow-step"><div class="step-num">1</div><div class="step-content"><strong>Por que refatorar?</strong><br><span style="color: var(--text-muted);">O problema real, os numeros, a dor</span></div></div>
+            <div class="flow-step"><div class="step-num">2</div><div class="step-content"><strong>O que e DDD?</strong><br><span style="color: var(--text-muted);">Conceitos-chave para todos os publicos</span></div></div>
+            <div class="flow-step"><div class="step-num">3</div><div class="step-content"><strong>O que foi feito</strong><br><span style="color: var(--text-muted);">A modelagem, decisoes, artefatos</span></div></div>
+        </div>
+        <div>
+            <div class="flow-step"><div class="step-num">4</div><div class="step-content"><strong>Como sera feito</strong><br><span style="color: var(--text-muted);">Roadmap em 4 fases, Strangler Fig</span></div></div>
+            <div class="flow-step"><div class="step-num">5</div><div class="step-content"><strong>Impacto no negocio</strong><br><span style="color: var(--text-muted);">Beneficios, metricas, riscos</span></div></div>
+            <div class="flow-step"><div class="step-num">6</div><div class="step-content"><strong>Perguntas &amp; Respostas</strong><br><span style="color: var(--text-muted);">Discussao aberta com o time</span></div></div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 3: SECAO 1 -->
+<!-- ============================================================= -->
+<div class="slide section-slide" id="slide-3">
+    <div class="section-number">01</div>
+    <h1>Por que refatorar?</h1>
+    <p class="subtitle">O cenario atual e seus riscos</p>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 4: O QUE A PROCEDURE FAZ -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-4">
+    <div class="section-tag">O Problema</div>
+    <h2>O que a <code>pr_cadastramento_empresa_prov</code> faz?</h2>
+    <p class="subtitle">Transforma uma proposta comercial PJ em um contrato efetivado ("baixa")</p>
+
+    <div class="comparison">
+        <div class="card card-accent-yellow">
+            <h3 style="color: var(--accent-yellow);">PROPOSTA</h3>
+            <p><code>tb_empresa_internet</code></p>
+            <p style="margin-top: 8px; font-size: 0.95rem;">Vendedor cadastra pelo <strong>TAFFIX</strong> ou <strong>BITIX</strong></p>
+        </div>
+        <div class="arrow">&rarr;</div>
+        <div class="card card-accent-green">
+            <h3 style="color: var(--accent-green);">CONTRATO ATIVO</h3>
+            <p><code>tb_empresa_conveniada</code></p>
+            <p style="margin-top: 8px; font-size: 0.95rem;">Empresa pode usar o plano de saude</p>
+        </div>
+    </div>
+
+    <div class="glow-box mt-30">
+        <p style="font-size: 0.95rem; color: var(--text-secondary);">
+            <strong style="color: var(--text-primary);">Na "baixa", a procedure cria simultaneamente:</strong>
+            Pessoa Juridica | Tabela de Preco | Empresa Conveniada | Coparticipacao | Carencia | Fidelizacao | Acesso Internet | Reembolso | Minimo Contratual | Endereco | Notificacao por e-mail
+        </p>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 5: NUMEROS -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-5">
+    <div class="section-tag">O Problema</div>
+    <h2>O tamanho do desafio</h2>
+
+    <div class="grid-4 mt-20">
+        <div class="card stat-card">
+            <div class="big-number" style="color: var(--accent-red);">4.991</div>
+            <div class="label">Linhas PL/SQL</div>
+        </div>
+        <div class="card stat-card">
+            <div class="big-number" style="color: var(--accent-yellow);">18</div>
+            <div class="label">Responsabilidades</div>
+        </div>
+        <div class="card stat-card">
+            <div class="big-number" style="color: var(--accent-purple);">84+</div>
+            <div class="label">Tabelas afetadas</div>
+        </div>
+        <div class="card stat-card">
+            <div class="big-number" style="color: var(--accent-green);">0</div>
+            <div class="label">Testes automatizados</div>
+        </div>
+    </div>
+
+    <div class="grid-4 mt-20">
+        <div class="card stat-card">
+            <div class="big-number" style="color: var(--accent-orange);">~360</div>
+            <div class="label">Linhas de boilerplate</div>
+        </div>
+        <div class="card stat-card">
+            <div class="big-number" style="color: var(--accent-cyan);">70+</div>
+            <div class="label">Variaveis declaradas</div>
+        </div>
+        <div class="card stat-card">
+            <div class="big-number" style="color: var(--accent-red);">~30</div>
+            <div class="label">WHEN OTHERS THEN NULL</div>
+        </div>
+        <div class="card stat-card">
+            <div class="big-number" style="color: var(--accent-pink);">4</div>
+            <div class="label">Chamadores frageis</div>
+        </div>
+    </div>
+
+    <div class="glow-box glow-box-red mt-20" style="text-align: center;">
+        <p style="font-size: 1.1rem;"><strong style="color: var(--accent-red);">"Funciona... mas ninguem quer mexer."</strong></p>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 6: A DOR POR PERSONA -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-6">
+    <div class="section-tag">O Problema</div>
+    <h2>A dor - por quem sente</h2>
+
+    <div class="grid-3 mt-20">
+        <div class="card card-accent-blue">
+            <span class="icon">&#128104;&#8205;&#128187;</span>
+            <h3 style="color: var(--accent-blue);">Desenvolvedor</h3>
+            <ul style="font-size: 0.95rem;">
+                <li><strong>Medo de mexer</strong> - efeito cascata imprevisivel</li>
+                <li><strong>Debug impossivel</strong> - 5.000 linhas sem separacao</li>
+                <li><strong>Sem testes</strong> - teste manual completo a cada mudanca</li>
+                <li><strong>Onboarding</strong> - semanas para entender</li>
+            </ul>
+        </div>
+        <div class="card card-accent-yellow">
+            <span class="icon">&#128202;</span>
+            <h3 style="color: var(--accent-yellow);">PO / Negocio</h3>
+            <ul style="font-size: 0.95rem;">
+                <li><strong>Demora</strong> - mudancas simples levam dias</li>
+                <li><strong>Bugs silenciosos</strong> - erros engolidos</li>
+                <li><strong>Regras duplicadas</strong> - resultados divergentes</li>
+                <li><strong>Rigidez</strong> - tudo esta acoplado</li>
+            </ul>
+        </div>
+        <div class="card card-accent-red">
+            <span class="icon">&#127970;</span>
+            <h3 style="color: var(--accent-red);">Gerente de TI</h3>
+            <ul style="font-size: 0.95rem;">
+                <li><strong>Risco</strong> - 1 pessoa entende = Single Point of Failure</li>
+                <li><strong>Custo crescente</strong> - cada feature custa mais</li>
+                <li><strong>Divida tecnica</strong> - 15+ anos acumulados</li>
+                <li><strong>Bloqueio</strong> - impossivel migrar para cloud</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 7: CONTRATO FRAGIL -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-7">
+    <div class="section-tag">Exemplo Concreto</div>
+    <h2>O contrato de retorno fragil</h2>
+    <p class="subtitle">Os 4 chamadores precisam conhecer os <em>bugs</em> para funcionar</p>
+
+    <div class="grid-2 mt-20">
+        <div>
+            <div class="code-block">
+<span class="comment">-- A procedure retorna sucesso assim:</span>
+p_erro_controle := <span class="string">'procedimento efetuado para empresa ,'</span> || cd_empresa;
+
+<span class="comment">-- O chamador extrai cd_empresa com parsing:</span>
+l_emp := <span class="function">substr</span>(w_erro, <span class="function">instr</span>(w_erro, <span class="string">','</span>) + 1);
+
+<span class="comment">-- Se for erro ORA-, o parsing retorna lixo:</span>
+<span class="comment">-- 'ORA-06502: PL/SQL: numeric or value error'</span>
+<span class="comment">-- l_emp = ' numeric or value error'</span>
+
+<span class="comment">-- A "defesa"? Checar se contem ORA-:</span>
+<span class="keyword">if</span> <span class="function">instr</span>(l_emp, <span class="string">'ORA-'</span>) > 0 <span class="keyword">then</span>
+    l_emp := <span class="keyword">null</span>;
+<span class="keyword">end if</span>;
+            </div>
+        </div>
+        <div>
+            <div class="card card-accent-red" style="margin-bottom: 16px;">
+                <h3 style="color: var(--accent-red);">Problemas</h3>
+                <ul style="font-size: 0.9rem;">
+                    <li>Sucesso e erro no <strong>mesmo parametro</strong></li>
+                    <li>Parsing com <code>substr/instr</code> (fragil)</li>
+                    <li>Espaco antes da virgula <strong>inconsistente</strong></li>
+                    <li>Chamador precisa conhecer os bugs</li>
+                </ul>
+            </div>
+            <div class="card card-accent-green">
+                <h3 style="color: var(--accent-green);">Solucao proposta</h3>
+                <ul style="font-size: 0.9rem;">
+                    <li><code>fl_status = 'S'/'E'/'P'</code> - inequivoco</li>
+                    <li><code>cd_empresa</code> - acesso direto</li>
+                    <li><code>ds_etapa_erro</code> - saber ONDE falhou</li>
+                    <li>TYPE RECORD type-safe</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 8: SECAO 2 -->
+<!-- ============================================================= -->
+<div class="slide section-slide" id="slide-8">
+    <div class="section-number">02</div>
+    <h1>O que e DDD?</h1>
+    <p class="subtitle">Domain-Driven Design - em linguagem acessivel</p>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 9: DDD EM 1 SLIDE -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-9">
+    <div class="section-tag">DDD</div>
+    <h2>Domain-Driven Design em um slide</h2>
+    <p class="subtitle">Eric Evans, 2003 - usado por Netflix, Nubank, iFood, grandes bancos</p>
+
+    <div class="grid-2 mt-20">
+        <div class="card card-accent-red">
+            <h3 style="color: var(--accent-red);">Abordagem Tradicional</h3>
+            <ul>
+                <li>Comecar pelo banco de dados</li>
+                <li>Pensar em tabelas</li>
+                <li>Codigo tecnico que so dev entende</li>
+                <li>"Funciona"</li>
+                <li>Desenvolvedor decide sozinho</li>
+            </ul>
+        </div>
+        <div class="card card-accent-green">
+            <h3 style="color: var(--accent-green);">Abordagem DDD</h3>
+            <ul>
+                <li>Comecar pelo negocio</li>
+                <li>Pensar em processos</li>
+                <li>Codigo que fala a lingua do negocio</li>
+                <li>"Funciona <strong>E</strong> e claro"</li>
+                <li>Negocio + Dev decidem juntos</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="glow-box mt-30">
+        <p style="font-size: 1rem;"><strong style="color: var(--text-primary);">Por que DDD aqui?</strong> Dominio complexo (ANS, coparticipacao, carencia) | Regras intrincadas | Multiplos especialistas | Legado de 15+ anos | Evolucao continua necessaria</p>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 10: CONCEITOS-CHAVE -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-10">
+    <div class="section-tag">DDD</div>
+    <h2>Os 3 conceitos que voce precisa saber</h2>
+
+    <div class="grid-3 mt-30">
+        <div class="card card-accent-blue">
+            <span class="icon">&#128483;&#65039;</span>
+            <h3 style="color: var(--accent-blue);">Linguagem Ubiqua</h3>
+            <p style="font-size: 0.95rem; margin-bottom: 16px;">TI e Negocio falam a mesma lingua</p>
+            <table style="font-size: 0.8rem;">
+                <tr><th>Sem DDD</th><th>Com DDD</th></tr>
+                <tr><td style="color: var(--accent-red);">INSERT na tb_empresa</td><td style="color: var(--accent-green);">Efetivar Empresa</td></tr>
+                <tr><td style="color: var(--accent-red);">substr do p_return</td><td style="color: var(--accent-green);">Consultar Resultado</td></tr>
+            </table>
+        </div>
+        <div class="card card-accent-cyan">
+            <span class="icon">&#127970;</span>
+            <h3 style="color: var(--accent-cyan);">Bounded Context</h3>
+            <p style="font-size: 0.95rem; margin-bottom: 16px;">Cada area tem suas proprias regras</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Como departamentos de uma empresa: Comercial, Financeiro e Regulatorio trabalham separados.</p>
+            <p style="font-size: 0.85rem; margin-top: 8px; color: var(--accent-red);">Hoje: 18 "departamentos" em 1 arquivo de 5.000 linhas.</p>
+        </div>
+        <div class="card card-accent-green">
+            <span class="icon">&#128230;</span>
+            <h3 style="color: var(--accent-green);">Aggregate</h3>
+            <p style="font-size: 0.95rem; margin-bottom: 16px;">Grupo de dados que mudam juntos</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Empresa Conveniada + Unidade Contratual + Parametros + Flags = 1 Aggregate com 13 filhos. Nunca separam.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 11: MAPA DE SUBDOMINIOS -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-11">
+    <div class="section-tag">DDD Estrategico</div>
+    <h2>Mapa de subdominios</h2>
+    <p class="subtitle">Classificacao por valor de negocio</p>
+
+    <div class="grid-3 mt-20">
+        <div class="card" style="border: 2px solid var(--accent-red); background: rgba(239, 68, 68, 0.03);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <span class="badge badge-core">CORE</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Investimento Alto</span>
+            </div>
+            <h3 style="color: var(--accent-red); font-size: 1.1rem;">Diferencial Competitivo</h3>
+            <ul style="font-size: 0.85rem;">
+                <li>Efetivacao de Contrato PJ</li>
+                <li>Precificacao / Modelo Comercial</li>
+                <li>Coparticipacao (ANS)</li>
+                <li>Carencia (ANS)</li>
+            </ul>
+            <p style="margin-top: 12px; font-size: 0.8rem; color: var(--text-muted);">BCs: 01, 06, 07, 08, 09, 10</p>
+        </div>
+        <div class="card" style="border: 2px solid var(--accent-yellow); background: rgba(245, 158, 11, 0.03);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <span class="badge badge-supporting">SUPPORTING</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Investimento Medio</span>
+            </div>
+            <h3 style="color: var(--accent-yellow); font-size: 1.1rem;">Necessario, nao diferencial</h3>
+            <ul style="font-size: 0.85rem;">
+                <li>Cadastro PJ (CNPJ)</li>
+                <li>Filial / Area de Venda</li>
+                <li>Validacao de Proposta</li>
+                <li>Fidelizacao, Reembolso, Minimo</li>
+                <li>Integracao Odonto</li>
+            </ul>
+            <p style="margin-top: 12px; font-size: 0.8rem; color: var(--text-muted);">BCs: 02, 03, 04, 05, 11, 13, 15, 16, 18</p>
+        </div>
+        <div class="card" style="border: 2px solid var(--accent-green); background: rgba(16, 185, 129, 0.03);">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 16px;">
+                <span class="badge badge-generic">GENERIC</span>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Investimento Baixo</span>
+            </div>
+            <h3 style="color: var(--accent-green); font-size: 1.1rem;">Usar solucao pronta</h3>
+            <ul style="font-size: 0.85rem;">
+                <li>Acesso / Portal (IAM)</li>
+                <li>Auditoria e Log</li>
+                <li>Notificacao por E-mail</li>
+            </ul>
+            <p style="margin-top: 12px; font-size: 0.8rem; color: var(--text-muted);">BCs: 12, 14, 17</p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 12: SECAO 3 -->
+<!-- ============================================================= -->
+<div class="slide section-slide" id="slide-12">
+    <div class="section-number">03</div>
+    <h1>O que foi feito</h1>
+    <p class="subtitle">A modelagem completa e seus artefatos</p>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 13: ARTEFATOS PRODUZIDOS -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-13">
+    <div class="section-tag">Modelagem</div>
+    <h2>Artefatos produzidos</h2>
+    <p class="subtitle">~2.700 linhas de analise tecnica + diagramas</p>
+
+    <div class="grid-2 mt-20">
+        <div>
+            <table>
+                <tr><th>Artefato</th><th>Conteudo</th></tr>
+                <tr><td><strong>Modelagem DDD</strong></td><td>18 BCs, 9 Aggregates, 30 Entities, 18 VOs, 15 Services, 21 Specs</td></tr>
+                <tr><td><strong>Diagramas C4</strong></td><td>7 diagramas (Contexto &rarr; Container &rarr; Componente &rarr; Landscape)</td></tr>
+                <tr><td><strong>Context Map</strong></td><td>Mapa de relacionamentos entre BCs (DSL + PlantUML)</td></tr>
+                <tr><td><strong>Analise de Impacto</strong></td><td>Impacto na pr_efetiva_internet (2.290 linhas)</td></tr>
+                <tr><td><strong>Proposta Contrato</strong></td><td>Redesign do retorno (TYPE RECORD)</td></tr>
+                <tr><td><strong>Roadmap</strong></td><td>4 fases de migracao com riscos</td></tr>
+            </table>
+        </div>
+        <div>
+            <div class="card card-accent-cyan">
+                <h3 style="color: var(--accent-cyan); font-size: 1.1rem;">Metricas do Modelo</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; font-size: 0.9rem;">
+                    <div><span class="highlight">18</span> Bounded Contexts</div>
+                    <div><span class="highlight">9</span> Aggregates</div>
+                    <div><span class="highlight">30</span> Entities</div>
+                    <div><span class="highlight">18</span> Value Objects</div>
+                    <div><span class="highlight">15</span> Domain Services</div>
+                    <div><span class="highlight">20</span> Domain Events</div>
+                    <div><span class="highlight">9</span> Factories</div>
+                    <div><span class="highlight">21</span> Specifications</div>
+                    <div><span class="highlight">18</span> Repositories</div>
+                    <div><span class="highlight">3</span> ACLs</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 14: 18 BCs -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-14">
+    <div class="section-tag">Modelagem</div>
+    <h2>Os 18 Bounded Contexts</h2>
+    <div class="slide-scrollable">
+    <table style="font-size: 0.85rem; margin-top: 16px;">
+        <tr><th>#</th><th>Bounded Context</th><th>Tipo</th><th>Package Alvo</th></tr>
+        <tr><td>01</td><td>Proposta e Orquestracao</td><td><span class="badge badge-core">Core</span></td><td><code>pk_cadastramento_empresa</code></td></tr>
+        <tr><td>02</td><td>Validacao de Proposta</td><td><span class="badge badge-supporting">Supporting</span></td><td><code>pk_validacao_proposta</code></td></tr>
+        <tr><td>03</td><td>Pessoa Juridica (CNPJ)</td><td><span class="badge badge-supporting">Supporting</span></td><td><code>pk_pessoa_juridica</code></td></tr>
+        <tr><td>04</td><td>Endereco e Comunicacao</td><td><span class="badge badge-supporting">Supporting</span></td><td><code>pk_endereco_comunicacao</code></td></tr>
+        <tr><td>05</td><td>Filial e Area de Venda</td><td><span class="badge badge-supporting">Supporting</span></td><td><code>pk_filial_area_venda</code></td></tr>
+        <tr><td>06</td><td>Modelo de Negocio</td><td><span class="badge badge-core">Core</span></td><td><code>pk_modelo_negocio</code></td></tr>
+        <tr><td>07</td><td>Precificacao</td><td><span class="badge badge-core">Core</span></td><td><code>pk_precificacao</code></td></tr>
+        <tr><td>08</td><td>Empresa Conveniada</td><td><span class="badge badge-core">Core</span></td><td><code>pk_empresa_conveniada</code></td></tr>
+        <tr><td>09</td><td>Coparticipacao</td><td><span class="badge badge-core">Core</span></td><td><code>pk_coparticipacao</code></td></tr>
+        <tr><td>10</td><td>Carencia</td><td><span class="badge badge-core">Core</span></td><td><code>pk_carencia</code></td></tr>
+        <tr><td>11</td><td>Fidelizacao Contratual</td><td><span class="badge badge-supporting">Supporting</span></td><td><code>pk_fidelizacao</code></td></tr>
+        <tr><td>12</td><td>Acesso Internet / Portal</td><td><span class="badge badge-generic">Generic</span></td><td><code>pk_acesso_internet</code></td></tr>
+        <tr><td>13</td><td>Integracao Odontologica</td><td><span class="badge badge-supporting">Supporting</span></td><td><code>pk_integracao_odonto</code></td></tr>
+        <tr><td>14</td><td>Auditoria e Log</td><td><span class="badge badge-generic">Generic</span></td><td><code>pk_log_auditoria</code></td></tr>
+        <tr><td>15</td><td>Reembolso / Livre Escolha</td><td><span class="badge badge-supporting">Supporting</span></td><td><code>pk_reembolso</code></td></tr>
+        <tr><td>16</td><td>Minimo Contratual</td><td><span class="badge badge-supporting">Supporting</span></td><td><code>pk_minimo_contratual</code></td></tr>
+        <tr><td>17</td><td>Notificacao (E-mail)</td><td><span class="badge badge-generic">Generic</span></td><td><code>pk_notificacao_email</code></td></tr>
+        <tr><td>18</td><td>Desconto e PIM</td><td><span class="badge badge-supporting">Supporting</span></td><td><code>pk_desconto_pim</code></td></tr>
+    </table>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 15: FLUXO -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-15">
+    <div class="section-tag">Modelagem</div>
+    <h2>A jornada de uma proposta</h2>
+    <p class="subtitle">Do nu_controle ao contrato ativo</p>
+
+    <div class="grid-2 mt-20">
+        <div class="slide-scrollable" style="max-height: calc(100vh - 240px);">
+            <div class="flow-step"><div class="step-num">1</div><div class="step-content"><strong>Receber Proposta</strong><br><span style="color: var(--text-muted); font-size: 0.9rem;">Carregar dados de tb_empresa_internet</span></div></div>
+            <div class="flow-step"><div class="step-num">2</div><div class="step-content"><strong>Validar</strong> (21 regras) <span class="badge badge-supporting" style="font-size: 0.65rem;">Fail Fast</span><br><span style="color: var(--text-muted); font-size: 0.9rem;">CNPJ, vendedor, CEP, natureza, empregados...</span></div></div>
+            <div class="flow-step"><div class="step-num">3</div><div class="step-content"><strong>Resolver Filial</strong><br><span style="color: var(--text-muted); font-size: 0.9rem;">Vendedor &rarr; Area de Venda &rarr; Filial</span></div></div>
+            <div class="flow-step"><div class="step-num">4</div><div class="step-content"><strong>Resolver Modelo de Negocio</strong><br><span style="color: var(--text-muted); font-size: 0.9rem;">Filial + Natureza + Empregados &rarr; Parametros</span></div></div>
+            <div class="flow-step"><div class="step-num">5</div><div class="step-content"><strong>Gerar Codigo da Empresa</strong> <span class="badge badge-blue" style="font-size: 0.65rem;">Correcao DDD</span><br><span style="color: var(--text-muted); font-size: 0.9rem;">Antes gerava antes de validar! Agora so apos validacao.</span></div></div>
+            <div class="flow-step"><div class="step-num">6</div><div class="step-content"><strong>Criar Pessoa Juridica</strong></div></div>
+            <div class="flow-step"><div class="step-num">7</div><div class="step-content"><strong>Criar Tabela de Preco</strong></div></div>
+            <div class="flow-step"><div class="step-num">8</div><div class="step-content"><strong style="color: var(--accent-cyan);">Criar Empresa Conveniada</strong> <span class="badge badge-core" style="font-size: 0.65rem;">Entidade Central</span></div></div>
+        </div>
+        <div class="slide-scrollable" style="max-height: calc(100vh - 240px);">
+            <div class="flow-step"><div class="step-num">9</div><div class="step-content"><strong>Configurar Coparticipacao</strong></div></div>
+            <div class="flow-step"><div class="step-num">10</div><div class="step-content"><strong>Configurar Fidelizacao</strong> <span style="color: var(--text-muted); font-size: 0.85rem;">(se 30-99 vidas)</span></div></div>
+            <div class="flow-step"><div class="step-num">11</div><div class="step-content"><strong>Cadastrar Endereco + Comunicacao</strong></div></div>
+            <div class="flow-step"><div class="step-num">12</div><div class="step-content"><strong>Configurar Carencia</strong></div></div>
+            <div class="flow-step"><div class="step-num">13</div><div class="step-content"><strong>Configurar Reembolso</strong> <span style="color: var(--text-muted); font-size: 0.85rem;">(se livre escolha)</span></div></div>
+            <div class="flow-step"><div class="step-num">14</div><div class="step-content"><strong>Criar Acesso Internet</strong></div></div>
+            <div class="flow-step"><div class="step-num">15</div><div class="step-content"><strong>Minimo Contratual</strong></div></div>
+            <div class="flow-step" style="border-top: 2px solid var(--accent-green); padding-top: 16px; margin-top: 8px;">
+                <div class="step-num" style="background: var(--gradient-2);">&#10003;</div>
+                <div class="step-content"><strong style="color: var(--accent-green);">COMMIT &rarr; E-mail &rarr; Descontos &rarr; Odonto</strong><br><span style="color: var(--text-muted); font-size: 0.9rem;">Contrato ativo!</span></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 16: DECISOES -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-16">
+    <div class="section-tag">Decisoes de Modelagem</div>
+    <h2>Decisoes arquiteturais-chave</h2>
+
+    <div class="grid-2 mt-20">
+        <div class="card card-accent-blue" style="margin-bottom: 16px;">
+            <h3 style="color: var(--accent-blue);">Strategy Pattern (SIGO vs BITIX)</h3>
+            <p style="font-size: 0.9rem;">Dois cursors <strong>identicos</strong> (<code>cr_empresa_neg</code> e <code>cr_empresa_neg_bitix</code>) unificados via Strategy.</p>
+            <div class="glow-box" style="margin-top: 12px; padding: 14px;">
+                <p style="font-size: 0.85rem;"><code>IOrigemPropostaStrategy</code><br>&nbsp;&nbsp;-- <code>SigoStrategy</code><br>&nbsp;&nbsp;-- <code>BitixStrategy</code></p>
+            </div>
+            <p style="font-size: 0.85rem; margin-top: 10px; color: var(--text-muted);">Ganho: elimina duplicacao; novos canais = nova Strategy.</p>
+        </div>
+        <div class="card card-accent-green" style="margin-bottom: 16px;">
+            <h3 style="color: var(--accent-green);">Fail Fast (Correcao de Ordem)</h3>
+            <p style="font-size: 0.9rem;">Codigo da empresa gerado <strong>antes de validar</strong> = gaps na sequence.</p>
+            <div class="glow-box glow-box-green" style="margin-top: 12px; padding: 14px;">
+                <p style="font-size: 0.85rem;"><strong>Legado:</strong> Gerar codigo &rarr; Validar &rarr; Falhou? Codigo perdido<br><strong>DDD:</strong> Validar &rarr; OK? &rarr; Gerar codigo &rarr; Zero desperdicio</p>
+            </div>
+        </div>
+        <div class="card card-accent-purple">
+            <h3 style="color: var(--accent-purple);">Anti-Corruption Layer</h3>
+            <p style="font-size: 0.9rem;">Cursor legado (80+ colunas flat) &rarr; Objetos de dominio tipados via <code>PropostaAdapter</code>.</p>
+        </div>
+        <div class="card card-accent-yellow">
+            <h3 style="color: var(--accent-yellow);">AFFIX como Policy</h3>
+            <p style="font-size: 0.9rem;">Contratos AFFIX possuem regras especiais (endereco, coparticipacao, limites). Modelado como Policy que modifica o comportamento.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 17: SECAO 4 -->
+<!-- ============================================================= -->
+<div class="slide section-slide" id="slide-17">
+    <div class="section-number">04</div>
+    <h1>Como sera feito</h1>
+    <p class="subtitle">Roadmap em 4 fases - Strangler Fig Pattern</p>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 18: STRANGLER FIG -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-18">
+    <div class="section-tag">Roadmap</div>
+    <h2>Strangler Fig Pattern</h2>
+    <p class="subtitle">O sistema <strong>nunca para de funcionar</strong>. Cada fase e entregavel.</p>
+
+    <div style="margin-top: 30px;">
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-weight: 600;">Fase 0 - Atual</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">4.991 linhas monoliticas</span>
+            </div>
+            <div class="progress-bar"><div class="fill" style="width: 100%; background: var(--accent-red);"></div></div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-weight: 600;">Fase 1 - Quick Wins</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">~4.200 linhas | Risco: MINIMO</span>
+            </div>
+            <div class="progress-bar"><div class="fill" style="width: 85%; background: var(--accent-orange);"></div></div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Extrair log (-360 linhas) | Unificar cursors | Validacoes em package</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-weight: 600;">Fase 2 - Packages DDD</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">18 packages | Risco: MEDIO</span>
+            </div>
+            <div class="progress-bar"><div class="fill" style="width: 40%; background: var(--accent-yellow);"></div></div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Cada BC &rarr; 1 package | Procedure vira orquestrador</p>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-weight: 600;">Fase 3 - Orquestrador Limpo</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">~30 linhas legiveis | Risco: ALTO</span>
+            </div>
+            <div class="progress-bar"><div class="fill" style="width: 6%; background: var(--accent-green);"></div></div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">Novo contrato de retorno | Adapter para compatibilidade</p>
+        </div>
+
+        <div>
+            <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-weight: 600;">Fase 4 - Cloud / Azure</span>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Microservicos .NET | Risco: ALTO</span>
+            </div>
+            <div class="progress-bar"><div class="fill" style="width: 2%; background: var(--accent-blue);"></div></div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">ASP.NET Core | Azure Durable Functions (Saga) | Service Bus | Application Insights</p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 19: ANTES/DEPOIS CODIGO -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-19">
+    <div class="section-tag">Resultado - Fase 3</div>
+    <h2>De 5.000 para ~30 linhas</h2>
+    <p class="subtitle">Qualquer desenvolvedor novo entende em 5 minutos</p>
+
+    <div class="code-block" style="font-size: 0.82rem; margin-top: 24px;">
+<span class="keyword">PROCEDURE</span> <span class="function">pr_cadastramento_empresa_prov</span>(
+    p_nu_controle  <span class="keyword">IN</span>  <span class="type">NUMBER</span>,
+    p_resultado    <span class="keyword">OUT</span> pk_efetivacao_types.<span class="type">t_resultado_efetivacao</span>
+) <span class="keyword">AS</span>
+    v_ctx  pk_cadastramento_empresa.<span class="type">t_contexto_cadastro</span>;
+<span class="keyword">BEGIN</span>
+    v_ctx := pk_cadastramento_empresa.<span class="function">fn_inicializa_contexto</span>(p_nu_controle);
+
+    pk_validacao_proposta.<span class="function">pr_valida_completa</span>(v_ctx);        <span class="comment">-- BC-02</span>
+    pk_filial_area_venda.<span class="function">pr_resolve_filial</span>(v_ctx);         <span class="comment">-- BC-05</span>
+    pk_modelo_negocio.<span class="function">pr_resolve_parametros</span>(v_ctx);        <span class="comment">-- BC-06</span>
+    pk_pessoa_juridica.<span class="function">pr_cria_ou_atualiza</span>(v_ctx);        <span class="comment">-- BC-03</span>
+    pk_precificacao.<span class="function">pr_cria_tabelas_preco</span>(v_ctx);         <span class="comment">-- BC-07</span>
+    pk_empresa_conveniada.<span class="function">pr_cria_empresa</span>(v_ctx);         <span class="comment">-- BC-08</span>
+    pk_coparticipacao.<span class="function">pr_configura</span>(v_ctx);                <span class="comment">-- BC-09</span>
+    pk_carencia.<span class="function">pr_configura</span>(v_ctx);                      <span class="comment">-- BC-10</span>
+    pk_endereco_comunicacao.<span class="function">pr_cadastra</span>(v_ctx);           <span class="comment">-- BC-04</span>
+    pk_acesso_internet.<span class="function">pr_configura</span>(v_ctx);               <span class="comment">-- BC-12</span>
+    pk_fidelizacao.<span class="function">pr_configura</span>(v_ctx);                   <span class="comment">-- BC-11</span>
+    pk_reembolso.<span class="function">pr_configura</span>(v_ctx);                     <span class="comment">-- BC-15</span>
+    pk_minimo_contratual.<span class="function">pr_configura</span>(v_ctx);             <span class="comment">-- BC-16</span>
+
+    <span class="keyword">COMMIT</span>;
+
+    pk_notificacao_email.<span class="function">pr_envia_efetivacao</span>(v_ctx);      <span class="comment">-- BC-17 (pos-commit)</span>
+    pk_desconto_pim.<span class="function">pr_aplica_desconto</span>(v_ctx);            <span class="comment">-- BC-18</span>
+    pk_integracao_odonto.<span class="function">pr_integra</span>(v_ctx);               <span class="comment">-- BC-13</span>
+
+    p_resultado := pk_efetivacao_types.<span class="function">sucesso</span>(v_ctx);
+<span class="keyword">EXCEPTION</span>
+    <span class="keyword">WHEN OTHERS THEN</span>
+        pk_cadastramento_empresa.<span class="function">pr_trata_erro</span>(v_ctx, p_resultado);
+<span class="keyword">END</span>;
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 20: SECAO 5 -->
+<!-- ============================================================= -->
+<div class="slide section-slide" id="slide-20">
+    <div class="section-number">05</div>
+    <h1>Impacto no negocio</h1>
+    <p class="subtitle">Beneficios, metricas e riscos</p>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 21: BENEFICIOS -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-21">
+    <div class="section-tag">Impacto</div>
+    <h2>Antes vs. Depois</h2>
+
+    <div class="grid-2 mt-20">
+        <div>
+            <h3 style="color: var(--accent-red); font-size: 1rem;">Hoje</h3>
+            <table style="font-size: 0.9rem;">
+                <tr><td>5.000 linhas para entender</td></tr>
+                <tr><td>Debug cego</td></tr>
+                <tr><td>Semanas de onboarding</td></tr>
+                <tr><td>"Leva 2 semanas" para um fix</td></tr>
+                <tr><td>"Nao sei o impacto"</td></tr>
+                <tr><td>1 pessoa entende tudo</td></tr>
+                <tr><td>Impossivel modernizar</td></tr>
+                <tr><td>Custo crescente</td></tr>
+            </table>
+        </div>
+        <div>
+            <h3 style="color: var(--accent-green); font-size: 1rem;">Apos refatoracao</h3>
+            <table style="font-size: 0.9rem;">
+                <tr><td>18 packages independentes</td></tr>
+                <tr><td>Cada package testavel isoladamente</td></tr>
+                <tr><td>Horas de onboarding por package</td></tr>
+                <tr><td>"Leva 2 dias, so nesse package"</td></tr>
+                <tr><td>"Impacto isolado no BC-09"</td></tr>
+                <tr><td>Equipe inteira pode contribuir</td></tr>
+                <tr><td>Caminho claro ate a cloud</td></tr>
+                <tr><td>Custo decrescente a cada fase</td></tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 22: METRICAS -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-22">
+    <div class="section-tag">Impacto</div>
+    <h2>Metricas de sucesso</h2>
+
+    <table class="mt-30" style="font-size: 0.95rem;">
+        <tr>
+            <th>Indicador</th>
+            <th>Hoje</th>
+            <th>Meta Fase 2</th>
+            <th>Meta Fase 4</th>
+        </tr>
+        <tr><td>Tempo de onboarding</td><td style="color: var(--accent-red);">~3 semanas</td><td style="color: var(--accent-yellow);">~3 dias</td><td style="color: var(--accent-green);">~1 dia</td></tr>
+        <tr><td>Tempo para fix simples</td><td style="color: var(--accent-red);">~5 dias</td><td style="color: var(--accent-yellow);">~1 dia</td><td style="color: var(--accent-green);">~4 horas</td></tr>
+        <tr><td>Cobertura de testes</td><td style="color: var(--accent-red);">0%</td><td style="color: var(--accent-yellow);">60%</td><td style="color: var(--accent-green);">90%+</td></tr>
+        <tr><td>Deploy</td><td style="color: var(--accent-red);">Manual</td><td style="color: var(--accent-yellow);">Semi-automatico</td><td style="color: var(--accent-green);">CI/CD completo</td></tr>
+        <tr><td>Incidentes por mudanca</td><td style="color: var(--accent-red);">Alto</td><td style="color: var(--accent-yellow);">-50%</td><td style="color: var(--accent-green);">-90%</td></tr>
+        <tr><td>Linhas na procedure</td><td style="color: var(--accent-red);">4.991</td><td style="color: var(--accent-yellow);">~200</td><td style="color: var(--accent-green);">0</td></tr>
+    </table>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 23: RISCOS -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-23">
+    <div class="section-tag">Impacto</div>
+    <h2>Riscos e mitigacoes</h2>
+
+    <div class="slide-scrollable mt-20">
+        <div class="card card-accent-red" style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: var(--accent-red); font-size: 1rem;">Regressao funcional</h3>
+                <span class="badge" style="background: rgba(239,68,68,0.15); color: var(--accent-red);">Impacto Alto</span>
+            </div>
+            <p style="font-size: 0.9rem; margin-top: 8px;"><strong>Mitigacao:</strong> Testes de regressao comparando dados (47 tabelas) antes de cada fase. Feature flags para rollback imediato.</p>
+        </div>
+        <div class="card card-accent-yellow" style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: var(--accent-yellow); font-size: 1rem;">Boundary transacional</h3>
+                <span class="badge" style="background: rgba(245,158,11,0.15); color: var(--accent-yellow);">Impacto Alto</span>
+            </div>
+            <p style="font-size: 0.9rem; margin-top: 8px;"><strong>Mitigacao:</strong> COMMIT interno mantido ate Fase 3. Decisao documentada como ADR-03.</p>
+        </div>
+        <div class="card card-accent-blue" style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: var(--accent-blue); font-size: 1rem;">Resistencia do time</h3>
+                <span class="badge badge-blue">Impacto Medio</span>
+            </div>
+            <p style="font-size: 0.9rem; margin-top: 8px;"><strong>Mitigacao:</strong> Quick Wins visiveis na Fase 1 (resultado imediato). Treinamento DDD de 2 sessoes. 5 conceitos, nao 50.</p>
+        </div>
+        <div class="card card-accent-green">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: var(--accent-green); font-size: 1rem;">Plano B (Rollback)</h3>
+                <span class="badge badge-generic">Sempre disponivel</span>
+            </div>
+            <p style="font-size: 0.9rem; margin-top: 8px;">Cada fase tem rollback independente. Procedure original coexiste como adapter. Feature flags para desligar packages em segundos.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 24: CRONOGRAMA -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-24">
+    <div class="section-tag">Roadmap</div>
+    <h2>Cronograma macro</h2>
+
+    <div class="mt-30">
+        <table style="font-size: 0.95rem;">
+            <tr><th>Fase</th><th>Escopo</th><th>Prazo</th><th>Devs</th><th>Impacto</th></tr>
+            <tr>
+                <td><span class="badge badge-generic">Fase 1</span></td>
+                <td>Quick Wins (log, cursors, validacoes)</td>
+                <td>2-4 semanas</td>
+                <td>1-2</td>
+                <td style="color: var(--accent-green);">Zero nos chamadores</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-supporting">Fase 2</span></td>
+                <td>18 packages DDD</td>
+                <td>3-6 meses</td>
+                <td>2-3</td>
+                <td style="color: var(--accent-yellow);">Medio (procedure &rarr; orquestrador)</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-core">Fase 3</span></td>
+                <td>Orquestrador limpo + novo contrato</td>
+                <td>2-3 meses</td>
+                <td>2</td>
+                <td style="color: var(--accent-orange);">Alto (muda interface)</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-purple">Fase 4</span></td>
+                <td>Cloud Azure (.NET, Service Bus, Saga)</td>
+                <td>Trimestres</td>
+                <td>3-5</td>
+                <td style="color: var(--accent-red);">Total (nova stack)</td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="glow-box glow-box-green mt-30">
+        <p style="font-size: 1rem; text-align: center;">
+            <strong style="color: var(--accent-green);">Cada fase e independente e entregavel.</strong><br>
+            <span style="font-size: 0.9rem;">Podemos parar na Fase 2 e ja teremos um sistema muito melhor.</span>
+        </p>
+    </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 25: ENCERRAMENTO -->
+<!-- ============================================================= -->
+<div class="slide cover-slide" id="slide-25">
+    <div class="section-tag" style="margin-bottom: 24px;">Conclusao</div>
+    <h1>De <span style="color: var(--accent-red);">5.000 linhas</span> de medo</h1>
+    <h1>para <span class="gradient-text">30 linhas</span> de clareza</h1>
+
+    <div class="divider" style="width: 120px; margin: 40px auto; background: var(--gradient-2); height: 3px; border-radius: 2px;"></div>
+
+    <div style="display: flex; gap: 40px; justify-content: center; margin-top: 20px;">
+        <div style="text-align: center;">
+            <div class="big-number" style="color: var(--accent-cyan); font-size: 2.5rem;">18</div>
+            <div style="color: var(--text-muted); font-size: 0.85rem;">Bounded Contexts</div>
+        </div>
+        <div style="text-align: center;">
+            <div class="big-number" style="color: var(--accent-green); font-size: 2.5rem;">4</div>
+            <div style="color: var(--text-muted); font-size: 0.85rem;">Fases incrementais</div>
+        </div>
+        <div style="text-align: center;">
+            <div class="big-number" style="color: var(--accent-purple); font-size: 2.5rem;">0</div>
+            <div style="color: var(--text-muted); font-size: 0.85rem;">Downtime</div>
+        </div>
+    </div>
+
+    <p style="margin-top: 40px; color: var(--text-muted); font-size: 1.1rem;">Perguntas?</p>
+</div>
+
+<!-- ============================================================= -->
+<!-- SLIDE 26: REFERENCIAS -->
+<!-- ============================================================= -->
+<div class="slide" id="slide-26">
+    <div class="section-tag">Referencias</div>
+    <h2>Material de apoio</h2>
+
+    <div class="grid-2 mt-30">
+        <div>
+            <h3 style="color: var(--accent-cyan); font-size: 1rem;">Documentacao do Projeto</h3>
+            <table style="font-size: 0.85rem;">
+                <tr><td>Modelagem DDD completa</td><td><code>ddd-modelagem-dominio.md</code></td></tr>
+                <tr><td>Diagramas C4</td><td><code>c4-model/*.puml</code></td></tr>
+                <tr><td>Context Map</td><td><code>context-map-*.puml</code></td></tr>
+                <tr><td>Analise de Impacto</td><td><code>analise-impacto-pr-efetiva-internet.md</code></td></tr>
+                <tr><td>Proposta Novo Contrato</td><td><code>proposta-novo-contrato-retorno.md</code></td></tr>
+                <tr><td>Roadmap</td><td><code>README-refatoracao.md</code></td></tr>
+            </table>
+        </div>
+        <div>
+            <h3 style="color: var(--accent-purple); font-size: 1rem;">Livros de Referencia</h3>
+            <ul style="font-size: 0.85rem;">
+                <li><strong>Domain-Driven Design</strong> - Eric Evans, 2003</li>
+                <li><strong>Implementing DDD</strong> - Vaughn Vernon, 2013</li>
+                <li><strong>Learning DDD</strong> - Vlad Khononov, 2021</li>
+                <li><strong>Working with Legacy Code</strong> - Michael Feathers</li>
+                <li><strong>Refactoring</strong> - Martin Fowler, 2018</li>
+            </ul>
+            <h3 style="color: var(--accent-green); font-size: 1rem; margin-top: 20px;">Empresas que usam DDD</h3>
+            <p style="font-size: 0.85rem; color: var(--text-secondary);">Nubank | iFood | Netflix | Itau | ThoughtWorks</p>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 40px;">
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Especialista: Thiago Rawel - Hapvida - Fevereiro 2026</p>
+    </div>
+</div>
+
+</div>
+
+<!-- NAVEGACAO -->
+<div class="nav-bar">
+    <button id="prevBtn" onclick="prevSlide()" disabled>&larr; Anterior</button>
+    <span class="slide-counter"><span id="currentSlide">1</span> / <span id="totalSlides">26</span></span>
+    <button id="nextBtn" onclick="nextSlide()">Proximo &rarr;</button>
+</div>
+
+<script>
+    let current = 1;
+    const total = 26;
+
+    function showSlide(n) {
+        document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+        document.getElementById('slide-' + n).classList.add('active');
+        document.getElementById('currentSlide').textContent = n;
+        document.getElementById('prevBtn').disabled = (n === 1);
+        document.getElementById('nextBtn').disabled = (n === total);
+        document.getElementById('progressFill').style.width = ((n / total) * 100) + '%';
+    }
+
+    function nextSlide() { if (current < total) { current++; showSlide(current); } }
+    function prevSlide() { if (current > 1) { current--; showSlide(current); } }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+        if (e.key === 'Home') { current = 1; showSlide(current); }
+        if (e.key === 'End') { current = total; showSlide(current); }
+    });
+
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; });
+    document.addEventListener('touchend', (e) => {
+        const diff = touchStartX - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > 50) { diff > 0 ? nextSlide() : prevSlide(); }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,84 @@
+@startuml c4-2-container-to-be
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+
+title Container | PR_EFETIVA_INTERNET (TO-BE) | refatoracao proposta\nRevisao ADRs: 17/04/2026
+
+Person(job, "Agendador", "DBMS_JOB / DBMS_SCHEDULER -- dispara periodicamente\n[MIGRACAO] Azure Function Timer Trigger ou K8s CronJob (ADR-17/ADR-29)")
+
+System_Boundary(sigo, "SIGO -- Hapvida (HUMASTER)\n[MIGRACAO] Hapvida.Insurance.EfetivacaoPIM.{Tipo} (ADR-16)") {
+    ContainerDb(oracle, "Oracle Database 19c", "Oracle 19c", "Schema HUMASTER\n[MIGRACAO] Acesso via Repository interfaces (ADR-22)")
+
+    Container(uc, "EfetivarMovimentacoesPIMUseCase", "PL/SQL Package", "Orquestrador das 9 fases -- substitui PR_EFETIVA_INTERNET monolitica\n[MIGRACAO] Orchestrator application type (ADR-16)")
+
+    Container(conf, "PK_CONFIG_SISTEMA", "PL/SQL Package", "Servico de configuracao -- encapsula FN_REGISTRO_SISTEMA\n[MIGRACAO] Azure App Configuration / IConfiguration (ADR-34)")
+    Container(pend, "PK_PENDENCIA_PIM", "PL/SQL Package", "Motor de 13 pendencias -- BC-EI-02 -- Specification pattern SP01..SP14\n[MIGRACAO] ISpecification<PropostaInternet>[] injetavel via DI")
+    Container(critica, "PK_CRITICA_BENEFICIARIO", "PL/SQL Package", "Servico de critica -- BC-EI-03 -- Strategy Saude/Odonto\n[MIGRACAO] IOperadoraStrategy com SaudeStrategy + OdontoStrategy")
+    Container(empresa, "PK_EFETIVACAO_EMPRESA", "PL/SQL Package", "Servico de efetivacao empresa -- BC-EI-04\nFase 1-2: consome assinatura legado via ACL02 (Adapter/Facade)\nFase 3: consome RECORD pk_efetivacao_types.t_resultado_efetivacao\n[MIGRACAO] CommandHandler Result<CdEmpresa> (ADR-03) [REF DD-01]")
+    Container(odonto, "PK_INTEGRACAO_SAUDE_ODONTO", "PL/SQL Package", "Espelhamento saude-odonto -- BC-EI-05 -- Strategy pattern\n[MIGRACAO] Strategy IOperadoraStrategy")
+    Container(benef, "PK_BAIXA_BENEFICIARIO", "PL/SQL Package", "Baixa de beneficiarios -- BC-EI-06 -- BULK COLLECT + FORALL\n[MIGRACAO] IEnumerable<T> + BulkUpdate (ADR-22)")
+    Container(log_svc, "PK_LOG_BAIXA_PIM", "PL/SQL Package", "Servico de log -- BC-EI-08 -- SEQUENCE para cd_log\n[MIGRACAO] ILogger estruturado + ULID/UUID")
+
+    Container(cad_empresa, "PR_CADASTRAMENTO_EMPRESA_PROV", "PL/SQL Procedure", "Criacao empresa conveniada -- contrato canonico Opcao D Hibrida:\nFase 1-2 assinatura legado (Adapter/Facade); Fase 3 RECORD t_resultado_efetivacao\n[REF DD-01] [REF rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/]")
+    Container(cad_internet2, "PR_CADASTRAMENTO_INTERNET2", "PL/SQL Procedure", "Efetivacao de beneficiario (mantido como servico externo)\n[MIGRACAO] Candidato a microsservico Beneficiarios")
+    Container(odon_empresa, "PR_ODON_CAD_EMPRESA_PROV", "PL/SQL Procedure", "Criacao empresa odonto (mantido como servico externo)\n[MIGRACAO] Integrado via IOperadoraStrategy.OdontoStrategy")
+}
+
+System_Ext(neoway, "Neoway", "Servico externo de validacao cadastral\n[MIGRACAO] HttpClient + Polly (ADR-05)")
+System_Ext(servicebus, "Azure Service Bus", "[MIGRACAO] Broker para Domain Events criticos:\nhap-ins-pim-company-created, hap-ins-pim-company-creation-failed,\nhap-ins-pim-provisional-code-migrated, hap-ins-pim-beneficiary-effected\n(ADR-02 / ADR-18)")
+
+Rel(job, uc, "Dispara periodicamente", "DBMS_JOB / DBMS_SCHEDULER")
+
+Rel(uc, conf, "Carrega flags de controle", "ConfiguracaoSistemaService")
+Rel(uc, pend, "Avalia pendencias da proposta", "AvaliacaoPendenciasService -- SP01..SP14")
+Rel(uc, critica, "Executa criticas beneficiarios", "CriticaBeneficiarioService")
+Rel(uc, empresa, "Cria empresa conveniada", "EfetivacaoEmpresaService -- retorno tipado OUT")
+Rel(uc, odonto, "Espelha empresa odonto", "EfetivacaoOdontoService")
+Rel(uc, benef, "Efetiva titulares/dependentes", "BaixaBeneficiarioService -- BULK COLLECT")
+Rel(uc, log_svc, "Registra log de baixa", "LogBaixaService -- SEQUENCE")
+
+Rel(empresa, cad_empresa, "Delega criacao", "Fase 1-2: assinatura legado (ACL02)\nFase 3: RECORD t_resultado_efetivacao (canonico)")
+Rel(benef, cad_internet2, "Delega baixa beneficiario", "pr_cadastramento_internet2")
+Rel(odonto, odon_empresa, "Delega criacao odonto", "pr_odon_cad_empresa_prov")
+
+Rel(uc, oracle, "Le e escreve via Repositorios", "PropostaInternetRepository, EmpresaConveniadaRepository,\nLogBaixaRepository, PendenciaInternetRepository, ...")
+
+Rel(pend, neoway, "Verifica divergencia (via ACL)", "DivergenciaNeowaySpec -- ACL04")
+
+Rel(uc, servicebus, "[MIGRACAO] Publica Domain Events criticos", "hap-ins-pim-* (ADR-18)")
+
+note right of empresa
+  MELHORIA CRITICA:
+  Contrato canonico Opcao D Hibrida.
+  Fase 1-2: Adapter/Facade mantem assinatura legado
+  (zero breaking change). Fase 3: RECORD
+  pk_efetivacao_types.t_resultado_efetivacao
+  (6 campos: fl_status, cd_empresa, ds_mensagem,
+  ds_etapa_erro, cd_sqlcode, ds_sqlerrm).
+  Elimina parsing fragil (DD-01, S11, A05 RESOLVIDO)
+  [MIGRACAO] CommandHandler Result<CdEmpresa>
+  [REF modelagem-em-execucao de pr_cadastramento_empresa_prov]
+end note
+
+note right of pend
+  MELHORIA ALTA:
+  Substitui 13 loops stp1..stp13
+  duplicados por Specification pattern
+  (PADRAO-02) -- ISpecification<PropostaInternet>
+end note
+
+note right of log_svc
+  MELHORIA MEDIA:
+  SEQUENCE Oracle para cd_log.
+  Elimina race condition MAX+1 (PADRAO-03)
+  [MIGRACAO] ULID/UUID gerado no dominio
+end note
+
+note right of conf
+  MELHORIA MEDIA:
+  Parametrizacao de datas hardcode
+  (S05/S06/S10) e vendedor 2704 (S07)
+  [MIGRACAO] Azure App Config (ADR-34)
+end note
+
+@enduml

@@ -1,0 +1,136 @@
+@startuml c4-2-container-pk-venda-json-to-be
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+title Container -- PK_VENDA_JSON (TO-BE) | Rev: PRODUCAO-20260402 | REF: ddd-modelagem-dominio.md (Secoes 1-11)
+
+' ================================================================
+' CONVENCOES DE REFERENCIAMENTO DDD -- obrigatorio em todo diagrama
+'
+' [BC-VJ-NN] = Bounded Context de origem (Sec. 1.2 do DDD)
+' DS:         = Domain Service hospedado (Sec. 4)
+' SP:         = Specification avaliada internamente (Sec. 7)
+' DE:         = Domain Event emitido (Sec. 5)
+' R:          = Repository utilizado (Sec. 6)
+' F:          = Factory utilizada (Sec. 9)
+' DD-NN       = Decisao de Design aplicada (Sec. 11)
+' S-NN        = Smell resolvido (eng. reversa)
+' [REF ADR-NN]= ADR que fundamenta a decisao
+' ================================================================
+
+note as N_DD
+  Decisoes de Design (REF Sec. 11 -- ddd-modelagem-dominio.md):
+  DD-01: ACL BITIX isolado do dominio de efetivacao [REF ADR-05]
+  DD-02: Contrato tipado OUT p_cd_empresa / p_status (elimina S03/A05)
+  DD-03: Estado global de package eliminado -- variaveis locais (elimina S04)
+  DD-04: CQRS -- MotorCriticasQuery separado de AplicarStatusErroCommand
+         [REF ADR-03] (elimina S12/A09)
+  DD-05: pr_efetiva_baixa_core extrai codigo triplicado (elimina S02/S07)
+  DD-06: StatusFinalService extraido das 3 rotinas duplicadas [RN07]
+end note
+
+' ----------------------------------------------------------------
+' Atores externos
+' ----------------------------------------------------------------
+Person(operador, "Operador T229B", "Efetiva proposta manualmente\nvia pr_efetiva_especifica(nu_controle,'T229B')")
+Person(job, "JOB Oracle", "Executa pr_efetiva_batch() periodicamente\n[BC-VJ-03] DS: EfetivacaoBatchService")
+System_Ext(bitix, "BITIX (NDI Minas)", "Sistema externo de vendas\nEnvia proposta via JSON CLOB\n[Published Language -- ADR-18]")
+System_Ext(sigo_core, "SIGO Core", "PR_EFETIVA_INTERNET\nAciona coligadas BITIX (Fase 9)\n[REF BC-EI-14 -- ddd-pr-efetiva-internet.md]")
+
+System_Boundary(sigo, "SIGO -- Oracle 19c / Schema HUMASTER") {
+
+  ' ---- Databases -- nomeados por Repositorios (Sec. 6 do DDD) ----
+
+  ContainerDb(oracle_staging, "Staging Internet", "Oracle 19c", "R: PropostaVendaRepository (R01) | R: EmpresaInternetRepository (R02)\nR: BeneficiarioInternetRepository (R07) | R: CriticaBeneficiarioRepository (R08)\n---\nTB_PROPOSTA_VENDA | TB_EMPRESA_INTERNET\nTB_ODON_EMPRESA_INTERNET\nTB_USUARIO_TITULAR_INTERNET | TB_USUARIO_DEPENDENTE_INTERNET")
+
+  ContainerDb(oracle_definitivo, "Cadastro Definitivo", "Oracle 19c", "R: EmpresaConveniadaRepository (R09) | R: PendenciaEmpresaRepository (R10)\n---\nTB_EMPRESA_CONVENIADA | TB_EMPRESA_CNAE | TB_PENDENCIA_EMPRESA")
+
+  ContainerDb(oracle_controle, "Controle e Log", "Oracle 19c", "R: ColigadaBitixRepository (R03) | R: FluxoPOSRepository (R04)\nR: StatusCadastroRepository (R05) | R: MapeamentoControleRepository (R06)\nR: BlocklistRepository (R10) | R: PendenciaUsuarioRepository (R11)\n---\nTB_EMPRESA_COLIGADA_BITX | TB_PIM_CONTROLE_CPF\nTB_STATUS_PROPOSTA_CADASTRO | TB_FILE_DOCUMENTO_BITIX | TB_PENDENCIA_USUARIO")
+
+  ' ---- Containers -- referenciados por BC, DS, SP, DE, R, F ----
+
+  Container(acl_bitix, "BITIXAdapterService", "PL/SQL Package (novo) HUMASTER", "BC-VJ-01 Recepcao Proposta BITIX | BC-VJ-08 Auto-baixa POS\n---\nDS: IntegracaoBitixService (RN01..RN16) | DS: AutoBaixaPOSService (RN08)\nSP: IdempotenciaIntegracaoSpec (RN09) | SP: AutoBaixaPOSElegivelSpec (RN08)\nSP: ContadorBeneficiariosOkSpec (RN16)\nF: PropostaEmpresaFactory (SQ_EMPRESA_INTERNET.nextval)\nF: EmpresaInternetFactory (fn_set_empresa_internet)\n---\nDD-01/ADR-05 - ACL canonico BITIX->SIGO\nDE: PropostaIntegradaBitix | DE: AutoBaixaAcionada")
+
+  Container(efetivacao_svc, "EfetivacaoService", "PL/SQL Package (refatorado) HUMASTER", "BC-VJ-03 Efetivacao Empresa | BC-VJ-04 Efetivacao Beneficiarios\nBC-VJ-05 Status Final | BC-VJ-06 Grupo Coligado\n---\nDS: EfetivacaoBatchService pr_efetiva_batch() (RN01)\nDS: EfetivacaoEspecificaService pr_efetiva_especifica() (DD-05)\nDS: GrupoColigadoService (RN03) | DS: StatusFinalService (RN07/DD-06)\nSP: PropostaElegivelSpec FL_STATUS=6 (RN02) | SP: GrupoColigadoCompletoSpec (RN03)\nDE: PropostaEfetivada | DE: EmpresaComCritica | DE: GrupoColigadoIncompleto\n---\nDD-03/S04: SEM estado global | Origens: T229B|JOB|BITIX|BAIXAPOS|BPR")
+
+  Container(motor_criticas_q, "MotorCriticasQuery", "PL/SQL Function (refatorada) HUMASTER", "BC-VJ-02 Validacao e Critica -- LEITURA\n---\nDS: MotorCriticasService - parte query (RN04)\nSP: PropostaSemCriticasSpec (RN04)\nModos: N=so criticas | E=excecao | S=todas\n---\nDD-04/ADR-03/S12/A09: Retorna apenas COUNT\nSEM UPDATE fl_status=9 - efeito colateral ELIMINADO")
+
+  Container(aplicar_status_cmd, "AplicarStatusErroCommand", "PL/SQL Procedure (nova) HUMASTER", "BC-VJ-02 Validacao e Critica -- ESCRITA\n---\nDS: MotorCriticasService - parte command (RN04)\nDE: EmpresaComCritica (fl_status=9)\n---\nDD-04/ADR-03: Aplica UPDATE fl_status=9\nsomente quando MotorCriticasQuery > 0")
+
+  Container(sub_cadastro_emp, "pr_cadastramento_empresa_prov", "PL/SQL Procedure HUMASTER (contrato refatorado)", "BC-VJ-03 Efetivacao Empresa BITIX\n---\nR: EmpresaConveniadaRepository (R09)\nR: PendenciaEmpresaRepository (R10)\n---\nDD-02/S03/A05: Contrato tipado:\np_cd_empresa OUT VARCHAR2 | p_status OUT NUMBER\n[MIGRACAO] CommandHandler Result<CdEmpresa> - ADR-03")
+
+  Container(sub_cad_beneficiarios, "EfetivacaoBeneficiariosService", "PL/SQL Procedure (refatorada) HUMASTER", "BC-VJ-04 Efetivacao Beneficiarios BITIX\n---\nDS: EfetivacaoBeneficiariosService (RN06)\nDS: PendenciaUsuarioService (RN10/RN15)\nSP: ContadorBeneficiariosOkSpec (RN16)\nDE: BeneficiarioEfetivado | DE: DivergenciaContadorBeneficiario\nR: BeneficiarioInternetRepository (R07) | R: CriticaBeneficiarioRepository (R08)\nR: MapeamentoControleRepository (R06) | R: PendenciaUsuarioRepository (R11)\n---\nBULK COLLECT de criticas (sem N+1)\npr_cadastramento_internet2 | pr_pim_pendencia")
+
+  Container(sub_odon, "IntegracaoOdontoService", "PL/SQL Procedures HUMASTER", "BC-VJ-10 Integracao Odonto\n---\nDS: MapeamentoSaudeOdontoService (RN10/RN15)\nF: ControleOdontoTitularFactory (RN10)\nR: MapeamentoControleRepository (R06)\n---\npr_odon_cad_empresa_prov | pr_set_usuario_od")
+
+  Container(fn_registro, "fn_registro_sistema", "PL/SQL Function HUMASTER", "BC-VJ-09 Configuracao de Sistema\n---\nR: RegistroSistemaRepository\nFlags: PK_VENDA_JSON_PR_EFETIVA_01\nFlags: PK_VENDA_JSON_RESPOSTA_BITIX_01\n[ATENCAO] A04: valor atual em producao -- pendencia PO")
+
+}
+
+' ================================================================
+' Relacoes externas
+' ================================================================
+Rel(bitix, acl_bitix, "Envia proposta JSON\n[DE: PropostaIntegradaBitix]", "pr_pim_insere_cnpj(p_json CLOB)")
+Rel(job, efetivacao_svc, "Dispara batch\n[DS: EfetivacaoBatchService / BC-VJ-03]", "pr_efetiva_batch()")
+Rel(operador, efetivacao_svc, "Efetiva manualmente\n[DS: EfetivacaoEspecificaService / BC-VJ-03]", "pr_efetiva_especifica(nu_controle, 'T229B')")
+Rel(sigo_core, efetivacao_svc, "Coligadas BITIX -- Fase 9\n[REF BC-EI-14 / PR_EFETIVA_INTERNET]", "pr_efetiva_batch()")
+
+' ================================================================
+' Relacoes internas
+' ================================================================
+Rel(acl_bitix, efetivacao_svc, "Auto-baixa POS\n[DE: AutoBaixaAcionada]\n[SP: AutoBaixaPOSElegivelSpec=true / RN08]", "pr_efetiva_especifica(nu_controle, 'BAIXAPOS')")
+Rel(acl_bitix, oracle_staging, "Persiste staging saude+odonto\n[R: PropostaVendaRepository / EmpresaInternetRepository]\n[F: PropostaEmpresaFactory / EmpresaInternetFactory]", "INSERT/UPDATE")
+Rel(acl_bitix, fn_registro, "Consulta flags de fluxo\n[R: RegistroSistemaRepository / BC-VJ-09]", "fn_registro_sistema")
+
+Rel(efetivacao_svc, motor_criticas_q, "Consulta criticas -- apenas leitura\n[SP: PropostaSemCriticasSpec / RN04]\n[DD-04 / REF ADR-03]", "fn_get_criticas_pendencias(nu_controle, modo)")
+Rel(efetivacao_svc, aplicar_status_cmd, "Aplica status 9 quando motor > 0\n[DE: EmpresaComCritica]\n[DD-04 / REF ADR-03]", "pr_aplicar_status_erro(nu_controle)")
+Rel(efetivacao_svc, sub_cadastro_emp, "Cadastra empresa definitiva\n[DD-02: contrato tipado OUT]", "pr_cadastramento_empresa_prov(nu_controle, p_cd_empresa OUT, p_status OUT)")
+Rel(efetivacao_svc, sub_cad_beneficiarios, "Efetiva beneficiarios\n[DS: EfetivacaoBeneficiariosService / RN06]", "EfetivacaoBeneficiariosService(cd_empresa)")
+Rel(efetivacao_svc, sub_odon, "Efetiva odonto\n[DS: MapeamentoSaudeOdontoService / RN10]", "IntegracaoOdontoService")
+Rel(efetivacao_svc, fn_registro, "Consulta flags de controle\n[R: RegistroSistemaRepository / BC-VJ-09]", "fn_registro_sistema")
+Rel(efetivacao_svc, oracle_staging, "Le e atualiza staging\n[R: PropostaVendaRepository / EmpresaInternetRepository]\n[SP: PropostaElegivelSpec: FL_STATUS=6 / RN02]", "SELECT/UPDATE FL_STATUS")
+Rel(efetivacao_svc, oracle_definitivo, "Atualiza cadastro definitivo\n[R: EmpresaConveniadaRepository]\n[DE: PropostaEfetivada]", "UPDATE/INSERT")
+Rel(efetivacao_svc, oracle_controle, "Le e escreve controle\n[R: ColigadaBitixRepository / FluxoPOSRepository]\n[SP: GrupoColigadoCompletoSpec / RN03]", "ColigadaBitixRepository / FluxoPOSRepository")
+
+' ================================================================
+' Notas de rastreabilidade DDD
+' ================================================================
+note right of acl_bitix
+  [DD-01 / REF ADR-05]
+  BC-VJ-01 e o ACL canonico
+  BITIX->SIGO. Separa traducao
+  JSON do dominio de efetivacao.
+  [MIGRACAO] HttpClient + Polly
+  com retry/circuit breaker
+end note
+
+note right of motor_criticas_q
+  [DD-04 / REF ADR-03 / S12]
+  CQRS: fn_get_criticas_pendencias
+  separada em Query + Command.
+  UPDATE fl_status=9 movido para
+  AplicarStatusErroCommand.
+  [ATENCAO] A09: excecao silenciosa
+  original retornava 0 mascarando erro
+end note
+
+note right of sub_cadastro_emp
+  [DD-02 / S03 / A05]
+  Parsing fragil eliminado.
+  Antes: substr(p_return, instr+1)
+  Agora: p_cd_empresa OUT VARCHAR2
+  [MIGRACAO] CommandHandler
+  Result<CdEmpresa> -- REF ADR-03
+end note
+
+note right of efetivacao_svc
+  [DD-03 / S04] 15 variaveis globais
+  eliminadas -- variaveis locais.
+  [DD-05 / S02] Codigo triplicado
+  consolidado em pr_efetiva_baixa_core.
+  [DD-06 / S07] StatusFinalService
+  extraido das 3 rotinas.
+  Origens aceitas (VO OrigemEfetivacao):
+  T229B | JOB | BITIX | BAIXAPOS | BPR
+end note
+
+@enduml

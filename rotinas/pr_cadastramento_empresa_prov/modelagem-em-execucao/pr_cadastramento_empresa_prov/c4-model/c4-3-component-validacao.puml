@@ -1,0 +1,80 @@
+@startuml c4-3-component-validacao
+!include <C4/C4_Component>
+
+LAYOUT_WITH_LEGEND()
+
+title [C4 Model - Nivel 3] Diagrama de Componentes\n**pk_validacao_proposta** (BC-02) - Detalhamento do Supporting Domain de Validacao\n[!] Atual: ~600 linhas com boilerplate repetido -> Alvo: ~300 linhas limpas
+
+' -----------------------------------
+' CONTAINER: pk_validacao_proposta
+' -----------------------------------
+
+Container_Boundary(validacao, "pk_validacao_proposta (BC-02 - Validacao de Proposta)") {
+
+    Component(pr_completa, "pr_valida_proposta_completa", "PL/SQL Procedure - FACHADA", "Procedure principal que orquestra\ntodas as sub-validacoes.\nRecebe: st_empresa_internet, t_contexto\nRaise excecao no primeiro erro encontrado")
+
+    Component(pr_docs, "pr_valida_documentos", "PL/SQL Procedure", "- Valida CNPJ/CPF obrigatorio\n- pk_administracao.fn_check_cic -> {1,2,3}\n- fn_check_caepf (quando CPF)\n- Verifica lista negra\n  (tb_pessoa_lista_negra)\n- Valida inscricao estadual\n  (sem espacos)")
+
+    Component(pr_vendedor, "pr_valida_vendedor", "PL/SQL Procedure", "- Verifica existencia em\n  tb_vendedor_plano\n- Vendedor ativo")
+
+    Component(pr_cadastrais, "pr_valida_dados_cadastrais", "PL/SQL Procedure", "- Razao social (obrigatorio,\n  sem espacos duplos)\n- Nome fantasia (obrigatorio,\n  sem espacos duplos)\n- Nome contato (obrigatorio,\n  sem espacos duplos)\n- Cargo contato\n  (sem espacos duplos)")
+
+    Component(pr_natureza, "pr_valida_natureza_empresa", "PL/SQL Procedure", "- Obrigatorio\n- Deve ser IN {0..9}\n- Total empregados > 0")
+
+    Component(pr_endereco, "pr_valida_endereco", "PL/SQL Procedure", "- CEP (tb_cep_logradouro\n  + tb_cep_localidade)\n- UF (tb_uf + consistencia\n  UF x CEP)\n- Cidade (obrigatorio,\n  sem espacos duplos)\n- Bairro (sem espacos duplos)\n- Tipo logradouro\n  (tb_tipo_logradouro)\n- Logradouro (obrigatorio,\n  sem espacos duplos)\n- Complemento\n  (sem espacos duplos)")
+
+    Component(pr_email, "pr_valida_email", "PL/SQL Procedure", "- Sem espacos\n- Contem '@'\n- Contem '.'")
+
+    Component(pr_contrato, "pr_valida_contrato", "PL/SQL Procedure", "- Dia pagamento IN {1..30}\n- Validade contrato obrigatoria\n- Minimo 6 meses\n  (quando modelo != 1 e\n  natureza_juridica = 1)")
+
+    Component(fn_valida_espaco, "fn_sem_espaco_duplo", "PL/SQL Function (privada)", "Funcao utilitaria reutilizavel:\nRETURN BOOLEAN\nVerifica INSTR(campo, '  ') = 0\n\n+ Elimina 15+ verificacoes\n   de espaco duplo repetidas")
+
+    Component(pr_raise, "pr_raise_erro", "PL/SQL Procedure (privada)", "Procedure utilitaria:\n1. Chama pk_log_auditoria\n   .pr_registra_erro\n2. raise_application_error\n   (-20201, msg)\n\n+ Elimina 30+ blocos\n   de boilerplate identicos")
+}
+
+' -----------------------------------
+' DEPENDENCIAS EXTERNAS
+' -----------------------------------
+
+Component(pk_adm, "pk_administracao\n.fn_check_cic", "PL/SQL Function\n(existente)", "Valida digito CNPJ/CPF\nRetorno: 1=CPF, 2=CNPJ, 3=valido")
+
+Component(fn_caepf, "fn_check_caepf", "PL/SQL Function\n(existente)", "Valida numero CAEPF")
+
+Component(pk_log, "pk_log_auditoria\n.pr_registra_erro", "PL/SQL Procedure\n(novo)", "Log generico + raise")
+
+ContainerDb(db, "Oracle HUMASTER", "Oracle 19c+", "tb_vendedor_plano\ntb_pessoa_lista_negra\ntb_cep_logradouro\ntb_cep_localidade\ntb_uf\ntb_tipo_logradouro\ntb_natureza_juridica_wnce")
+
+' -----------------------------------
+' RELACIONAMENTOS
+' -----------------------------------
+
+Rel(pr_completa, pr_vendedor, "1o")
+Rel(pr_completa, pr_docs, "2o")
+Rel(pr_completa, pr_cadastrais, "3o")
+Rel(pr_completa, pr_natureza, "4o")
+Rel(pr_completa, pr_endereco, "5o")
+Rel(pr_completa, pr_email, "6o")
+Rel(pr_completa, pr_contrato, "7o")
+
+Rel(pr_docs, pk_adm, "fn_check_cic")
+Rel(pr_docs, fn_caepf, "fn_check_caepf")
+
+Rel(pr_cadastrais, fn_valida_espaco, "Usa")
+Rel(pr_endereco, fn_valida_espaco, "Usa")
+
+Rel(pr_raise, pk_log, "Registra + raise")
+
+Rel(pr_docs, pr_raise, "Erro -> raise")
+Rel(pr_vendedor, pr_raise, "Erro -> raise")
+Rel(pr_cadastrais, pr_raise, "Erro -> raise")
+Rel(pr_natureza, pr_raise, "Erro -> raise")
+Rel(pr_endereco, pr_raise, "Erro -> raise")
+Rel(pr_email, pr_raise, "Erro -> raise")
+Rel(pr_contrato, pr_raise, "Erro -> raise")
+
+Rel(pr_docs, db, "Consulta")
+Rel(pr_vendedor, db, "Consulta")
+Rel(pr_endereco, db, "Consulta")
+Rel(pr_contrato, db, "Consulta")
+
+@enduml

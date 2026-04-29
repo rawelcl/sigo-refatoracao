@@ -1,0 +1,136 @@
+@startuml c4-2-container-to-be
+!theme plain
+title C4 — Nível 2: Container (TO-BE) — Arquitetura Refatorada com Packages
+caption Diagrama de Container — Situação Futura (14 packages + orquestrador ~150 linhas)
+
+skinparam rectangle {
+    BackgroundColor<<container>> #438DD5
+    FontColor<<container>>       #FFFFFF
+    BackgroundColor<<db>>        #438DD5
+    FontColor<<db>>              #FFFFFF
+    BackgroundColor<<ext>>       #999999
+    FontColor<<ext>>             #FFFFFF
+    BorderColor                  #333333
+    FontSize                     10
+}
+
+!define Container(e_alias, e_label, e_techn, e_descr) rectangle "==e_label\n<size:9>[e_techn]</size>\n\n e_descr" <<container>> as e_alias
+!define ContainerDb(e_alias, e_label, e_techn, e_descr) database "==e_label\n<size:9>[e_techn]</size>\n\n e_descr" <<db>> as e_alias
+!define System_Ext(e_alias, e_label, e_descr) rectangle "==e_label\n\n e_descr" <<ext>> as e_alias
+
+package "Oracle Database — Schema HUMASTER" as oracle {
+
+    Container(job, "DBMS_SCHEDULER JOB", "Oracle Scheduler", "Dispara pr_efetiva_internet\na cada N minutos")
+
+    Container(orq, "pr_efetiva_internet\n(Orquestrador)", "PL/SQL Procedure\n(~150 linhas)", "**ORQUESTRADOR LIMPO**\n---\n• Delega para 14 packages\n• Zero lógica de negócio\n• 9 fases claras\n• Exception handler único")
+
+    ' ==========================================
+    ' PACKAGES CORE DOMAIN
+    ' ==========================================
+    Container(pk_efet_emp, "pk_efetivacao\n_empresa_pim", "PL/SQL Package", "BC-EI-04\n---\nEfetiva empresa saúde\n(ACL ? pr_cadastramento\n_empresa_prov)")
+
+    Container(pk_efet_odon, "pk_efetivacao\n_odonto_pim", "PL/SQL Package", "BC-EI-05\n---\nEfetiva empresa odonto\n(ACL ? pr_odon_cad\n_empresa_prov)")
+
+    Container(pk_baixa, "pk_baixa\n_beneficiario", "PL/SQL Package", "BC-EI-06\n---\nAutoriza titulares\nMigra código provisório\n(ACL ? pr_cadastramento\n_internet2)")
+
+    ' ==========================================
+    ' PACKAGES SUPPORTING
+    ' ==========================================
+    Container(pk_pend, "pk_pendencia_pim", "PL/SQL Package", "BC-EI-02\n---\n13 Specifications\nMotor de pendências")
+
+    Container(pk_crit, "pk_critica_pim", "PL/SQL Package", "BC-EI-03\n---\nExecuta críticas\n(ACL ? pr_critica\n_internet)")
+
+    Container(pk_status, "pk_status_pim", "PL/SQL Package", "BC-EI-07\n---\nMáquina de estados\ndo ciclo de vida")
+
+    Container(pk_log, "pk_log_baixa_pim", "PL/SQL Package", "BC-EI-08\n---\nLog centralizado\n(Oracle SEQUENCE)")
+
+    Container(pk_carga, "pk_carga\n_modelo_pim", "PL/SQL Package", "BC-EI-11\n---\nCarga PIM por modelo\n(área de venda)")
+
+    Container(pk_indiv, "pk_individual_pim", "PL/SQL Package", "BC-EI-12\n---\nIndividual/Familiar")
+
+    Container(pk_odon_puro, "pk_odonto\n_puro_pim", "PL/SQL Package", "BC-EI-13\n---\nOdonto sem saúde")
+
+    Container(pk_colig, "pk_coligada_pim", "PL/SQL Package", "BC-EI-14\n---\nBITIX + SIGO")
+
+    ' ==========================================
+    ' PACKAGES GENERIC
+    ' ==========================================
+    Container(pk_cfg, "pk_config\n_sistema_pim", "PL/SQL Package", "BC-EI-09\n---\nFlags de sistema\n(Record Type)")
+
+    Container(pk_ext, "pk_integracao\n_externa_pim", "PL/SQL Package", "BC-EI-10\n---\nACL: Neoway,\nOrçamento, Adesão")
+
+    ' ==========================================
+    ' TABELAS
+    ' ==========================================
+    ContainerDb(tables, "50+ Tabelas", "Oracle Tables", "tb_empresa_internet\ntb_pendencia_empresa_internet\ntb_usuario_titular_internet\ntb_empresa_conveniada\ntb_log_baixa_controle\ntb_proposta_venda\n...")
+
+    ' ==========================================
+    ' TESTES
+    ' ==========================================
+    Container(tests, "Testes utPLSQL", "PL/SQL Test Suite", "40+ cenários\n?70% coverage\nRegressão das 9 fases")
+}
+
+System_Ext(neoway, "Neoway", "Divergência cadastral")
+System_Ext(orcamento, "Orçamento", "Validação orçamento")
+System_Ext(adesao, "Adesão Digital", "Efetivação digital")
+
+' ==========================================
+' RELACIONAMENTOS — Orquestrador ? Packages
+' ==========================================
+job --> orq : "Executa"
+
+orq --> pk_cfg : "1. Carrega config"
+orq --> pk_carga : "2. Fase 1"
+orq --> pk_pend : "3. Fase 2"
+orq --> pk_efet_emp : "4. Fase 3a"
+orq --> pk_efet_odon : "5. Fase 3b"
+orq --> pk_crit : "6. Fase 3c"
+orq --> pk_baixa : "7. Fases 3d, 5, 6"
+orq --> pk_status : "8. Status"
+orq --> pk_odon_puro : "9. Fase 4"
+orq --> pk_indiv : "10. Fase 7"
+orq --> pk_colig : "11. Fases 8-9"
+orq --> pk_log : "12. Log (transversal)"
+
+' ==========================================
+' RELACIONAMENTOS — Packages ? Tabelas
+' ==========================================
+pk_pend --> tables
+pk_crit --> tables
+pk_efet_emp --> tables
+pk_efet_odon --> tables
+pk_baixa --> tables
+pk_status --> tables
+pk_log --> tables
+pk_cfg --> tables
+
+' ==========================================
+' RELACIONAMENTOS — ACL ? Externo
+' ==========================================
+pk_ext --> neoway : "ACL"
+pk_ext --> orcamento : "ACL"
+pk_ext --> adesao : "ACL"
+
+' ==========================================
+' TESTES
+' ==========================================
+tests ..> pk_pend : "testa"
+tests ..> pk_crit : "testa"
+tests ..> pk_efet_emp : "testa"
+tests ..> pk_baixa : "testa"
+tests ..> pk_log : "testa"
+
+note right of orq
+  **Benefícios da refatoração:**
+  ? 2.290 ? ~150 linhas (orquestrador)
+  ? 14 packages isolados e testáveis
+  ? ACL para 17 dependências externas
+  ? Record Type para estado (sem variáveis globais)
+  ? Coleção de controles (elimina duplicação)
+  ? Log centralizado com SEQUENCE
+  ? ?70% test coverage (utPLSQL)
+  ? Máquina de estados explícita
+  ? Deploy canary (v1/v2)
+end note
+
+@enduml

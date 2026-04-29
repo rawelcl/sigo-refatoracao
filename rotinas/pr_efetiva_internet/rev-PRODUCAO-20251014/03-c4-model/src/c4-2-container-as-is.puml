@@ -1,0 +1,62 @@
+@startuml c4-2-container-as-is
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+
+title Container | PR_EFETIVA_INTERNET (AS-IS) | rev-PRODUCAO-20251014
+
+Person(job, "DBMS_JOB / DBMS_SCHEDULER", "Agendador automatico que dispara a procedure periodicamente")
+
+System_Boundary(sigo, "SIGO -- Hapvida (HUMASTER)") {
+    ContainerDb(oracle, "Oracle Database 19c", "Oracle 19c", "Schema HUMASTER -- base de dados principal")
+
+    Container(proc, "PR_EFETIVA_INTERNET", "PL/SQL Procedure", "Orquestrador batch de efetivacao PIM -- 2290 linhas, 9 fases sequenciais")
+
+    Container(cad_empresa, "PR_CADASTRAMENTO_EMPRESA_PROV", "PL/SQL Procedure", "Cria empresa conveniada definitiva a partir da proposta")
+    Container(cad_internet2, "PR_CADASTRAMENTO_INTERNET2", "PL/SQL Procedure", "Efetiva beneficiario titular + dependentes no sistema")
+    Container(critica_int, "PR_CRITICA_INTERNET", "PL/SQL Procedure", "Executa criticas de beneficiarios (titular + dependente)")
+    Container(critica_emp, "PR_CRITICA_EMPRESA_INTERNET_1", "PL/SQL Procedure", "Executa critica DIREX de empresa (pendencia 11)")
+    Container(odon_empresa, "PR_ODON_CAD_EMPRESA_PROV", "PL/SQL Procedure", "Cria empresa odonto definitiva vinculada a saude")
+    Container(nat_jur, "PR_NAT_JURIDICA_ODON", "PL/SQL Procedure", "Processa natureza juridica da empresa odonto (SAC:1886321)")
+    Container(odon_agr, "PR_ODON_OBRIGACAO_AGREGADO", "PL/SQL Procedure", "Gera obrigacoes de odonto para agregados (fase 7)")
+    Container(bitix, "PR_COLIGA_EMPRESA_BITIX", "PL/SQL Procedure", "Processa baixa de empresas BITIX enviadas via JSON")
+    Container(venda_json, "PK_VENDA_JSON.PR_EFETIVA", "PL/SQL Package Proc.", "Efetiva propostas JSON da integracao BITIX (fase 8)")
+    Container(coligada, "PR_PROCESSA_EMPRESA_COLIGADA", "PL/SQL Procedure", "Processa contratos coligados pendentes do site Hapvida (fase 9)")
+
+    Container(fn_reg, "FN_REGISTRO_SISTEMA", "PL/SQL Function", "Le parametros/flags de controle em TB_REGISTRO_SISTEMA")
+    Container(fn_orc, "FN_VI_CHECA_ORCAMENTO", "PL/SQL Function", "Verifica se contrato e orcamento (retorna 'C' ou 'S')")
+    Container(fn_ades, "FN_EFETIVA_ADESAO_DIGITAL", "PL/SQL Function", "Verifica aprovacao de adesao digital (retorna 3=aprovado)")
+    Container(fn_div, "FN_CHECA_DIVERGENCIA", "PL/SQL Function", "Verifica divergencia Neoway para o contrato")
+    Container(fn_ind, "FN_INDIVIDUAL_FAMILIAR", "PL/SQL Function", "Verifica se empresa e individual/familiar (retorna '00100')")
+    Container(fn_colig, "FN_VALIDA_COLIGADA_BAIXA", "PL/SQL Function", "Valida coligada para baixa antes do loop principal")
+    Container(fn_cpf, "PK_ADMINISTRACAO.FN_CHECK_CIC", "PL/SQL Package Func.", "Valida CPF/CIC (retorna 1=valido, 3=CAEPF)")
+    Container(fn_log, "PK_NK4TRACE.T", "PL/SQL Package Proc.", "Log/trace de execucao (utilitario)")
+}
+
+System_Ext(neoway, "Neoway", "Servico externo de validacao cadastral")
+
+Rel(job, proc, "Dispara periodicamente", "DBMS_JOB / DBMS_SCHEDULER")
+
+Rel(proc, fn_reg, "Carrega 5 flags de controle", "linhas 42-54")
+Rel(proc, cad_internet2, "Efetiva beneficiario", "Fases 1,2,4,5,6,7")
+Rel(proc, critica_int, "Executa critica beneficiario", "Fases 2,3,6")
+Rel(proc, critica_emp, "Executa critica empresa DIREX", "Fase 2 -- pendencia 11")
+Rel(proc, cad_empresa, "Cria empresa conveniada definitiva", "Fase 2 -- novas empresas")
+Rel(proc, odon_empresa, "Cria empresa odonto", "Fase 2 -- odonto vinculado")
+Rel(proc, nat_jur, "Processa natureza juridica odonto", "Fase 2 -- apos criar odonto")
+Rel(proc, odon_agr, "Gera obrigacoes agregado odonto", "Fase 7")
+Rel(proc, bitix, "Processa coligadas BITIX", "Fase 8")
+Rel(proc, venda_json, "Efetiva propostas JSON BITIX", "Fase 8")
+Rel(proc, coligada, "Processa coligadas SIGO", "Fase 9")
+Rel(proc, fn_orc, "Verifica orcamento", "Fases 2")
+Rel(proc, fn_ades, "Verifica adesao digital", "Fase 2")
+Rel(proc, fn_div, "Verifica divergencia Neoway", "Fase 2 -- pendencia 12")
+Rel(proc, fn_ind, "Verifica individual/familiar", "Fase 6")
+Rel(proc, fn_colig, "Valida coligada baixa", "Pre-loop PIM")
+Rel(proc, fn_cpf, "Valida CPF titular/dependente", "Fase 2 -- pendencia 7")
+Rel(proc, fn_log, "Registra log de pendencias odonto", "Utilitario")
+
+Rel(proc, oracle, "Le e escreve", "tb_empresa_internet, tb_empresa_conveniada, tb_usuario_*, tb_pendencia_*, tb_log_baixa_controle, tb_odon_empresa_internet")
+
+Rel(fn_div, neoway, "Consulta base cadastral", "API/dblink Neoway")
+
+@enduml

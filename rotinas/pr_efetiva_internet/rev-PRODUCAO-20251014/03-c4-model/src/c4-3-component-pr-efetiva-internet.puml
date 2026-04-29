@@ -1,0 +1,70 @@
+@startuml c4-3-component-pr-efetiva-internet
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+
+title Componente | PR_EFETIVA_INTERNET (AS-IS) | 9 fases internas
+
+Container_Boundary(proc, "PR_EFETIVA_INTERNET (HUMASTER)") {
+
+    Component(cfg, "Fase 0: Configuracao", "PL/SQL Block", "Carrega 5 flags via FN_REGISTRO_SISTEMA\n[RN01] FL_CRITICA, FL_LOG, HABILITA_65ANOS\nCD_EMPRESA_IND_ODON_PURO, CHECA_VENDA_OD_PURO")
+
+    Component(fase1, "Fase 1: Carga PIM Modelo", "PL/SQL FOR Loop", "Seleciona areas de venda com fl_baixa=1\n[RN02] Para cada empresa <= 29 vidas com modelo:\nchama pr_cadastramento_internet2\n[ATENCAO] Dupla consulta fl_baixa sobrescreve")
+
+    Component(checa_pim, "Verificador PIM Automatico", "PL/SQL IF Block", "[RN03] Checa MOVIMENTACAO_PIM_AUTOMATICO\nSe 'NAO': pula toda a fase 2\n[CRITICO] PIM DESLIGADO em producao (17/04/2026)")
+
+    Component(pre_colig, "Pre-validacao Coligadas", "PL/SQL FOR Loop", "[RN04] fn_valida_coligada_baixa\n[ATENCAO] V_PROPOSTA_MAE sempre NULL")
+
+    Component(fase2_sel, "Fase 2: Selecao Propostas PIM", "PL/SQL FOR Loop (cursor st_e)", "tb_empresa_internet:\n[RN05] dt_cad > 01/11/2012 [ATENCAO hardcode]\ntp_operacao=1, fl_status IN(0,1,8), fl_sinaliza_ok='S'")
+
+    Component(filtro, "Filtros de Elegibilidade", "PL/SQL IF Blocks", "[RN06] Exclui ex-clientes (fl_tipo_contrato=2)\nExclui PME 30-99 funcionarios\n[ATENCAO] Logica ex-cliente acoplada a HABILITA_65ANOS")
+
+    Component(motor_pend, "Motor de Pendencias (stp1..stp13)", "PL/SQL FOR Loop x13", "[RN08..RN18] 13 tipos de pendencia:\nPend 1: nome suspeito\nPend 2: localidade limitrofe\nPend 3: vendedor fora de filial\nPend 4: dep > 43 anos [ANS]\nPend 5: sobrinho > 23 anos [ANS]\nPend 6/13: titular >= 59/65 anos [ANS]\nPend 7: CPF invalido\nPend 8: vidas fora de [1,29]\nPend 10: digitacao tardia (>6 dias)\nPend 11: critica DIREX\nPend 12: divergencia Neoway\n[PADRAO-02] 13 loops com mesmo pattern INSERT duplicado")
+
+    Component(critica_blk, "Bloco de Critica T-Provisorio", "PL/SQL IF Block", "[RN19] Se FL_CRITICA='S' e empresa nova:\nChama pr_critica_internet (saude + odonto)\nConta criticas -- se > 0: pendencia 9\n[ATENCAO] Log so gerado se tem odonto vinculado")
+
+    Component(cad_emp_blk, "Cadastro Empresa Nova", "PL/SQL Block", "[RN20] pr_cadastramento_empresa_prov(nu_controle, p_return)\n[CRITICO] Extrai cd_empresa via substr(p_return, instr(','))\n[CRITICO] Detecta erro via instr('ORA-') na string")
+
+    Component(cad_odon, "Cadastro Empresa Odonto", "PL/SQL IF Block", "[RN21] Se empresa saude cadastrada e tem odonto:\npr_odon_cad_empresa_prov + PR_NAT_JURIDICA_ODON\nValida: nu_controle_saude = nu_controle E nu_cgc_cpf = nu_cgc_cpf")
+
+    Component(migracao, "Migracao Codigo Provisorio->Definitivo", "PL/SQL UPDATEs", "[RN22] UPDATE tb_empresa_internet (CD_EMPRESA, FL_STATUS=9)\nUPDATE tb_empresa_conveniada (FL_EMPRESA_NOVA='S')\nDELETE + INSERT tb_pendencia_empresa (pendencia 1)\nUPDATE titulares/dependentes: cd_empresa T+ctrl->definitivo")
+
+    Component(efetiva_benef, "Efetivacao de Beneficiarios por Canal", "PL/SQL IF Blocks", "[RN23] Canal 2 (Middle): apenas dt_inicio\nCanal 1 (PME): fl_status=8 + pr_cadastramento_internet2\n[RN24] Se ficarem com fl_status=8: pendencia 9 + reverter empresa")
+
+    Component(fase3_odon, "Fase 3: Odonto Puro", "PL/SQL FOR Loop", "[RN25] tb_odon_empresa_internet sem saude vinculada\n<= 29 vidas, vendedor em odon_param_vendedor_pim\nCritica + efetivacao + carencia 30 dias [ANS]")
+
+    Component(fase4_incl, "Fase 4: Inclusoes", "PL/SQL FOR Loop", "[RN26] cd_tipo_internet=2 (so inclusao)\nTitulares pendentes: autoriza (status 8) + internet2")
+
+    Component(fase5_comp, "Fase 5: Completo", "PL/SQL FOR Loop", "[RN27] cd_tipo_internet=1 (completo)\nAutoriza + internet2\nPos-baixa: se critica -> status 1 + cd_pendencia=499 [ATENCAO hardcode]")
+
+    Component(fase6_ind, "Fase 6: Individual/Familiar", "PL/SQL FOR Loop", "[RN28] fn_individual_familiar='00100'\nfl_inclui_usuario_auto='S', dt_digitacao >= sysdate-30\nCritica + efetivacao ou pendenciamento")
+
+    Component(fase7_agr, "Fase 7: Obrigacao Agregado Odonto", "PL/SQL Call", "[RN29] pr_odon_Obrigacao_Agregado")
+
+    Component(fase8_bit, "Fase 8: BITIX", "PL/SQL IF Block", "[RN30] COLIGADA_EMPRESA_BITIX=1:\nPR_COLIGA_EMPRESA_BITIX + PK_VENDA_JSON.pr_efetiva")
+
+    Component(fase9_col, "Fase 9: Coligadas SIGO", "PL/SQL IF Block", "[RN31] COLIGADA_EMPRESA=1:\npr_processa_empresa_coligada")
+
+    Component(excecao, "Tratamento de Excecoes", "EXCEPTION Blocks", "[PADRAO-01] 50+ blocos WHEN OTHERS THEN NULL\nAlguns: WHEN OTHERS THEN Dbms_Output.put_line\nRollback parcial em pr_cadastramento_internet2\nInsere critica 999 em caso de erro critico")
+}
+
+Rel(cfg, checa_pim, "Inicializa flags")
+Rel(checa_pim, pre_colig, "PIM ligado")
+Rel(pre_colig, fase2_sel, "Coligadas pre-validadas")
+Rel(cfg, fase1, "Flags carregadas")
+Rel(fase1, efetiva_benef, "Empresa modelo efetivada")
+Rel(fase2_sel, filtro, "Proposta selecionada")
+Rel(filtro, motor_pend, "Proposta elegivel")
+Rel(motor_pend, critica_blk, "Sem pendencias")
+Rel(critica_blk, cad_emp_blk, "Sem criticas")
+Rel(cad_emp_blk, cad_odon, "Empresa saude criada")
+Rel(cad_odon, migracao, "Odonto processado")
+Rel(migracao, efetiva_benef, "Codigos migrados")
+Rel(efetiva_benef, fase3_odon, "Loop concluido")
+Rel(fase3_odon, fase4_incl, "Fase 3 concluida")
+Rel(fase4_incl, fase5_comp, "Fase 4 concluida")
+Rel(fase5_comp, fase6_ind, "Fase 5 concluida")
+Rel(fase6_ind, fase7_agr, "Fase 6 concluida")
+Rel(fase7_agr, fase8_bit, "Obrigacoes geradas")
+Rel(fase8_bit, fase9_col, "BITIX processado")
+
+@enduml

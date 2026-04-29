@@ -1,0 +1,56 @@
+@startuml c4-landscape-evolucao
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+
+title C4 Model Visao de Evolucao Arquitetural
+' Subtitulo: 3 Fases da Refatoracao - Strangler Fig Pattern - PR_CADASTRAMENTO_EMPRESA_PROV
+
+' ============================================================
+' FASE 1 -- AS-IS
+' ============================================================
+System_Boundary(fase1, "FASE 1 - AS-IS (Monolito PL/SQL)") {
+
+  Person(ator_f1, "Corretor / Operador", "Portal TAFFIX / BITIX")
+
+  System(monolito, "PR_CADASTRAMENTO_EMPRESA_PROV\n(*) ~5.025 linhas monoliticas\n(*) 16 fases misturadas\n(*) 23 regras de negocio\n(*) 40+ tabelas acopladas\n(*) 80+ WHEN OTHERS THEN NULL\n(*) p_erro_controle=NULL (mascaramento)\n(*) Senha previsivel (6 digitos)\n(*) CNPJ/senha em email plaintext\n(*) MAX+1 race condition (~15 ocorr.)", "PL/SQL Procedure HUMASTER")
+
+  Rel(ator_f1, monolito, "Dispara via 5 rotinas chamadoras")
+}
+
+' ============================================================
+' FASE 2 -- TO-BE (Packages DDD)
+' ============================================================
+System_Boundary(fase2, "FASE 2 - TO-BE (Packages DDD - PL/SQL Refatorado)") {
+
+  Person(ator_f2, "Corretor / Operador", "Portal TAFFIX / BITIX")
+
+  System(orq_f2, "pk_cad_orquestrador\n(Orquestrador)\n[+] ~60 linhas\n[+] Interface publica mantida\n[+] Apenas coordenacao\n[+] COMMIT/ROLLBACK correto\n[+] p_erro_controle com SQLERRM", "PL/SQL Package BC-CAD-01")
+
+  System(packages, "11 Packages PL/SQL\n(Bounded Contexts BC-CAD-02..12)\n[+] Separacao de responsabilidades\n[+] Interfaces via TYPE Record\n[+] Testavel por package\n[+] Rastreavel por BC\n[+] Senha aleatoria segura\n[+] Email sem dados sensiveis\n[+] SEQUENCE em lugar de MAX+1\n[+] Excecoes propagadas com log", "PL/SQL Packages DDD")
+
+  Rel(ator_f2, orq_f2, "Dispara (mesma interface)")
+  Rel(orq_f2, packages, "Delega por BC via t_contexto_cadastramento")
+}
+
+' ============================================================
+' FASE 3 -- FUTURO (Microservicos)
+' ============================================================
+System_Boundary(fase3, "FASE 3 - FUTURO (Microservicos .NET 8+ / Azure)") {
+
+  Person(ator_f3, "Corretor / Operador", "Portal Web / API")
+
+  System(gateway, "API Gateway\n(Azure API Mgmt)\nOAuth2 / OIDC", "Azure")
+
+  System(microsservicos, "7 Microsservicos\n.NET 8 / Azure Container Apps\n[+] CadastramentoEmpresaService\n[+] PrecificacaoService\n[+] ParametrizacaoService\n[+] ValidacaoPropostaService\n[+] PessoaJuridicaService\n[+] AcessoInternetService\n[+] OdontoImplantacaoService\n[+] Deploy independente\n[+] SAGA pattern (40+ escritas)\n[+] Event-Driven (Service Bus)\n[+] DB por servico (PostgreSQL/SQL)", ".NET 8 / Azure")
+
+  System(bus_f3, "Azure Service Bus\nCompanyContractCreated\nContractProvisioningCompleted\nContractRegistrationFailed", "Event Bus - Azure")
+
+  System(acl_f3, "ACL Legado Oracle\n(fase de transicao)\nWrap procedures legadas\nate migracao completa", ".NET 8 / Container App")
+
+  Rel(ator_f3, gateway, "HTTPS / REST")
+  Rel(gateway, microsservicos, "Roteia e autentica")
+  Rel(microsservicos, bus_f3, "Publica / Consome eventos")
+  Rel(microsservicos, acl_f3, "Legado (fase transicao)")
+}
+
+@enduml

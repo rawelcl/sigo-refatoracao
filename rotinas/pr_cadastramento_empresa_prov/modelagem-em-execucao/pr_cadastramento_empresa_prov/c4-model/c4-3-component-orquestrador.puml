@@ -1,0 +1,147 @@
+@startuml c4-3-component-orquestrador
+!include <C4/C4_Component>
+
+LAYOUT_WITH_LEGEND()
+
+title [C4 Model - Nivel 3] Diagrama de Componentes\n**pk_cadastramento_empresa** (Orquestrador) + Packages Chamados
+
+' -----------------------------------
+' CONTAINER: Orquestrador
+' -----------------------------------
+
+Container_Boundary(orq, "pk_cadastramento_empresa (BC-01 - Orquestrador)") {
+
+    Component(ctx_type, "t_contexto_cadastro", "PL/SQL TYPE (Record)", "Estrutura compartilhada entre\ntodos os packages:\n- cd_empresa, cd_filial\n- cd_pessoa, cd_tabela\n- modelo_negocio, canal_venda\n- flags de controle")
+
+    Component(cr_propostas, "cr_propostas_pendentes", "PL/SQL Cursor", "SELECT * FROM tb_empresa_internet\nWHERE nu_controle = p_nu_controle\nAND fl_status_processamento IN (0,8)")
+
+    Component(fn_init, "fn_inicializa_contexto", "PL/SQL Function", "Inicializa t_contexto_cadastro\ncom valores padrao e\ncalcula constante_vl (desconto)")
+
+    Component(pr_main, "pr_processa_proposta", "PL/SQL Procedure", "Fluxo principal (ORDEM CORRIGIDA):\n1. Valida, 2. Filial,\n3. Parametros, 4. Pessoa,\n5. Preco, 6. Empresa,\n7. Copart, 8. Carencia,\n9. Endereco, 10. Acesso,\n11. Fidelizacao, 12. Reembolso,\n13. Min. contratual,\n14. Commit,\n15. Odonto, 16. Notif, 17. PIM")
+
+    Component(pr_erro, "pr_trata_erro", "PL/SQL Procedure", "Rollback + registra pendencia\n(tb_pendencia_empresa_internet)\n+ verifica se empresa\nja foi criada parcialmente")
+
+    Component(pr_post, "pr_pos_processamento", "PL/SQL Procedure", "Pos-commit (assincrono no TO-BE):\n- pr_odon_param_esp_empresa\n- Pr_Vcc_Empresa_Super_Simples\n- pr_send_mail (BC-17)\n- pr_desconto_empresa (BC-18)\n- pr_cobranca_falta_param")
+}
+
+' -----------------------------------
+' PACKAGES CORE DOMAIN (Chamados pelo Orquestrador)
+' -----------------------------------
+
+Container_Boundary(core, "Core Domain Packages") {
+
+    Component(filial, "pk_filial_area_venda\n.pr_resolve_filial", "PL/SQL", "Vendedor -> Area Venda -> Filial\nOverride: cd_filial_contrato\nOverride: filial_modelo (TAFFIX)\nResolve cd_empresa_plano")
+
+    Component(modelo, "pk_modelo_negocio\n.pr_resolve_parametros", "PL/SQL", "Verifica SIGO vs BITIX\nResolve coligadas\nBusca tb_empresa_neg\nDefine canal_venda\nDefine tabela geral")
+
+    Component(preco, "pk_precificacao\n.pr_cria_tabelas_preco", "PL/SQL", "Cria tb_preco_plano (principal)\nInsere tb_valor_plano\nCria tabela agregados\nInsere descontos\nInsere franquias")
+
+    Component(empresa, "pk_empresa_conveniada\n.pr_cria_empresa", "PL/SQL", "Gera cd_empresa (fn_empresa_conveniada)\nINSERT tb_empresa_conveniada\nCria unidade + parametros\nConfigura RN 279/309\nBreakeven, flags, historico")
+
+    Component(copart, "pk_coparticipacao\n.pr_configura", "PL/SQL", "Controle fator empresa\nFatores empresa\nInternacao PJ\nIsencao coparticipacao\nTipos reembolso\nTabela referencia")
+
+    Component(carencia, "pk_carencia\n.pr_configura", "PL/SQL", "Compra carencia (seq)\nGrupos carencia\nModulos carencia\nGrupos odontologicos")
+}
+
+' -----------------------------------
+' PACKAGES SUPPORTING DOMAIN
+' -----------------------------------
+
+Container_Boundary(support, "Supporting Domain Packages") {
+
+    Component(val_doc, "pk_validacao_proposta\n.pr_valida_documentos", "PL/SQL", "Valida CNPJ/CPF, CAEPF,\nlista negra, vendedor")
+
+    Component(val_cad, "pk_validacao_proposta\n.pr_valida_dados_cadastrais", "PL/SQL", "Valida razao social, fantasia,\nnatureza empresa, total empregados,\ncontato, cargo")
+
+    Component(val_end, "pk_validacao_proposta\n.pr_valida_endereco", "PL/SQL", "Valida CEP, UF, cidade, bairro,\nlogradouro, complemento, email")
+
+    Component(val_cont, "pk_validacao_proposta\n.pr_valida_contrato", "PL/SQL", "Valida data pagamento (1-30),\nvalidade contrato (min 6 meses),\nnatureza juridica")
+
+    Component(pessoa, "pk_pessoa_juridica\n.pr_cria_ou_atualiza", "PL/SQL", "Verifica existencia por CNPJ\nINSERT ou UPDATE tb_pessoa\nGera cd_pessoa (seq + digito)")
+
+    Component(endereco, "pk_endereco_comunicacao\n.pr_cadastra", "PL/SQL", "Endereco correspondencia\n(Affix reusa / demais cria)\nContato pessoa\nMeios comunicacao\n(tel,fax,cel,email,bip)")
+
+    Component(fidel, "pk_fidelizacao\n.pr_configura", "PL/SQL", "Fidelizacao Middle Market\n(canal_venda = 2, 30-99 benef.)")
+
+    Component(reemb, "pk_reembolso\n.pr_configura", "PL/SQL", "Prazos, tipos, tabelas\ne composicao reembolso\npor plano")
+
+    Component(minimo, "pk_minimo_contratual\n.pr_configura", "PL/SQL", "Vigencia, multas,\nfaturamento minimo,\nqtd vidas")
+
+    Component(odonto, "pk_integracao_odonto\n.pr_integra", "PL/SQL", "Verifica param 225\npr_odon_param_esp_empresa\nPr_Vcc_Empresa_Super_Simples")
+
+    Component(desconto, "pk_desconto_pim\n.pr_aplica_desconto", "PL/SQL", "Aplica descontos PIM/ADM\nquando FL_ATIVA_PIM_ADM = 'S'\npr_desconto_empresa")
+}
+
+' -----------------------------------
+' PACKAGES GENERIC
+' -----------------------------------
+
+Container_Boundary(generic, "Generic / Infraestrutura") {
+
+    Component(log_erro, "pk_log_auditoria\n.pr_registra_erro", "PL/SQL", "Registra erro + raise\n(substitui 30 blocos\nde boilerplate)")
+
+    Component(log_info, "pk_log_auditoria\n.pr_registra_info", "PL/SQL", "Registra log informativo\nsem raise_application_error")
+
+    Component(log_pend, "pk_log_auditoria\n.pr_registra_pendencia", "PL/SQL", "INSERT tb_pendencia_empresa_internet")
+
+    Component(acesso, "pk_acesso_internet\n.pr_configura", "PL/SQL", "Acesso internet (seq)\nControles internet\nLimite acesso (Affix)\nUpdate titulares/depend.\n(TP definitivo)")
+
+    Component(notif, "pk_notificacao_email\n.pr_envia_efetivacao", "PL/SQL", "Envia e-mail de efetivacao\npr_send_mail (Hapvida)\npr_send_mail_html_rn (RN Saude)")
+}
+
+' -----------------------------------
+' DATABASE
+' -----------------------------------
+
+ContainerDb(db, "Oracle HUMASTER", "Oracle 19c+")
+
+' -----------------------------------
+' RELACIONAMENTOS - Fluxo de Orquestracao
+' -----------------------------------
+
+' Orquestrador monta contexto
+Rel(pr_main, fn_init, "Inicializa")
+Rel(pr_main, cr_propostas, "Itera propostas")
+
+' Orquestrador chama validacoes
+Rel(pr_main, val_doc, "1.1 Valida docs")
+Rel(pr_main, val_cad, "1.2 Valida cadastro")
+Rel(pr_main, val_end, "1.3 Valida endereco")
+Rel(pr_main, val_cont, "1.4 Valida contrato")
+
+' Orquestrador chama core (ORDEM CORRIGIDA: fail fast)
+Rel(pr_main, filial, "2. Resolve filial")
+Rel(pr_main, modelo, "3. Busca parametros")
+Rel(pr_main, pessoa, "4. Cria pessoa")
+Rel(pr_main, preco, "5. Cria preco")
+Rel(pr_main, empresa, "6. Cria empresa")
+Rel(pr_main, copart, "7. Config copart.")
+Rel(pr_main, carencia, "8. Config carencia")
+
+' Orquestrador chama supporting
+Rel(pr_main, endereco, "9. Cadastra endereco")
+Rel(pr_main, acesso, "10. Cria acesso")
+Rel(pr_main, fidel, "11. Fidelizacao")
+Rel(pr_main, reemb, "12. Reembolso")
+Rel(pr_main, minimo, "13. Min. contratual")
+
+' Pos-processamento
+Rel(pr_post, odonto, "14. Integra odonto")
+Rel(pr_post, notif, "15. E-mail efetivacao")
+Rel(pr_post, desconto, "16. Desconto PIM/ADM")
+
+' Erro
+Rel(pr_main, pr_erro, "EXCEPTION")
+
+' Todos usam log
+Rel(val_doc, log_erro, "Registra erro")
+Rel(val_cad, log_erro, "Registra erro")
+Rel(val_end, log_erro, "Registra erro")
+Rel(pr_erro, log_pend, "Registra pendencia")
+
+' Todos acessam DB
+Rel(empresa, db, "INSERT/UPDATE")
+Rel(pessoa, db, "INSERT/UPDATE")
+Rel(preco, db, "INSERT")
+
+@enduml

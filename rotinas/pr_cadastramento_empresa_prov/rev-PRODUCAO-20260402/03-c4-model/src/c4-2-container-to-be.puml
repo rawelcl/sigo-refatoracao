@@ -1,0 +1,69 @@
+@startuml c4-2-container-to-be
+!include <C4/C4_Container>
+LAYOUT_WITH_LEGEND()
+
+title C4 Model - Nivel 2 Diagrama de Containers - TO-BE (Estado Alvo - Fase 2)
+' Subtitulo: 12 Packages PL/SQL organizados por Bounded Context (DDD)
+
+Person(corretor, "Corretor / Empresa", "Cadastra proposta via TAFFIX (PIM) ou BITIX")
+Person(operador_adm, "Operador Administrativo", "Monitora e resolve pendencias")
+
+System_Boundary(sistema_refat, "SIGO - Implantacao de Empresa - REFATORADO (Packages DDD)") {
+
+  ' --- Orquestrador (Application Layer) ---
+  Container(orq, "pk_cad_orquestrador", "PL/SQL Package (Orquestrador)", "Application Layer\n~60 linhas\nInterface publica: p_nu_controle, p_erro_controle\nApenas coordenacao de fases\nGerencia transacao (COMMIT/ROLLBACK)\nBC-CAD-01")
+
+  ' --- Core Domain Packages ---
+  System_Boundary(core, "Core Domain Packages") {
+    Container(pk_empresa, "pk_cad_empresa_conveniada", "PL/SQL Package", "Cria contrato definitivo\nINSERT tb_empresa_conveniada\n+ tb_hist, +tb_model_reaj\n+ tb_implantacao, + tb_cnpj_cont\nBC-CAD-07")
+    Container(pk_preco, "pk_cad_precificacao", "PL/SQL Package", "Gestao de tabela de precos\nModelo atacado x AFFIX\nCopia valores/franquias/descontos\nRN279/309 (tabela inativos)\nBC-CAD-05")
+    Container(pk_param, "pk_cad_parametrizacao", "PL/SQL Package", "Parametros operacionais\nUnidade, carencias, grupos\nModulos, fidelizacao\nMinimo contratual\nBC-CAD-08")
+    Container(pk_copart, "pk_cad_copart_reembolso", "PL/SQL Package", "Coparticipacao e reembolso\nControle fator empresa\nCopart tabelas\nReembolso (plano livre escolha)\nBC-CAD-09")
+  }
+
+  ' --- Supporting Domain Packages ---
+  System_Boundary(supporting, "Supporting Domain Packages") {
+    Container(pk_valid, "pk_cad_validacao_proposta", "PL/SQL Package", "Validacoes pre-processamento\nVendedor, lista negra\nDocumento (CNPJ/CPF/CAEPF)\nDados cadastrais\nBC-CAD-02")
+    Container(pk_idcontrat, "pk_cad_identificacao_contratual", "PL/SQL Package", "Resolve contexto comercial\nFilial (hierarquia 3 niveis)\nCanal SIGO vs BITIX\nConsolidacao de vidas\nParametros negociacao\nBC-CAD-03")
+    Container(pk_pessoa, "pk_cad_pessoa", "PL/SQL Package", "Gestao de Pessoa Juridica\nCria / atualiza tb_pessoa\nDigito verificador\nEnderecos e contatos\nBC-CAD-04")
+    Container(pk_acesso, "pk_cad_acesso_internet", "PL/SQL Package", "Acesso internet da empresa\ntb_acesso_internet\nControles de servico (7/12/14/16)\nSenha segura (aleatorio)\nVinculo titulares/dependentes\nBC-CAD-10")
+    Container(pk_odonto, "pk_cad_odonto", "PL/SQL Package", "Integracao odonto\nSuper Simples (sem plano odonto)\nRepasse automatico (param 225)\nBC-CAD-12")
+  }
+
+  ' --- Generic / Infraestrutura ---
+  System_Boundary(generic, "Generic / Infraestrutura") {
+    Container(pk_ans, "pk_cad_regulatorio_ans", "PL/SQL Package", "Calculos regulatorios ANS\nFlag faixa etaria (RN195)\nTabela inativos (RN279/309)\nCoparticipacao (RN195)\nBC-CAD-06")
+    Container(pk_log, "pk_log_auditoria", "PL/SQL Package", "Log e auditoria\ntb_log_baixa_controle\nTratamento de erro explicito\np_erro_controle correto")
+    Container(pk_notif, "pk_notificacao", "PL/SQL Package", "Notificacao boas-vindas\nTemplate por operadora\nlog_envio_kit\nDados sensiveis removidos do email\nBC-CAD-11")
+  }
+
+  ContainerDb(oracle, "Oracle Database 19c", "Oracle 19c", "Schema HUMASTER\nAcesso via repositorios\nUm repositorio por Aggregate Root")
+
+}
+
+System_Ext(pr_efetiva, "PR_EFETIVA_INTERNET\n+ Outros chamadores", "5 rotinas chamadoras -- interface publica mantida")
+System_Ext(email_smtp, "Servidor SMTP", "Email boas-vindas (sem dados sensiveis)")
+System_Ext(odonto_ext, "Modulo Odonto", "Super Simples + repasse (via ACLs)")
+
+Rel(pr_efetiva, orq, "Chama interface publica", "p_nu_controle, p_erro_controle")
+Rel(orq, pk_valid, "1. Valida proposta", "t_contexto_cadastramento")
+Rel(orq, pk_idcontrat, "2. Identifica contexto contratual", "t_contexto_cadastramento")
+Rel(orq, pk_pessoa, "3. Cria/localiza pessoa juridica", "t_contexto_cadastramento")
+Rel(orq, pk_preco, "4. Provisiona tabela de precos", "t_contexto_cadastramento")
+Rel(orq, pk_ans, "5. Calculos regulatorios ANS", "t_contexto_cadastramento")
+Rel(orq, pk_empresa, "6. Cria contrato definitivo", "t_contexto_cadastramento")
+Rel(orq, pk_param, "7. Parametrizacao operacional", "t_contexto_cadastramento")
+Rel(orq, pk_copart, "8. Coparticipacao e reembolso", "t_contexto_cadastramento")
+Rel(orq, pk_acesso, "9. Cria acesso internet", "t_contexto_cadastramento")
+Rel(orq, pk_notif, "10. Notificacao boas-vindas", "t_contexto_cadastramento")
+Rel(orq, pk_odonto, "11. Integracao odonto", "t_contexto_cadastramento")
+Rel(orq, pk_log, "Log e auditoria em todas as fases")
+Rel_Back(oracle, pk_empresa, "INSERT principal")
+Rel_Back(oracle, pk_preco, "INSERT precos")
+Rel_Back(oracle, pk_param, "INSERT parametros")
+Rel_Back(oracle, pk_copart, "INSERT copart/reemb")
+Rel_Back(oracle, pk_acesso, "INSERT acesso")
+Rel(pk_notif, email_smtp, "Envia email (sem CNPJ/senha)")
+Rel(pk_odonto, odonto_ext, "Replica via ACL")
+
+@enduml

@@ -1,0 +1,199 @@
+@startuml fluxo-pk-venda-json-as-is
+!theme plain
+title Fluxo de Execucao -- PK_VENDA_JSON (AS-IS)
+
+' ============================================================
+' GRUPO 1: INTEGRACAO BITIX (pr_pim_insere_cnpj)
+' ============================================================
+partition "pr_pim_insere_cnpj -- ACL BITIX" {
+
+  start
+
+  :Recebe JSON CLOB do BITIX\nParametros: p_json, p_ret_json OUT;
+
+  :Inicializa variaveis globais de package\n[CRITICO S04]: G_PROVISORIO, G_PROPOSTA, etc.;
+
+  :JSON_VALUE p_json: extrai V_STATUS, COD_OPERADORA,\nFL_COMMIT, V_COLIGADA, G_TOTAL_BENEFICIARIO;
+
+  note right
+    [S10] JSON_VALUE re-executado
+    em 5+ locais ao longo da procedure
+  end note
+
+  if (RN09: Proposta ja existe em TB_PROPOSTA_VENDA?) then (Sim)
+    if (RN09: fn_registro_sistema('RESPOSTA_BITIX_01')='S'?) then (Sim)
+      if (V_STATUS IN (1,2,3,6,7,9,10)?) then (Sim)
+        :Retorna JSON: INTEGRACAO=0, MENSAGEM='JA INTEGRADO';
+        stop
+      endif
+    else (Nao)
+      if (V_STATUS IN (1,7,10)?) then (Sim)
+        :Retorna JSON: INTEGRACAO=0, MENSAGEM='JA INTEGRADO';
+        stop
+      endif
+    endif
+  endif
+
+  :Gera NU_CONTROLE via SQ_EMPRESA_INTERNET.nextval\nGera NU_CONTROLE_OD via SQ_EMPRESA_INTERNET.nextval;
+
+  :fn_set_empresa_internet:\nDesserializa JSON -> TB_EMPRESA_INTERNET%ROWTYPE;
+
+  :INSERT TB_EMPRESA_INTERNET (staging saude)\nINSERT TB_EMPRESA_INTERNET replica odonto [RN15]\nINSERT TB_ODON_EMPRESA_INTERNET;
+
+  :pr_set_usuario_internet:\nInsere titulares em TB_USUARIO_TITULAR_INTERNET\nInsere dependentes em TB_USUARIO_DEPENDENTE_INTERNET;
+
+  :pr_set_usuario_od:\nInsere beneficiarios odonto\npr_control_internet: registra TB_PIM_CONTROLE_CPF [RN10];
+
+  if (RN16: FL_COMMIT='N' E COUNT_BENE != G_TOTAL_BENEFICIARIO?) then (Sim)
+    :INSERT TB_PENDENCIA_EMPRESA_INTERNET cd_pendencia=9\n'Quantidade de beneficiarios diferente do JSON';
+  endif
+
+  :pr_cadastramento_empresa_baixa:\nExecuta criticas de pendencia de empresa;
+
+  :pr_critica_internet por beneficiario:\nExecuta criticas de cada titular;
+
+  if (RN12: fn_get_confopera_emp=1 E FL_COMMIT='S' E V_COLIGADA='S'?) then (Sim)
+    :pr_set_emp_fluxo_pos(nu_controle,'',7)\nRegistra fluxo 7 para coligada POS [RN12];
+  endif
+
+  if (RN08: fn_get_confopera_emp=1 E FL_COMMIT='S' E V_COLIGADA='N'?) then (Sim)
+    :N_TOTAL_BLOQUEIO := fn_get_criticas_pendencias(pnu_controle)\n[CRITICO S12] tem side effect de UPDATE fl_status=9;
+    if (N_TOTAL_BLOQUEIO = 0?) then (Sim)
+      if (RN13: fn_get_blocklist_emp = 0 E RN14: fn_get_pend_neoway = 0?) then (Sim)
+        :UPDATE TB_PROPOSTA_VENDA fl_status=6;
+        :pr_set_emp_fluxo_pos(nu_controle,'',10);
+        :pr_efetiva_baixa_manual(pnu_controle,'E','BAIXAPOS')\nAuto-baixa POS acionada [RN08];
+      else (Nao)
+        :pr_set_emp_fluxo_pos para fluxo 17 ou 99;
+      endif
+    else (Nao)
+      :pr_set_emp_fluxo_pos(nu_controle,'',7);
+    endif
+  endif
+
+  :Monta JSON de retorno\n{TPROVISORIO, INTEGRACAO, MENSAGEM, MOTIVOS};
+  :COMMIT;
+  :Retorna p_ret_json;
+
+  stop
+}
+
+' ============================================================
+' GRUPO 2: EFETIVACAO BATCH (pr_efetiva)
+' ============================================================
+partition "pr_efetiva -- Batch JOB" {
+
+  start
+
+  :Entrada: chamada por JOB Oracle ou PR_EFETIVA_INTERNET (coligadas);
+
+  if (RN01: fn_registro_sistema('PK_VENDA_JSON_PR_EFETIVA_01')='S'?) then (Fluxo Avancado CTE)
+
+    :Cursor CTE (WITH QTD_COLIGADA):\nSeleciona propostas onde grupo esta completo\nUNION ALL propostas nao-coligadas FL_STATUS=6;
+
+    while (Tem proposta no cursor?) is (Sim)
+      :pr_efetiva_baixa_manual(st_e.nu_controle, 'N');
+    endwhile (Nao)
+
+  else (Fluxo Legado Dois Loops)
+
+    :Loop 1 -- Nao coligadas:\nFL_STATUS=6 AND NOT EXISTS coligada;
+    while (Tem proposta nao-coligada?) is (Sim)
+      :pr_efetiva_baixa_manual(nu_controle, 'N');
+    endwhile (Nao)
+
+    :Loop 2 -- Coligadas:\nFL_STATUS=6 AND EXISTS coligada;
+    while (Tem proposta coligada?) is (Sim)
+      :Busca cd_proposta_mae e FN_VALIDA_COLIGADA;
+      :SELECT COUNT INTO V_COUNT_NAO_APTA_BAIXA\ncoligadas com status NOT IN (6,7,10) [RN03];
+      if (V_COUNT_NAO_APTA_BAIXA = 0 E FN_VALIDA_COLIGADA = 0?) then (Sim)
+        :pr_efetiva_baixa_manual(nu_controle, 'N') [RN03];
+      else (Nao)
+        :Aguarda proximo ciclo do JOB;
+      endif
+    endwhile (Nao)
+
+  endif
+
+  stop
+}
+
+' ============================================================
+' GRUPO 3: EFETIVACAO ESPECIFICA (pr_efetiva_baixa_manual)
+' ============================================================
+partition "pr_efetiva_baixa_manual -- Nucleo de Efetivacao" {
+
+  start
+
+  :Entrada: nu_controle, p_revalidar_pendencias, p_origem\nOrigem: 'JOB','T229B','BAIXAPOS','BPR','BITIX';
+
+  :SELECT TB_PROPOSTA_VENDA WHERE nu_controle\nObtem nu_controle_od, fl_status;
+
+  :fn_get_criticas_pendencias(nu_controle, p_revalidar_pendencias, 'S')\n[CRITICO S12]: pode atualizar fl_status=9 como side effect [RN04];
+
+  if (COUNT_VALIDA = 0?) then (Sim -- sem criticas)
+
+    :pr_cadastramento_empresa_prov(nu_controle, w_erro OUT)\nCadastra empresa definitiva [RN05];
+
+    :l_emp := substr(w_erro, instr(w_erro,',')+1)\n[CRITICO S03]: parsing fragil de string de retorno;
+
+    if (nu_controle_od IS NOT NULL E w_erro IS NOT NULL?) then (Sim)
+      :pr_odon_cad_empresa_prov(nu_controle_od, l_emp, w_erro_od)\nCadastra empresa odonto;
+    endif
+
+    if (l_emp IS NOT NULL?) then (Sim -- empresa criada)
+
+      :UPDATE TB_EMPRESA_INTERNET cd_empresa=l_emp, fl_status=9;
+
+      if (nu_controle_od IS NOT NULL?) then (Sim)
+        :UPDATE TB_ODON_EMPRESA_INTERNET cd_empresa;
+        :PR_NAT_JURIDICA_ODON;
+      endif
+
+      :INSERT TB_EMPRESA_CNAE;
+      :DELETE/INSERT TB_PENDENCIA_EMPRESA;
+
+      note right
+        RN11: Middle 30-99 sem conta conjunta:
+        pai='-999' [ATENCAO A08 valor magico]
+        cobranca=NULL
+      end note
+
+      :Loop titulares (N+1 [S05]):\nSELECT nu_controle FROM TB_USUARIO_TITULAR_INTERNET WHERE cd_empresa=l_emp;
+      while (Tem titular?) is (Sim)
+        :pr_critica_internet(nu_controle, 1, 'N')\nRevalida criticas [RN06];
+        :SELECT COUNT INTO v_cont FROM TB_USUARIO_CRITICA_INTERNET;
+        if (v_cont = 0?) then (Sim)
+          :pr_cadastramento_internet2(nu_controle)\nEfetiva beneficiario [RN06];
+          :pr_pim_pendencia(nu_controle, 0)\n[S01] excecao silenciosa;
+        endif
+      endwhile (Nao)
+
+      :RN07: fn_get_confopera_emp(nu_controle)?;
+      if (Retorna 0 (PRE) OU p_revalidar_pendencias='N'?) then (Sim -- PRE ou JOB)
+        :UPDATE TB_PROPOSTA_VENDA fl_status=7, cd_empresa=l_emp [RN07];
+      else (POS)
+        if (sem blocklist E sem Neoway E sem fluxo 7?) then (Sim -- Caminho feliz POS)
+          :UPDATE TB_PROPOSTA_VENDA fl_status=10 [RN07];
+        else (POS com ressalva)
+          :UPDATE TB_PROPOSTA_VENDA fl_status=7 [RN07];
+        endif
+      endif
+
+      :COMMIT;
+
+    else (Nao -- l_emp NULL)
+      note right
+        [S03] Erro silencioso:
+        empresa nao criada sem nenhuma
+        notificacao explicita
+      end note
+    endif
+
+  else (Sim -- tem criticas)
+    :Proposta permanece bloqueada\nfl_status ja atualizado para 9 por side effect de fn_get_criticas_pendencias [S12];
+  endif
+
+  stop
+}
+@enduml

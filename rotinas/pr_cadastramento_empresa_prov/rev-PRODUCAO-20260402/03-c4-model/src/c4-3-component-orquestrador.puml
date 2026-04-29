@@ -1,0 +1,55 @@
+@startuml c4-3-component-orquestrador
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+
+title C4 Model - Nivel 3 Diagrama de Componentes
+' Subtitulo: pk_cad_orquestrador (Orquestrador) + Packages Chamados
+
+' --- Tipo de contexto compartilhado ---
+Container(ctx, "t_contexto_cadastramento", "PL/SQL TYPE RECORD", "Contexto compartilhado entre packages\np_nu_controle, lcd_empresa, lcd_filial\nlnu_controle, wcd_canal_venda\nwfl_tabela_geral, lcd_tabela\nv_fl_faixa_ans, lcd_pessoa, lcd_acesso")
+
+' --- Orquestrador ---
+Container_Boundary(orq, "pk_cad_orquestrador (BC-CAD-01 - Orquestrador)") {
+  Component(c_entrada, "ValidarParametrosEntrada", "PL/SQL Block", "Valida p_nu_controle nao nulo\nAbre cursor cr_empresa_internet\nVerifica fl_status_processamento IN (0,8)\nRN01, RN02")
+  Component(c_ctx, "InicializarContexto", "PL/SQL Block", "Inicializa t_contexto_cadastramento\nLe st_e do cursor\nMonta estrutura de contexto\npara passagem entre packages")
+  Component(c_coord, "CoordenaFases", "PL/SQL Call Sequence", "Delega 11 fases em sequencia\nMant�m contrato de retorno\n(t_contexto_cadastramento)\nSEM logica de negocio propria")
+  Component(c_tx, "GerenciarTransacao", "PL/SQL Block", "COMMIT apos todas as fases OK\nROLLBACK + INSERT tb_pendencia\nse qualquer fase falhar\np_erro_controle = SQLERRM (nao NULL)")
+}
+
+' --- Core Domain ---
+System_Boundary(core, "Core Domain Packages") {
+  Container(pk_valid, "pk_cad_validacao_proposta", "PL/SQL Package", "Validacao de proposta\nBC-CAD-02")
+  Container(pk_idcontrat, "pk_cad_identificacao_contratual", "PL/SQL Package", "Contexto comercial\nBC-CAD-03")
+  Container(pk_pessoa, "pk_cad_pessoa", "PL/SQL Package", "Pessoa Juridica\nBC-CAD-04")
+  Container(pk_preco, "pk_cad_precificacao", "PL/SQL Package", "Tabela de precos\nBC-CAD-05")
+  Container(pk_ans, "pk_cad_regulatorio_ans", "PL/SQL Package", "RN195 + RN279/309\nBC-CAD-06")
+  Container(pk_empresa, "pk_cad_empresa_conveniada", "PL/SQL Package", "INSERT contrato\nBC-CAD-07")
+  Container(pk_param, "pk_cad_parametrizacao", "PL/SQL Package", "Parametros operacionais\nBC-CAD-08")
+  Container(pk_copart, "pk_cad_copart_reembolso", "PL/SQL Package", "Copart + Reembolso\nBC-CAD-09")
+  Container(pk_acesso, "pk_cad_acesso_internet", "PL/SQL Package", "Acesso Internet\nBC-CAD-10")
+}
+
+' --- Supporting / Generic ---
+System_Boundary(generic, "Supporting / Generic") {
+  Container(pk_notif, "pk_notificacao", "PL/SQL Package", "Email boas-vindas\nBC-CAD-11")
+  Container(pk_odonto, "pk_cad_odonto", "PL/SQL Package", "Odonto Super Simples\nBC-CAD-12")
+  Container(pk_log, "pk_log_auditoria", "PL/SQL Package", "Log e auditoria\nTratamento explicito de erros")
+}
+
+Rel(c_entrada, c_ctx, "Proposta elegivel encontrada")
+Rel(c_ctx, c_coord, "Contexto inicializado")
+Rel(c_coord, pk_valid, "Fase 1 -- Valida proposta", "t_contexto_cadastramento")
+Rel(c_coord, pk_idcontrat, "Fase 2 -- Identifica contexto", "t_contexto_cadastramento")
+Rel(c_coord, pk_pessoa, "Fase 3 -- Gestao de pessoa", "t_contexto_cadastramento")
+Rel(c_coord, pk_preco, "Fase 4 -- Provisiona precos", "t_contexto_cadastramento")
+Rel(c_coord, pk_ans, "Fase 5 -- Calculos ANS", "t_contexto_cadastramento")
+Rel(c_coord, pk_empresa, "Fase 6 -- Cria contrato", "t_contexto_cadastramento")
+Rel(c_coord, pk_param, "Fase 7 -- Parametrizacao", "t_contexto_cadastramento")
+Rel(c_coord, pk_copart, "Fase 8 -- Copart + Reembolso", "t_contexto_cadastramento")
+Rel(c_coord, pk_acesso, "Fase 9 -- Acesso Internet", "t_contexto_cadastramento")
+Rel(c_coord, pk_notif, "Fase 10 -- Notificacao")
+Rel(c_coord, pk_odonto, "Fase 11 -- Odonto")
+Rel(c_coord, pk_log, "Log em todas as fases")
+Rel(c_coord, c_tx, "Todas as fases concluidas")
+
+@enduml

@@ -1,0 +1,171 @@
+@startuml fluxo-pr-cadastramento-empresa-prov-to-be
+!theme plain
+title Fluxo de Execucao -- PR_CADASTRAMENTO_EMPRESA_PROV (TO-BE)
+
+note right
+  Melhorias aplicadas:
+  - Separacao em 12 packages por Bounded Context
+  - t_contexto_cadastramento como TYPE Record
+  - p_erro_controle retorna SQLERRM (nao NULL)
+  - Senha aleatoria segura (eliminacao de S10)
+  - CNPJ e senha removidos do email (eliminacao de S09)
+  - Excecoes propagadas com log (eliminacao de S01)
+  - SEQUENCE em lugar de MAX+1 (eliminacao de S05)
+  - COMMIT unico ao final (eliminacao de S02)
+  - Tratamento explicito de tp_operacao
+  - Specifications como objetos autonomos e testaveis
+end note
+
+start
+
+:Entrada\np_nu_controle IN NUMBER;
+
+:pk_cad_orquestrador.executar(p_nu_controle, p_erro_controle);
+
+' --- FASE DE VALIDACAO ---
+partition "pk_cad_validacao_proposta (BC-CAD-02)" {
+  :ValidarPropostasElegiveis(p_nu_controle)\n=> PropostaElegivelParaProcessamentoSpec;
+  if (Tem propostas status IN (0,8)?) then (Nao)
+    :Retornar sem erro (nenhuma proposta a processar);
+    stop
+  else (Sim)
+  endif
+
+  :ApenasInclusaoSpec.verificar(tp_operacao)\n=> Apenas tp_operacao = '1' processado;
+  if (tp_operacao = '1'?) then (Nao)
+    note right: [ATENCAO] Registrar [ATENCAO] se tp_operacao desconhecido
+    :Pular proposta (sem erro);
+  else (Sim)
+
+    :VendedorAtivoSpec.verificar(cd_vendedor_plano)\nSE invalido: raise DomainException;
+
+    :CNPJNaoRestritoSpec.verificar(nu_cgc_cpf)\nSE restrito: raise DomainException;
+
+    :DocumentoFiscalValidoSpec.verificar(nu_cgc_cpf, nu_caepf)\nUSA ValidacaoDocumentoACL\nSE invalido: raise DomainException;
+
+    :DadosCadastraisCompletosSpec.verificar(st_e)\nValida ~18 campos obrigatorios\nSE incompleto: raise DomainException;
+  endif
+}
+
+' --- FASE DE IDENTIFICACAO CONTRATUAL ---
+partition "pk_cad_identificacao_contratual (BC-CAD-03)" {
+  :ResolucaoFilialService.resolver()\nHierarquia: contrato > TAFFIX > vendedor;
+
+  if (Canal SIGO coligada?) then (Sim)
+    :ConsolidacaoVidasColigadaService.consolidar()\nSUM de tb_empresa_coligada;
+  else (Nao / BITIX)
+  endif
+
+  :SelecaoParametrosNegociacaoService.selecionar(canal, filial, vidas, dt)\n=> lnu_controle definido\nSE nao encontrado: raise DomainException;
+}
+
+' --- FASE DE GESTAO DE PESSOA ---
+partition "pk_cad_pessoa (BC-CAD-04)" {
+  :PessoaJuridicaService.criarOuLocalizar(nu_cgc_cpf)\nGera cd_pessoa (Sequence ou UUID)\npk_administracao via GeracaoCodPessoaACL\nINSERT/UPDATE tb_pessoa;
+}
+
+' --- FASE DE PRECIFICACAO ---
+partition "pk_cad_precificacao (BC-CAD-05)" {
+  if (Modelo atacado (cd_modelo_negocio=1)?) then (Sim)
+    :GestaoTabelaPrecosService.criarExclusiva()\nINSERT tb_preco_plano\nwfl_tabela_geral = 'N';
+  else (AFFIX)
+    :GestaoTabelaPrecosService.reutilizarCompartilhada()\nlcd_tabela = lcd_tabela_saude\nwfl_tabela_geral = 'S';
+  endif
+  :CopiarValoresPorCoparticipacao()\ntb_valor_plano filtrado por fl_participacao\n=> RN195 aplicada via coparticipacao correta;
+  :CopiarFranquiasEDescontos();
+}
+
+' --- FASE REGULATORIO ANS ---
+partition "pk_cad_regulatorio_ans (BC-CAD-06)" {
+  :CalculoFaixaEtariaANSService.calcular()\nAFFIX OU canal IN (1,2) OU 100 vidas\n=> v_fl_faixa_ans (RN195);
+
+  :CalculoRN279InatibosService.calcular()\nUSA TabelaInatibosRN279ACL\nUSA CopiaTabelaPrecosACL\n=> lfl_rn_279_309, lcd_tabela_copia_inativo;
+
+  :CalculoVigenciaContratoService.calcular()\n12 meses (atacado) ou herda da mae (AFFIX)\n=> vdt_validade_contrato;
+}
+
+' --- FASE DE CRIACAO DO CONTRATO ---
+partition "pk_cad_empresa_conveniada (BC-CAD-07)" {
+  :EmpresaConveniadaFactory.criar(st_e, ctx)\nEmpresaConveniada.calcularCanalVenda()\nDetermina branch por prorrogacao\nINSERT tb_empresa_conveniada\n(p_erro_controle = SQLERRM se falhar -- nao NULL);
+
+  :INSERT tabelas de contexto:\ntb_natureza_juridica_emp\ntb_modelo_reaj_empresa\ntb_implantacao_emp\ntb_empresa_conveniada_com\ntb_empresa_cnpj_contratante\ntb_empresa_conveniada_unidade;
+
+  :UPDATE tb_empresa_internet (datas);
+
+  :AjustarFlTipoFaixa em tb_valor_plano;
+}
+
+' --- FASE DE PARAMETRIZACAO OPERACIONAL ---
+partition "pk_cad_parametrizacao (BC-CAD-08)" {
+  :INSERT tb_parametros_unidade (por plano);
+  :INSERT tb_controle_fator_empresa;
+  :INSERT tb_terapias_espec_empresa;
+  :INSERT tb_fator_empresa (faixas etarias);
+  :INSERT tb_fidelizacao_empresa\n(dt_fim = dt_inicio + N dias -- PO deve confirmar valor);
+  :EmpresaConveniada.vincularMinimoContratual()\nSE param ativo em TB_PARAM_MINIMO_CONTRATUAL;
+  :INSERT tb_hist_empresa_conveniada\ntb_compra_carencia, tb_compra_grupo\ntb_compra_modulo, tb_odon_compra_grupo;
+  :INSERT tb_empresa_endereco, tb_endereco_pessoa\ntb_contato_pessoa, tb_meio_comunicacao_pessoa;
+  :INSERT tb_empresa_breakeven\n(vl = constante configuravel -- nao hardcode);
+  :INSERT tb_empresa_conveniada_imagem;
+}
+
+' --- FASE DE COPART E REEMBOLSO ---
+partition "pk_cad_copart_reembolso (BC-CAD-09)" {
+  :UPDATE tb_controle_fator_empresa (isencoes copart);
+  :INSERT tb_copart_internacao_param_pj;
+  :INSERT tb_copart_isnt_tp_benef;
+  :INSERT tb_copart_tipo_reembolso;
+  :INSERT tb_copart_tab_empresa;
+  :Para cada plano de livre escolha:\nINSERT tb_reemb_empresa_prazo_pag\ntb_reemb_empresa_prazo_pag_tip\ntb_reemb_empresa_tabela\ntb_reemb_empresa_composicao;
+}
+
+' --- FASE DE ACESSO INTERNET ---
+partition "pk_cad_acesso_internet (BC-CAD-10)" {
+  :AcessoInternetFactory.criar(lcd_empresa, lcd_pessoa)\nSenha aleatoria segura (8 chars)\nCriptografia via CriptografiaACL\nINSERT tb_acesso_internet;
+  :AcessoInternetEmpresa.configurarControles(dt_dia_pagamento)\nINSERT tb_controle_internet (4 servicos: 7,12,14,16)\ndia_limite por dt_dia_pagamento;
+  :UPDATE tb_usuario_titular_internet\nUPDATE tb_usuario_dependente_internet;
+  :INSERT tb_emp_limite_acesso_contra;
+  :INSERT tb_acesso_dados_empresa (email ADM);
+}
+
+' --- COMMIT ---
+:COMMIT (unico ao final de todas as fases)\npk_log_auditoria.registrarSucesso();
+
+' --- NOTIFICACAO (POS-COMMIT) ---
+partition "pk_notificacao (BC-CAD-11)" {
+  :NotificacaoBoasVindasService.enviar(empresa, email)\nSEM CNPJ, SEM senha no corpo\nLink de primeiro acesso seguro\nTemplate por cd_empresa_plano (7/14/outros)\nINSERT tb_log_envio_kit;
+}
+
+' --- POS-PROCESSAMENTO (POS-COMMIT) ---
+partition "pk_cad_odonto (BC-CAD-12)" {
+  :pk_desconto_empresa.aplicar (se FL_ATIVA_PIM_ADM)\npr_cobranca_falta_param;
+
+  if (count oei = 0 -- sem odonto vinculado?) then (Sem odonto)
+    :OdontoSuperSimplesACL.replicar(lcd_empresa)\npr_vcc_empresa_super_simples;
+  else (Com odonto)
+  endif
+
+  if (param 225 = 1?) then (Sim)
+    :RepasseOdontoACL.parametrizar(lcd_empresa)\npr_odon_param_esp_empresa;
+  else (Nao)
+  endif
+}
+
+:Emitir Domain Event CompanyContractCreated\n(consumido por Faturamento, Beneficiario, Odonto);
+
+:Retornar p_erro_controle = NULL (sucesso)\nChamador PODE interpretar NULL como sucesso;
+
+stop
+
+' --- Handler de excecao global ---
+note
+[CRITICO -- corrigido] WHEN OTHERS:
+ROLLBACK
+p_erro_controle := SQLERRM  (nao NULL -- correcao de S04 / DD-CAD-04)
+pk_log_auditoria.registrarErro(nu_controle, sqlerrm)
+INSERT tb_pendencia_empresa_internet (CD_PENDENCIA=9)
+Emitir Domain Event ContractRegistrationFailed
+COMMIT da pendencia
+-- Chamador recebe SQLERRM e pode tratar corretamente
+end note
+@enduml

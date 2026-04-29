@@ -1,0 +1,149 @@
+﻿@startuml c4-2-container-to-be-fase3
+!include <C4/C4_Container>
+
+LAYOUT_WITH_LEGEND()
+
+title [C4 Model - Nivel 2] Diagrama de Containers - **TO-BE FASE 3** (Modernizacao)\nMicroservicos .NET 8+ / Azure Cloud-Native / Event-Driven Architecture
+
+' ===================================================================
+' ATORES
+' ===================================================================
+
+Person(vendedor, "Vendedor / Corretor", "Cadastra empresas\nvia Portal Web ou BITIX")
+Person(operador, "Operador ADM", "Monitora e gerencia\ncadastros")
+
+' ===================================================================
+' API GATEWAY / BFF
+' ===================================================================
+
+System_Boundary(gateway, "Camada de Entrada (Azure)") {
+    Container(api_gw, "API Gateway", "Azure API Management", "Roteamento, autenticacao\nvia Microsoft Entra ID,\nrate limiting, logging,\npoliticas de seguranca")
+
+    Container(bff, "BFF - Cadastro Empresa", "ASP.NET Core 8\nMinimal APIs", "Backend-for-Frontend\nAgrega chamadas dos\nmicroservicos para\na tela de cadastro")
+
+    Container(portal, "Portal Web\n(Nova Tela TAFFIX)", "React 18 + TypeScript", "Interface moderna de\ncadastro de empresas\nsubstitui Oracle Forms\nHospedado em Azure Static Web Apps")
+
+    Container(bitix_legacy, "BITIX\n(Ferramenta de Vendas)", "Web Application\n(Legado)", "Plataforma de vendas\nusada pelo vendedor/corretor\npara cadastrar propostas\n(integrada via API Gateway\ndurante transicao)")
+}
+
+' ===================================================================
+' MICROSERVICOS - CORE
+' ===================================================================
+
+System_Boundary(core_services, "Core Domain Services (Azure Container Apps)") {
+
+    Container(svc_orq, "Cadastro Empresa\nOrchestrator", "ASP.NET Core 8\nAzure Durable Functions\nSaga Pattern", "Orquestra o fluxo completo\nde cadastramento via\nSaga (orquestracao)\ncom compensacao automatica")
+
+    Container(svc_modelo, "Servico de\nModelo de Negocio", "ASP.NET Core 8\nMinimal API", "Resolve parametros\nSIGO/BITIX/coligadas\nCanal de venda")
+
+    Container(svc_preco, "Servico de\nPrecificacao", "ASP.NET Core 8\nMinimal API", "Tabelas de preco\nValores de plano\nDescontos")
+
+    Container(svc_contrato, "Servico de\nContrato (Empresa\nConveniada)", "ASP.NET Core 8\nMinimal API", "Criacao do contrato\nUnidades, parametros\nRN 279/309\nMediatR + CQRS")
+
+    Container(svc_copart, "Servico de\nCoparticipacao", "ASP.NET Core 8\nMinimal API", "Coparticipacao\nFranquias, fatores\nIsencoes, reembolso")
+
+    Container(svc_carencia, "Servico de\nCarencia", "ASP.NET Core 8\nMinimal API", "Compra de carencia\nGrupos, modulos")
+}
+
+' ===================================================================
+' MICROSERVICOS - SUPPORTING
+' ===================================================================
+
+System_Boundary(support_services, "Supporting Services (Azure Container Apps)") {
+
+    Container(svc_validacao, "Servico de\nValidacao", "ASP.NET Core 8\nMinimal API", "Valida proposta:\nCNPJ, endereco, vendedor,\ndados cadastrais, contrato\nFluentValidation")
+
+    Container(svc_pessoa, "Servico de\nPessoa Juridica", "ASP.NET Core 8\nMinimal API", "CRUD de pessoa juridica\nEntity Framework Core\nGerencia tb_pessoa")
+
+    Container(svc_endereco, "Servico de\nEndereco", "ASP.NET Core 8\nMinimal API", "Enderecos, contatos\nMeios de comunicacao\nValidacao CEP")
+
+    Container(svc_filial, "Servico de\nFilial", "ASP.NET Core 8\nMinimal API", "Resolve filial\nArea de venda")
+
+    Container(svc_fidel, "Servico de\nFidelizacao", "ASP.NET Core 8\nMinimal API", "Fidelizacao Middle Market\nCanal venda = 2\n30-99 beneficiarios")
+
+    Container(svc_reemb, "Servico de\nReembolso", "ASP.NET Core 8\nMinimal API", "Prazos, tipos, tabelas\nComposicao reembolso\npor plano")
+
+    Container(svc_minimo, "Servico de\nMinimo Contratual", "ASP.NET Core 8\nMinimal API", "Vigencia, multas\nFaturamento minimo\nQtd vidas")
+
+    Container(svc_desconto, "Servico de\nDesconto / PIM", "ASP.NET Core 8\nMinimal API", "Descontos administrativos\nFL_ATIVA_PIM_ADM\nBC-18")
+
+    Container(svc_odonto, "Servico de\nIntegracao Odonto", "ASP.NET Core 8\nMinimal API", "Espelhamento odonto\nSuper Simples\nAnti-Corruption Layer")
+}
+
+' ===================================================================
+' INFRAESTRUTURA
+' ===================================================================
+
+System_Boundary(infra, "Infraestrutura / Cross-Cutting (Azure)") {
+
+    ContainerQueue(event_bus, "Event Bus", "Azure Service Bus\n(Topics + Subscriptions)", "Eventos de dominio:\n- PropostaValidada\n- EmpresaCriada\n- PrecoCriado\n- CarenciaConfigurada\n...")
+
+    Container(svc_log, "Servico de\nLog / Auditoria", "ASP.NET Core 8\nAzure Application Insights\nAzure Monitor", "Centraliza logs\nAuditoria\nPendencias\nDistributed Tracing")
+
+    Container(svc_notif, "Servico de\nNotificacao", "ASP.NET Core 8\nAzure Communication Services", "E-mail, SMS\nNotificacoes internas")
+
+    Container(svc_acesso, "Servico de\nAcesso Internet", "ASP.NET Core 8\nMinimal API", "Acessos, controles\nLimites, usuarios")
+}
+
+' ===================================================================
+' DATABASES (Database per Service)
+' ===================================================================
+
+System_Boundary(databases, "Databases (Database per Service - Azure)") {
+
+    ContainerDb(db_proposta, "DB Proposta", "Azure SQL Database", "tb_empresa_internet\n(propostas pendentes)")
+
+    ContainerDb(db_contrato, "DB Contrato", "Azure SQL Database", "tb_empresa_conveniada\ntb_empresa_conv_unidade\ntb_hist_empresa_conv")
+
+    ContainerDb(db_pessoa, "DB Pessoa", "Azure SQL Database", "tb_pessoa\ntb_endereco_pessoa\ntb_contato_pessoa\ntb_meio_comunicacao")
+
+    ContainerDb(db_preco, "DB Precificacao", "Azure SQL Database", "tb_preco_plano\ntb_valor_plano\ntb_desconto_preco_plano")
+
+    ContainerDb(db_legado, "Oracle HUMASTER\n(Legado)", "Oracle 19c+", "Tabelas legadas\nainda nao migradas\n(fase de transicao)\nAcesso via Oracle Gateway\nou Linked Server")
+}
+
+' ===================================================================
+' RELACIONAMENTOS
+' ===================================================================
+
+' Entrada
+Rel(vendedor, portal, "Cadastra proposta\n(novo portal)", "HTTPS")
+Rel(vendedor, bitix_legacy, "Cadastra proposta\n(plataforma de vendas)", "HTTPS")
+Rel(portal, api_gw, "Chamadas API", "HTTPS")
+Rel(bitix_legacy, api_gw, "Envia proposta", "REST/JSON")
+Rel(api_gw, bff, "Roteia", "HTTPS")
+
+' BFF --> Orquestrador
+Rel(bff, svc_orq, "Inicia cadastro", "REST")
+
+' Orquestrador --> Servicos (Saga - ORDEM CORRIGIDA: fail fast)
+Rel(svc_orq, svc_validacao, "1. Valida", "REST/Event")
+Rel(svc_orq, svc_filial, "2. Resolve filial", "REST")
+Rel(svc_orq, svc_modelo, "3. Parametros", "REST")
+Rel(svc_orq, svc_pessoa, "4. Cria pessoa", "REST")
+Rel(svc_orq, svc_preco, "5. Cria preco", "REST")
+Rel(svc_orq, svc_contrato, "6. Cria contrato", "REST")
+Rel(svc_orq, svc_copart, "7. Copart.", "REST")
+Rel(svc_orq, svc_carencia, "8. Carencia", "REST")
+Rel(svc_orq, svc_endereco, "9. Endereco", "REST")
+Rel(svc_orq, svc_acesso, "10. Acesso", "REST")
+Rel(svc_orq, svc_fidel, "11. Fidelizacao", "REST")
+Rel(svc_orq, svc_reemb, "12. Reembolso", "REST")
+Rel(svc_orq, svc_minimo, "13. Min. contratual", "REST")
+
+' Eventos
+Rel(svc_contrato, event_bus, "Publica\nEmpresaCriada", "Event")
+Rel(event_bus, svc_odonto, "Consome\nEmpresaCriada", "Event")
+Rel(event_bus, svc_notif, "Consome\nCadastroCompleto", "Event")
+Rel(event_bus, svc_log, "Consome\ntodos os eventos", "Event")
+Rel(svc_desconto, event_bus, "Publica\nDescontoPIMAplicado", "Event")
+Rel(event_bus, svc_desconto, "Consome\nEmpresaCriada\n(aplica PIM)", "Event")
+
+' Databases
+Rel(svc_orq, db_proposta, "Le/Atualiza")
+Rel(svc_contrato, db_contrato, "Grava")
+Rel(svc_pessoa, db_pessoa, "Grava")
+Rel(svc_preco, db_preco, "Grava")
+Rel(svc_odonto, db_legado, "ACL\n(Anti-Corruption)", "SQL")
+
+@enduml

@@ -1,0 +1,75 @@
+@startuml c4-3-component-pk-venda-json
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+title Componente -- PK_VENDA_JSON (AS-IS)
+
+Container_Boundary(pkg, "PK_VENDA_JSON -- HUMASTER") {
+
+  ' Grupo 1: ACL / Integracao BITIX
+  Component(pr_pim_insere_cnpj, "pr_pim_insere_cnpj", "Procedure Publica\nL4637-6055", "Ponto de entrada JSON BITIX.\nDesserializa proposta, persiste staging saude+odonto,\nexecuta criticas, monta retorno JSON.\nAuto-baixa POS se elegivel [RN08].")
+
+  Component(fn_set_empresa, "fn_set_empresa_internet", "Function Publica\nL4344-4636", "Desserializa campo a campo o JSON de empresa\npara TB_EMPRESA_INTERNET%ROWTYPE.")
+
+  Component(pr_set_usuario_internet, "pr_set_usuario_internet", "Procedure Publica\nL2822-4343", "Insere beneficiarios do JSON em\nTB_USUARIO_TITULAR_INTERNET e\nTB_USUARIO_DEPENDENTE_INTERNET.")
+
+  Component(pr_set_usuario_od, "pr_set_usuario_od", "Procedure Publica\nL1747-2772", "Cria/atualiza registros de beneficiarios odonto.\nGerencia mapeamento saude-odonto [RN10].")
+
+  Component(pr_control_internet, "pr_control_internet", "Procedure Publica\nL2773-2821", "Gerencia TB_PIM_CONTROLE_CPF:\nmapeamento controle saude-odonto [RN10].")
+
+  ' Grupo 2: Efetivacao Batch
+  Component(pr_efetiva, "pr_efetiva", "Procedure Publica\nL132-801", "Orquestrador JOB: processa TODAS as propostas\nFL_STATUS=6. Dois caminhos via fn_registro_sistema\n[RN01]. Trata coligadas [RN03] e nao-coligadas [RN02].")
+
+  ' Grupo 3: Efetivacao Especifica
+  Component(pr_efetiva_baixa_manual, "pr_efetiva_baixa_manual", "Procedure Publica\nL802-1332", "Efetivacao de proposta especifica.\nChamada por T229B, BAIXAPOS, JOB manual.\nLogica PRE/POS duplicada de pr_efetiva [S02].")
+
+  Component(pr_efetiva_baixa_manual_emp, "pr_efetiva_baixa_manual_emp", "Procedure Publica\nL1333-1746", "Efetivacao so da empresa (sem beneficiarios).\nEspecifico canal BITIX. Logica PRE/POS duplicada [S02].")
+
+  ' Motor de criticas
+  Component(fn_get_criticas, "fn_get_criticas_pendencias", "Function Publica\nL6101-6290", "Motor: conta criticas/pendencias em 3 modos.\n[CRITICO S12] Tem efeito colateral:\nUPDATE fl_status=9 quando p_valida_nao_coligada='S'.")
+
+  ' Validacoes POS
+  Component(fn_get_blocklist, "fn_get_blocklist_emp", "Function Publica\nL6056-6076", "Conta documentos blocklist BITIX [RN13].\nRetorna 1 se ha blocklist, 0 se limpo.")
+
+  Component(fn_get_pend_neoway, "fn_get_pend_neoway", "Function Publica\nL6077-6100", "Verifica se algum beneficiario tem\nfl_status_processamento='17' [RN14].\nTitulares OU dependentes.")
+
+  ' Pendencias
+  Component(pr_pim_pendencia, "pr_pim_pendencia", "Procedure Privada\nL7-131", "Atualiza TB_PENDENCIA_USUARIO\napos efetivacao de beneficiario.\n[S01] WHEN OTHERS THEN NULL -- silencioso.")
+}
+
+' Sistemas externos ao package
+ContainerDb(staging, "Staging", "Oracle Tables", "TB_PROPOSTA_VENDA\nTB_EMPRESA_INTERNET\nTB_USUARIO_TITULAR/DEPENDENTE_INTERNET")
+ContainerDb(definitivo, "Definitivo", "Oracle Tables", "TB_EMPRESA_CONVENIADA\nTB_EMPRESA_CNAE")
+ContainerDb(controle, "Controle", "Oracle Tables", "TB_EMPRESA_COLIGADA_BITX\nTB_PIM_CONTROLE_CPF\nTB_FILE_DOCUMENTO_BITIX")
+
+Container_Ext(sub_cadastro_emp, "pr_cadastramento_empresa_prov", "Procedure externa", "Cadastra empresa definitiva")
+Container_Ext(sub_critica, "pr_critica_internet", "Procedure externa", "Critica beneficiario titular")
+Container_Ext(sub_cad_int2, "pr_cadastramento_internet2", "Procedure externa", "Efetiva beneficiario")
+Container_Ext(sub_odon_ext, "pr_odon_cad_empresa_prov\npr_set_emp_fluxo_pos", "Procedures externas", "Odonto e fluxo POS")
+
+' Relacoes entre componentes
+Rel(pr_pim_insere_cnpj, fn_set_empresa, "Desserializa empresa JSON")
+Rel(pr_pim_insere_cnpj, pr_set_usuario_internet, "Insere beneficiarios do JSON")
+Rel(pr_pim_insere_cnpj, fn_get_criticas, "Verifica criticas (antes de auto-baixa)")
+Rel(pr_pim_insere_cnpj, fn_get_blocklist, "Verifica blocklist [RN13]")
+Rel(pr_pim_insere_cnpj, fn_get_pend_neoway, "Verifica Neoway [RN14]")
+Rel(pr_pim_insere_cnpj, pr_efetiva_baixa_manual, "Auto-baixa POS [RN08]")
+
+Rel(pr_efetiva, fn_get_criticas, "Valida criticas antes de efetivar")
+Rel(pr_efetiva, pr_efetiva_baixa_manual, "Delega efetivacao de proposta")
+Rel(pr_efetiva_baixa_manual, sub_cadastro_emp, "Cadastra empresa definitiva [RN05]")
+Rel(pr_efetiva_baixa_manual, sub_critica, "Revalida criticas titular")
+Rel(pr_efetiva_baixa_manual, sub_cad_int2, "Efetiva beneficiario [RN06]")
+Rel(pr_efetiva_baixa_manual, pr_pim_pendencia, "Atualiza pendencias usuario")
+Rel(pr_efetiva_baixa_manual, sub_odon_ext, "Efetiva odonto + fluxo POS")
+Rel(pr_efetiva_baixa_manual_emp, sub_cadastro_emp, "Cadastra empresa definitiva [RN05]")
+
+Rel(pr_set_usuario_od, pr_control_internet, "Atualiza mapeamento controle [RN10]")
+
+' Persistencia
+Rel(pr_pim_insere_cnpj, staging, "INSERT/UPDATE staging")
+Rel(pr_pim_insere_cnpj, controle, "INSERT coligada, controle CPF, log")
+Rel(pr_efetiva_baixa_manual, staging, "UPDATE FL_STATUS, CD_EMPRESA")
+Rel(pr_efetiva_baixa_manual, definitivo, "UPDATE/INSERT empresa definitiva")
+Rel(fn_get_blocklist, controle, "SELECT TB_FILE_DOCUMENTO_BITIX")
+Rel(fn_get_pend_neoway, staging, "SELECT titular/dependente status=17")
+@enduml

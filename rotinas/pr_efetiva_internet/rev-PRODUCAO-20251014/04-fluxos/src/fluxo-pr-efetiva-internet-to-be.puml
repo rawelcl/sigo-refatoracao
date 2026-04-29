@@ -1,0 +1,240 @@
+﻿@startuml fluxo-pr-efetiva-internet-to-be
+!theme plain
+title Fluxo de Execucao | PR_EFETIVA_INTERNET (TO-BE) | proposta de refatoracao\nRevisao ADRs: 17/04/2026 | [MIGRACAO] markers + eventos ADR-18
+
+note right
+  Melhorias aplicadas:
+  - [CRITICO] Contrato de retorno pr_cadastramento_empresa_prov: Opcao D Hibrida -- Adapter/Facade na Fase 1-2 (mantem assinatura legado, zero breaking change) + RECORD canonico `pk_efetivacao_types.t_resultado_efetivacao` na Fase 3 | [REF DD-01] [REF ADR-03/05]
+  - [ALTO] Motor de pendencias: Specification pattern -- 13 loops -> 1 servico (elimina PADRAO-02) | [REF ADR-74]
+  - [ALTO] BULK COLLECT + FORALL na efetivacao de beneficiarios (elimina S03) | [MIG-02]
+  - [ALTO] Substituicao de WHEN OTHERS THEN NULL por log estruturado + reraise (elimina S01) | [MIG-11]
+  - [ALTO] Unit of Work por empresa -- elimina COMMITs parciais dentro do loop (S04) | [MIG-05]
+  - [MEDIO] SEQUENCE para cd_log -- elimina race condition MAX+1 (PADRAO-03) | [MIG-06]
+  - [MEDIO] Parametrizacao de datas hardcode (S05/S06/S10) em TB_REGISTRO_SISTEMA | [MIG-03]
+  - [MEDIO] Separacao da logica de ex-cliente do flag HABILITA_65ANOS (A06)
+  - [MEDIO] Semantica correta de flag PIM: wPimDesligado em vez de wVerificaPim (S19) | [REF ADR-21]
+  - [BAIXO] Strategy pattern para duplicacao saude/odonto (S12) | [MIG-10]
+  - [BAIXO] Decomposicao em 9 Use Cases separados invocados pelo mesmo JOB
+  ADRs que passaram a vigorar: ADR-02, ADR-03, ADR-05, ADR-18, ADR-21, ADR-22, ADR-74
+end note
+
+start
+
+partition "EfetivarMovimentacoesPIMUseCase (orquestrador)" {
+
+  :ConfiguracaoSistemaService.carregarFlags();
+  note right
+    Carrega via PK_CONFIG_SISTEMA (encapsula fn_registro_sistema):
+    - FL_CRITICA_SAUDE_ODONTO, FL_LOG_BAIXA_CONTROLE, HABILITA_65ANOS
+    - DT_CORTE_PIM (parametrizado -- elimina hardcode '01/11/2012')
+    - DT_CORTE_ODONTO (parametrizado -- elimina hardcode '16/05/2017')
+    - PRAZO_DIGITACAO_DIAS (parametrizado -- elimina hardcode 30 dias)
+    - CD_VENDEDOR_EXCECAO_FILIAL (parametrizado -- elimina hardcode 2704)
+    [MIGRACAO MIG-03] Azure App Configuration / IConfiguration (ADR-34)
+  end note
+
+  partition "Fase 1: CargaAutomaticaModeloUseCase [RN02]" {
+    :CargaAutomaticaModeloService.processar();
+    note right
+      Regra unica de fl_baixa: tb_area_venda e determinante.
+      Explicita precedencia (elimina ambiguidade A02)
+    end note
+    while (Tem area de venda com fl_baixa=1?) is (Sim)
+      :EfetivacaoEmpresaDigitadaService.processar();
+      :Event: CargaModeloProcessada;
+    endwhile (Nao)
+  }
+
+  partition "Fase 2: LoopPrincipalPIMUseCase [RN03..RN24]" {
+    if (ConfiguracaoSistemaService.isPimDesligado()?) then (Sim)
+      note right: wPimDesligado -- semantica correta (elimina S19) [REF ADR-21]
+      :Registra log: PIM desligado -- fase 2 ignorada;
+      :Goto Fase 3;
+    else (Nao)
+
+    :ColigadaService.preValidar();
+    note right: fn_valida_coligada_baixa com proposta mae correta (elimina A03)
+
+    :PropostaInternetRepository.findPendentesParaPIM(dtCorte);
+    note right: dtCorte parametrizado -- elimina hardcode (MIG-03)
+
+    while (Tem proposta PIM?) is (Sim)
+
+      :ContextoEfetivacaoFactory.inicializar(proposta);
+      note right: ContextoEfetivacao como RECORD TYPE (elimina S15 -- 25 variaveis globais) [MIG-15]
+
+      :CanalVenda = CanalVenda.calcular(nu_total_empregado);
+
+      if (ExClienteSpec.satisfiedBy(proposta) OU PME30_99Spec.satisfiedBy(proposta)?) then (Sim)
+        note right
+          Separada da logica de HABILITA_65ANOS (elimina A06):
+          ExClienteSpec e PME30_99Spec independentes
+        end note
+        :Ignora proposta neste ciclo;
+      else (Nao)
+
+        :PendenciaInternetRepository.limparPorControle(nu_controle);
+
+        partition "AvaliacaoPendenciasService.avaliar() [RN08..RN18]" {
+          note right
+            Substitui 13 loops duplicados (stp1..stp13) por
+            ISpecification<PropostaInternet>[] -- testavel, reutilizavel
+            [MIG-14] [REF ADR-74 -- Specifications]
+          end note
+          :SP01..SP12: avaliar todas as Specifications;
+          :Event: PendenciasAvaliadas;
+          note right: [MIGRACAO] Topico ADR-18: hap-ins-pim-validations-assessed
+        }
+
+        if (COUNT_PENDENCIAS = 0?) then (Sim)
+
+          if (proposta.cd_empresa IS NOT NULL?) then (Sim -- reativacao)
+            :EmpresaConveniadaRepository.reativar(cd_empresa);
+          else (Nao -- empresa nova)
+
+            if (FL_CRITICA='S'?) then (Sim)
+              :CriticaBeneficiarioService.executar(nu_controle, nuControleOdonto);
+              note right: Strategy IOperadoraStrategy -- saude E odonto [MIG-10]
+              if (Tem criticas?) then (Sim)
+                :PendenciaInternetRepository.inserir(nu_controle, 9);
+                :PropostaVendaRepository.atualizarStatus(nu_controle, 9);
+                :Event: CriticasSaudeExecutadas;
+                note right: [MIGRACAO] Topico ADR-18: hap-ins-pim-beneficiary-critiques-run
+                :Goto proximo do loop;
+              endif
+            endif
+
+            partition "EfetivacaoEmpresaService.efetivar() [RN20]" {
+              :pr_cadastramento_empresa_prov(nu_controle, p_resultado OUT pk_efetivacao_types.t_resultado_efetivacao);
+              note right
+                MELHORIA CRITICA: contrato canonico Opcao D Hibrida.
+                - Fase 1-2: procedure antiga mantida como Adapter/Facade
+                  (assinatura legado `OUT p_erro_controle VARCHAR2`) -- zero breaking change.
+                - Fase 3 (ilustrada aqui): RECORD com 6 campos (fl_status, cd_empresa,
+                  ds_mensagem, ds_etapa_erro, cd_sqlcode, ds_sqlerrm) -- acesso por campo,
+                  elimina parsing fragil (DD-01, S11, S20, A05 RESOLVIDO).
+                [MIG-09] [REF ADR-03 -- CQRS CommandHandler]
+                [REF rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/]
+              end note
+              if (p_resultado.fl_status = 'S' (sucesso)?) then (Sim)
+                :l_cd_empresa = p_resultado.cd_empresa;
+                :Event: EmpresaCriadaComSucesso;
+                note right
+                  [MIGRACAO MIG-07] Topico ADR-18: hap-ins-pim-company-created
+                  Broker: Azure Service Bus (nao pode perder)
+                end note
+              else (Nao -- 'E' ou 'P')
+                :LogBaixaService.registrar(nu_controle, p_resultado.ds_mensagem, p_resultado.ds_etapa_erro);
+                :Event: EmpresaCriacaoFalhou;
+                note right
+                  [MIGRACAO MIG-07] Topico ADR-18: hap-ins-pim-company-creation-failed
+                  Broker: Azure Service Bus
+                end note
+                :RAISE DomainException;
+              endif
+            }
+
+            partition "EfetivacaoOdontoService.efetivar() [RN21]" {
+              if (Tem proposta odonto valida com mesmo CGC?) then (Sim)
+                :pr_odon_cad_empresa_prov + PR_NAT_JURIDICA_ODON;
+                :Event: OdontoEfetivadoComSucesso;
+                note right: [MIGRACAO] Topico ADR-18: hap-ins-pim-dental-company-created
+              endif
+            }
+          endif
+
+          partition "GestaoStatus + BaixaBeneficiario [RN22..RN24]" {
+            :GestaoStatusService.atualizarStaging(cd_empresa, nu_controle);
+            note right: Unit of Work -- sem COMMIT parcial [MIG-05]
+            :BaixaBeneficiarioService.migrarCodigoProvisorio(nu_controle, cd_empresa);
+            :Event: CodigoProvisoriaMigrado;
+            note right
+              [MIGRACAO MIG-07] Topico ADR-18: hap-ins-pim-provisional-code-migrated
+              Broker: Azure Service Bus (mudanca critica de codigo de empresa)
+            end note
+
+            if (CanalVenda = 2 (Middle)?) then (Sim)
+              :BaixaBeneficiarioService.atualizarDtInicio(cd_empresa);
+            else (Canal 1 PME)
+              :BULK COLLECT titulares elegíveis;
+              note right: Elimina cursor N+1 [MIG-01] [MIG-02]
+              :FORALL: BaixaBeneficiarioService.efetivarTitulares();
+              :Event: BeneficiarioEfetivado;
+              note right: [MIGRACAO] Topico ADR-18: hap-ins-pim-beneficiary-effected (Service Bus)
+            endif
+
+            if (existemNaoEfetivados?) then (Sim)
+              :Pendencia 9 + marcarPendente;
+              :Event: BeneficiariosNaoEfetivados;
+            else (Nao)
+              :Unit of Work COMMIT -- esta empresa;
+            endif
+          }
+
+          :LogBaixaService.registrarFinalizacao();
+          note right: cd_log via SEQUENCE [MIG-06] [REF ADR-74]
+          :Event: LogBaixaRegistrado;
+
+        else (Nao -- tem pendencias)
+          :Empresa permanece pendente para revisao manual;
+        endif
+      endif
+    endwhile (Nao)
+    endif
+  }
+
+  partition "Fase 3: OdontoPuroUseCase [RN25]" {
+    :OdontoPuroService.processar(dtCorteOdonto);
+    note right: dtCorteOdonto parametrizado [MIG-03]
+    :Event: OdontoPuroProcessado;
+  }
+
+  partition "Fase 4: InclusoesUseCase [RN26]" {
+    :BaixaBeneficiarioService.processarInclusoes();
+    :Event: BeneficiarioEfetivado;
+  }
+
+  partition "Fase 5: ProcessamentoCompletoUseCase [RN27]" {
+    :BaixaBeneficiarioService.processarCompleto(cdPendenciaPosBaixa);
+    note right: cdPendenciaPosBaixa parametrizado [MIG-03]
+    :Event: BeneficiarioEfetivado;
+  }
+
+  partition "Fase 6: IndividualFamiliarUseCase [RN28]" {
+    :ProcessamentoIndividualService.processar(prazoDigitacao);
+    note right: prazoDigitacao parametrizado [MIG-03]
+    :Event: IndividualProcessado;
+  }
+
+  partition "Fase 7: ObrigacaoAgregadoOdontoUseCase [RN29]" {
+    :OdontoPuroService.processarObrigacaoAgregado();
+  }
+
+  note right
+    [REMOVIDO NO TO-BE] Fase 8 BITIX (RN30).
+    PR_COLIGA_EMPRESA_BITIX + PK_VENDA_JSON.pr_efetiva + flag `COLIGADA_EMPRESA_BITIX`
+    MIGRAM para o VJ (PK_VENDA_JSON) com scheduler proprio (DBMS_JOB/Azure Function Timer).
+    Pre-requisito de deploy: criacao previa do scheduler VJ (A9).
+    [REF DD-05] [REF MIG-16] [REF Conflito 10 -- analise-comparativa-ddd-ei-vj.md]
+  end note
+
+  partition "Fase 8: ColigadaSIGOUseCase [RN31]" {
+    if (ColigadaService.isSigoAtivo()?) then (Sim)
+      :ColigadaService.processarSigo();
+      :Event: ColigadaProcessada;
+    endif
+  }
+
+  :COMMIT final;
+  :Event: EfetivacaoPIMConcluida;
+  note right
+    [MIGRACAO MIG-07] Topico ADR-18: hap-ins-pim-effection-completed
+    Broker: RabbitMQ (sumario eventual)
+    Payload: {totalProcessadas, totalPendentes, totalErros}
+    [MIGRACAO MIG-04] Dispatcher: DBMS_JOB -> Azure Function Timer Trigger (ADR-17/ADR-29)
+  end note
+
+}
+
+stop
+@enduml

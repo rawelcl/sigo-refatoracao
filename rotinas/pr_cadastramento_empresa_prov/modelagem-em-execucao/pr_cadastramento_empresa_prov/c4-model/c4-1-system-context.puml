@@ -1,0 +1,64 @@
+@startuml c4-1-system-context
+!include <C4/C4_Context>
+
+LAYOUT_WITH_LEGEND()
+LAYOUT_LEFT_RIGHT()
+
+title [C4 Model - Nivel 1] Diagrama de Contexto do Sistema\nCadastStructurizrramento de Empresa Conveniada - Hapvida/SIGO
+
+' -----------------------------------
+' PERSONAS / ATORES
+' -----------------------------------
+
+Person(vendedor, "Vendedor / Corretor", "Cadastra propostas de\nempresas conveniadas\nvia TAFFIX ou BITIX")
+
+Person(operador_adm, "Operador Administrativo", "Monitora processamento\nde propostas e resolve\npendencias")
+
+' -----------------------------------
+' SISTEMA PRINCIPAL (SuD - System under Discussion)
+' -----------------------------------
+
+System(cadastro_empresa, "Sistema de Cadastramento\nde Empresa Conveniada", "Processa propostas de novas empresas conveniadas,\nexecutando validacoes, criacao de pessoa juridica,\nprecificacao, configuracao contratual,\ncarencia, coparticipacao e integracoes.\n\n**Atual:** pr_cadastramento_empresa_prov\n(~5.000 linhas PL/SQL monoliticas)")
+
+' -----------------------------------
+' SISTEMAS DE ENTRADA DE PROPOSTAS
+' -----------------------------------
+
+System_Ext(taffix_sys, "TAFFIX\n(Oracle Forms)", "Tela de cadastro interno\nde propostas empresariais\nUsado por vendedores\ne operadores")
+
+System_Ext(bitix_sys, "BITIX\n(Ferramenta de Vendas)", "Plataforma de vendas\nusada pelo vendedor/corretor\npara cadastrar propostas\nde empresas conveniadas")
+
+' -----------------------------------
+' SISTEMAS EXTERNOS / DEPENDENCIAS
+' -----------------------------------
+
+System_Ext(humaster_db, "Oracle Database\nHUMASTER", "Banco de dados principal\ncom 30+ tabelas envolvidas\nno cadastramento")
+
+System_Ext(odonto, "Sistema Odontologico", "Recebe espelhamento de\nparametros da empresa\nrecem-cadastrada\n(pr_odon_param_esp_empresa)")
+
+System_Ext(super_simples, "Sistema Super Simples\n(VCC)", "Replica empresa para\nmodalidade Super Simples\n(Pr_Vcc_Empresa_Super_Simples)")
+
+System_Ext(pim, "Sistema PIM\n(Desconto Empresa)\n(BC-18)", "Calcula e aplica\ndescontos administrativos\nquando FL_ATIVA_PIM_ADM = 'S'\n(pr_desconto_empresa)")
+
+System_Ext(cobranca, "Sistema de Cobranca", "Verifica parametros de\ncobranca faltantes\n(pr_cobranca_falta_param)")
+
+System_Ext(notificacao, "Servico de Notificacao\n(E-mail)", "Envia e-mail de efetivacao\nao vendedor/concessionaria\ndiferenciando Hapvida vs RN Saude\n(pr_send_mail / pr_send_mail_html_rn)")
+
+' -----------------------------------
+' RELACIONAMENTOS
+' -----------------------------------
+
+Rel(vendedor, taffix_sys, "Cadastra proposta\n(via tela interna)", "Oracle Forms / Web")
+Rel(vendedor, bitix_sys, "Cadastra proposta\n(via plataforma de vendas)", "Web")
+Rel(taffix_sys, cadastro_empresa, "Submete proposta", "tb_empresa_internet")
+Rel(bitix_sys, cadastro_empresa, "Submete proposta", "tb_empresa_internet")
+Rel(operador_adm, cadastro_empresa, "Monitora e\nreprocessa", "Job / Manual")
+
+Rel(cadastro_empresa, humaster_db, "Le propostas,\ngrava empresa,\npessoa, preco,\nendereco, etc.", "PL/SQL / SQL")
+Rel(cadastro_empresa, odonto, "Espelha parametros\nda empresa", "PL/SQL")
+Rel(cadastro_empresa, super_simples, "Replica empresa", "PL/SQL")
+Rel(cadastro_empresa, notificacao, "Notifica efetivacao\n(Hapvida/RN Saude)", "E-mail")
+Rel(cadastro_empresa, pim, "Aplica descontos\nPIM/ADM (BC-18)", "PL/SQL")
+Rel(cadastro_empresa, cobranca, "Verifica parametros", "PL/SQL")
+
+@enduml

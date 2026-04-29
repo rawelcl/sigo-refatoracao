@@ -1,0 +1,107 @@
+@startuml c4-landscape-evolucao
+!include <C4/C4_Context>
+
+LAYOUT_WITH_LEGEND()
+
+title [C4 Model] Visao de Evolucao Arquitetural\n**3 Fases da Refatoracao** - Strangler Fig Pattern
+
+rectangle "---------------------------------------\n**FASE 1 - AS-IS (Monolito PL/SQL)**\n---------------------------------------" as fase1 {
+    
+    Person(v1, "Vendedor")
+    
+    System(taffix1, "TAFFIX\n(Oracle Forms)", "Tela interna")
+    System(bitix1, "BITIX\n(Ferr. de Vendas)", "Plataforma\ndo vendedor")
+    
+    System(mono, "pr_cadastramento_empresa_prov\n\n[!] ~5.000 linhas monoliticas\n[!] 70+ variaveis globais\n[!] 30+ tabelas acopladas\n[!] Sem testes unitarios\n[!] Codigo repetido (log)\n[!] Logica SIGO+BITIX misturada", "PL/SQL Procedure")
+    
+    System_Ext(db1, "Oracle\nHUMASTER")
+    
+    Rel(v1, taffix1, "Tela interna")
+    Rel(v1, bitix1, "Plataforma vendas")
+    Rel(taffix1, mono, "tb_empresa_internet")
+    Rel(bitix1, mono, "tb_empresa_internet")
+    Rel(mono, db1, "30+ tabelas")
+}
+
+rectangle "---------------------------------------\n**FASE 2 - TO-BE (Packages DDD)**\n---------------------------------------" as fase2 {
+    
+    Person(v2, "Vendedor")
+    
+    System(taffix2, "TAFFIX", "Oracle Forms")
+    System(bitix2, "BITIX", "Ferr. de Vendas")
+    
+    System(orq, "pk_cadastramento_empresa\n(Orquestrador)\n\n+ ~50 linhas\n+ Apenas coordenacao", "PL/SQL Package")
+    
+    System(cores, "18 Packages PL/SQL\n(Bounded Contexts)\n\n+ Separacao de responsabilidades\n+ Interfaces claras (pks/pkb)\n+ Testaveis individualmente\n+ Log centralizado\n+ Validacao reutilizavel\n+ Notificacao (BC-17)\n+ Desconto/PIM (BC-18)", "PL/SQL Packages")
+    
+    System_Ext(db2, "Oracle\nHUMASTER")
+    
+    Rel(v2, taffix2, "Tela interna")
+    Rel(v2, bitix2, "Plataforma vendas")
+    Rel(taffix2, orq, "tb_empresa_internet")
+    Rel(bitix2, orq, "tb_empresa_internet")
+    Rel(orq, cores, "Chama packages")
+    Rel(cores, db2, "SQL/DML")
+}
+
+rectangle "---------------------------------------\n**FASE 3 - FUTURO (Microservicos .NET 8+ / Azure)**\n---------------------------------------" as fase3 {
+    
+    Person(v3, "Vendedor")
+    
+    System(portal, "Portal Web\n(Nova UI)", "React 18 + TypeScript\nAzure Static Web Apps", "Interface moderna de\ncadastro de empresas\nsubstitui Oracle Forms")
+
+    System(bitix3, "BITIX\n(Legado - Transicao)", "Integrado via\nAPI Gateway")
+    
+    System(api, "API Gateway\n+ BFF", "Azure API Management\nASP.NET Core 8\nMinimal APIs")
+    
+    System(svcs, "Microservicos\n(por Bounded Context)\n\n+ Deploy independente\n+ Escalabilidade\n+ Database per Service\n+ Event-Driven\n+ Saga Pattern\n+ Azure Container Apps", "ASP.NET Core 8\nMinimal APIs\nMediatR + CQRS")
+    
+    System(events, "Event Bus", "Azure Service Bus\n(Topics + Subscriptions)")
+    
+    System_Ext(db3, "Azure SQL Database\n+ Oracle (legado)")
+    
+    Rel(v3, portal, "Novo portal")
+    Rel(v3, bitix3, "Plataforma vendas\n(transicao)")
+    Rel(portal, api, "HTTPS")
+    Rel(bitix3, api, "REST/JSON")
+    Rel(api, svcs, "REST")
+    Rel(svcs, events, "Eventos")
+    Rel(svcs, db3, "Dados")
+}
+
+' -----------------------------------
+' SETAS DE EVOLUCAO
+' -----------------------------------
+
+fase1 -right[hidden]-> fase2
+fase2 -right[hidden]-> fase3
+
+note bottom of fase1
+  **Riscos:**
+  • Manutencao cara
+  • Sem cobertura de testes
+  • Qualquer mudanca pode quebrar
+  • Onboarding demorado
+end note
+
+note bottom of fase2
+  **Beneficios:**
+  • Manutencao localizada
+  • Testes por package
+  • Reutilizacao
+  • Documentacao viva
+  • Sem risco de infraestrutura
+end note
+
+note bottom of fase3
+  **Beneficios:**
+  • Deploy continuo (Azure DevOps)
+  • Escala independente (Container Apps)
+  • Database per Service (Azure SQL)
+  • Resiliencia (Azure Service Bus)
+  • UI moderna (React)
+  • Observabilidade (App Insights)
+  • Seguranca (Microsoft Entra ID)
+end note
+
+@enduml

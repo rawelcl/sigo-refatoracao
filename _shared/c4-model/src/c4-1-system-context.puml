@@ -1,0 +1,30 @@
+@startuml c4-1-system-context
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+
+title C4 Model - Nivel 1 Diagrama de Contexto do Sistema
+' Subtitulo: Dominio de Efetivacao PIM / Implantacao de Empresa Conveniada - Hapvida/SIGO
+
+' --- Atores ---
+Person(corretor, "Corretor / Empresa", "Cadastra proposta de empresa via ferramenta WEBHAP (Portal do Corretor), BITIX (NDI Minas) ou TAFFIX (Administradoras de Beneficios)")
+Person(operador_adm, "Operador Administrativo", "Monitora o processamento, resolve pendencias e reprocessa propostas com erro")
+
+' --- Sistema Principal ---
+System(sigo_implantacao, "SIGO - Implantacao de Empresa Conveniada", "Efetiva contratos de empresa a partir de propostas digitadas em ferramentas de venda (origens WEBHAP, BITIX, TAFFIX). Cadastra empresa, parametriza contrato e cria acessos. Schema: HUMASTER")
+
+' --- Sistemas Externos ---
+System_Ext(taffix, "Portal WEBHAP / TAFFIX", "Ferramentas de venda que geram propostas PIM/SS e PME (`cd_operados` WEBHAP ou PONTO). Corretor preenche proposta que vai para staging tb_empresa_internet")
+System_Ext(bitix, "Ferramenta BITIX (NDI Minas)", "Ferramenta de venda externa que envia propostas PIM/PME via API JSON (`cd_operados='BITIX'`). Usa dt_assinatura e tb_empresa_coligada_bitx")
+System_Ext(email_server, "Servidor de Email (SMTP)", "Recebe chamadas de pr_send_mail e pr_send_mail_html_rn para envio de email de boas-vindas ao administrador da empresa")
+System_Ext(oracle_db, "Oracle Database 19c", "Schema HUMASTER. Persiste contrato definitivo em tb_empresa_conveniada e ~40 tabelas operacionais. Contem tb_empresa_internet (staging)")
+
+' --- Relacionamentos ---
+Rel(corretor, taffix, "Preenche proposta de empresa", "Web Browser / App")
+Rel(corretor, bitix, "Envia proposta via API", "JSON / REST")
+Rel(taffix, sigo_implantacao, "Proposta armazenada em staging", "PL/SQL direto (tb_empresa_internet)")
+Rel(bitix, sigo_implantacao, "Proposta integrada via PK_VENDA_JSON", "JSON -> PL/SQL")
+Rel(sigo_implantacao, oracle_db, "Le propostas, cria contratos e parametros", "PL/SQL / Oracle")
+Rel(sigo_implantacao, email_server, "Envia email de boas-vindas", "SMTP (pr_send_mail)")
+Rel(operador_adm, sigo_implantacao, "Monitora, reprocessa e resolve pendencias", "Interface interna SIGO")
+
+@enduml

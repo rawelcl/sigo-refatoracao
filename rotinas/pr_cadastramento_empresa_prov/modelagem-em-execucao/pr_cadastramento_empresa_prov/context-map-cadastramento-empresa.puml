@@ -1,0 +1,145 @@
+@startuml context-map-cadastramento-empresa
+!theme cerulean-outline
+title **Context Map - Refatoracao DDD**\n**pr_cadastramento_empresa_prov** (~5.000 linhas -> 18 Bounded Contexts)\n
+
+skinparam rectangle {
+    roundCorner 15
+    BackgroundColor<<core>> #FFE0B2
+    BorderColor<<core>> #E65100
+    BackgroundColor<<support>> #C8E6C9
+    BorderColor<<support>> #2E7D32
+    BackgroundColor<<generic>> #BBDEFB
+    BorderColor<<generic>> #1565C0
+    BackgroundColor<<app>> #E1BEE7
+    BorderColor<<app>> #6A1B9A
+}
+
+skinparam arrow {
+    Color #455A64
+    Thickness 2
+}
+
+' ============================================
+' CANAIS DE ENTRADA (Ferramentas do Vendedor)
+' ============================================
+
+actor "Vendedor /\nCorretor" as VENDEDOR
+rectangle "**TAFFIX**\n(Oracle Forms)\n--------------\nTela interna de\ncadastro" as TAFFIX #E8EAF6
+rectangle "**BITIX**\n(Ferr. de Vendas)\n--------------\nPlataforma de vendas\nusada pelo vendedor" as BITIX #E8EAF6
+
+VENDEDOR -down-> TAFFIX : "cadastra\nproposta"
+VENDEDOR -down-> BITIX : "cadastra\nproposta"
+
+' ============================================
+' CAMADA DE APLICACAO (Orquestrador)
+' ============================================
+
+rectangle "**BC-01: Orquestracao do\nCadastramento**\n\n//Application Service//\n------------------\n- Coordena fluxo completo\n- Gerencia transacao\n- Trata erros globais\n- Registra resultado\n------------------\n>> pk_cadastramento_empresa" as ORQUESTRACAO <<app>>
+
+TAFFIX -down-> ORQUESTRACAO : "tb_empresa_internet"
+BITIX -down-> ORQUESTRACAO : "tb_empresa_internet"
+
+' ============================================
+' CORE DOMAINS (Dominios principais)
+' ============================================
+
+rectangle "**BC-02: Validacao\nde Proposta**\n\n//Supporting Domain//\n------------------\n- Valida CNPJ/CPF/CAEPF\n- Valida dados cadastrais\n- Valida endereco\n- Valida e-mail\n- Valida datas/pagamento\n- Valida vendedor\n- Valida lista negra\n------------------\n>> pk_validacao_proposta\n>> ~600 linhas de validacoes\n   com boilerplate repetido" as VALIDACAO <<support>>
+
+rectangle "**BC-03: Gestao de\nPessoa Juridica**\n\n//Supporting Domain//\n------------------\n- Verifica existencia CNPJ\n- Cria/Atualiza tb_pessoa\n- Determina tipo pessoa\n------------------\n>> pk_pessoa_juridica\n>> tb_pessoa" as PESSOA <<support>>
+
+rectangle "**BC-06: Parametrizacao\nde Negocio**\n\n//Core Domain//\n------------------\n- Parametros SIGO\n- Parametros BITIX\n- Resolve coligadas\n- Modelo de negocio\n- Canal de venda\n------------------\n>> pk_modelo_negocio\n>> tb_empresa_neg" as PARAM_NEG <<core>>
+
+rectangle "**BC-07: Precificacao\ne Tabela de Precos**\n\n//Core Domain//\n------------------\n- Tabela preco principal\n- Tabela preco agregados\n- Valores de plano\n- Descontos por faixa\n------------------\n>> pk_precificacao\n>> tb_preco_plano\n>> tb_valor_plano" as PRECIFICACAO <<core>>
+
+rectangle "**BC-08: Empresa\nConveniada (Contrato)**\n\n//Core Domain//\n------------------\n- Gera codigo empresa\n- Cria contrato\n- Unidades\n- Parametros unidade\n- Historico\n- RN 279/309\n- Breakeven\n------------------\n>> pk_empresa_conveniada\n>> tb_empresa_conveniada" as EMPRESA <<core>>
+
+rectangle "**BC-09: Coparticipacao\ne Fator Empresa**\n\n//Core Domain//\n------------------\n- Controle fator empresa\n- Fatores empresa\n- Franquias\n- Internacao PJ\n- Isencao beneficiario\n- Tipos reembolso\n------------------\n>> pk_coparticipacao\n>> tb_controle_fator_empresa" as COPART <<core>>
+
+rectangle "**BC-10: Carencia e\nCompra de Carencia**\n\n//Core Domain//\n------------------\n- Compras de carencia\n- Grupos de carencia\n- Modulos de carencia\n- Grupos odontologicos\n------------------\n>> pk_carencia\n>> tb_compra_carencia" as CARENCIA <<core>>
+
+' ============================================
+' SUPPORTING DOMAINS
+' ============================================
+
+rectangle "**BC-04: Gestao de Endereco\ne Comunicacao**\n\n//Supporting Domain//\n------------------\n- Endereco correspondencia\n- Contato empresa\n- Meios comunicacao\n  (tel,fax,cel,email)\n------------------\n>> pk_endereco_comunicacao" as ENDERECO <<support>>
+
+rectangle "**BC-05: Filial e\nArea de Venda**\n\n//Supporting Domain//\n------------------\n- Resolve filial\n  (vendedor/contrato/TAFFIX)\n- Empresa plano\n------------------\n>> pk_filial_area_venda" as FILIAL <<support>>
+
+rectangle "**BC-11: Fidelizacao**\n\n//Supporting Domain//\n------------------\n- Regras Middle Market\n  (30-99 beneficiarios)\n------------------\n>> pk_fidelizacao" as FIDELIZACAO <<support>>
+
+rectangle "**BC-13: Integracao\nOdonto / Super Simples**\n\n//Supporting Domain//\n------------------\n- Espelhamento odonto\n- Empresa super simples\n- Param 225\n------------------\n>> pk_integracao_odonto" as ODONTO <<support>>
+
+rectangle "**BC-15: Reembolso**\n\n//Supporting Domain//\n------------------\n- Prazos/tipos/tabelas\n- Composicao reembolso\n------------------\n>> pk_reembolso" as REEMBOLSO <<support>>
+
+rectangle "**BC-16: Minimo\nContratual**\n\n//Supporting Domain//\n------------------\n- Vigencia/multas\n- Faturamento minimo\n------------------\n>> pk_minimo_contratual" as MINIMO <<support>>
+
+rectangle "**BC-18: Desconto\nPIM / ADM**\n\n//Supporting Domain//\n------------------\n- Descontos administrativos\n- FL_ATIVA_PIM_ADM\n- pr_desconto_empresa\n------------------\n>> pk_desconto_pim" as DESCONTO <<support>>
+
+' ============================================
+' GENERIC SUBDOMAIN
+' ============================================
+
+rectangle "**BC-12: Acesso\nInternet e Controle**\n\n//Generic Subdomain//\n------------------\n- Acesso internet\n- Controles movimentacao\n- Limite acesso (Affix)\n- Titulares/dependentes\n------------------\n>> pk_acesso_internet" as ACESSO <<generic>>
+
+rectangle "**BC-14: Log e\nAuditoria**\n\n//Generic Subdomain//\n------------------\n- Log baixa controle\n- Pendencias empresa\n- Erros processamento\n------------------\n>> pk_log_auditoria\n>> Boilerplate repetido\n   30+ vezes (12 linhas cada)" as LOG <<generic>>
+
+rectangle "**BC-17: Notificacao\nE-mail**\n\n//Generic Subdomain//\n------------------\n- E-mail efetivacao\n- Hapvida vs RN Saude\n- pr_send_mail / html_rn\n------------------\n>> pk_notificacao_email" as NOTIFICACAO <<generic>>
+
+' ============================================
+' RELACIONAMENTOS - Orquestrador -> Contextos
+' ============================================
+
+ORQUESTRACAO -down-> VALIDACAO : "1. Valida\ndados"
+ORQUESTRACAO -down-> FILIAL : "2. Resolve\nfilial"
+ORQUESTRACAO -down-> PARAM_NEG : "3. Busca\nparametros"
+ORQUESTRACAO -down-> PESSOA : "4. Cria/atualiza\npessoa"
+ORQUESTRACAO -down-> PRECIFICACAO : "5. Cria\ntabela preco"
+ORQUESTRACAO -down-> EMPRESA : "6. Cria\nempresa"
+ORQUESTRACAO -down-> COPART : "7. Config\ncoparticipacao"
+ORQUESTRACAO -down-> CARENCIA : "8. Config\ncarencia"
+ORQUESTRACAO -down-> ENDERECO : "9. Cadastra\nendereco"
+ORQUESTRACAO -down-> ACESSO : "10. Cria\nacesso internet"
+ORQUESTRACAO -down-> FIDELIZACAO : "11. Fidelizacao"
+ORQUESTRACAO -down-> REEMBOLSO : "12. Reembolso"
+ORQUESTRACAO -down-> MINIMO : "13. Min.\ncontratual"
+ORQUESTRACAO -down-> ODONTO : "14. Integra\nodonto"
+ORQUESTRACAO -down-> NOTIFICACAO : "15. Notifica\ne-mail"
+ORQUESTRACAO -down-> DESCONTO : "16. Desconto\nPIM/ADM"
+
+' ============================================
+' RELACIONAMENTOS - Dependencias entre contextos
+' ============================================
+
+FILIAL -right-> PARAM_NEG : "filial ->\nparametros"
+PARAM_NEG -right-> PRECIFICACAO : "modelo ->\ntabela preco"
+EMPRESA -down-> FIDELIZACAO : "canal_venda=2"
+EMPRESA -down-> REEMBOLSO : "por plano"
+COPART -right-> REEMBOLSO : "tipos\nreembolso"
+
+' ============================================
+' LOG consumido por varios
+' ============================================
+
+VALIDACAO -down-> LOG : "registra\nerros"
+PESSOA -down-> LOG : "registra\nerros"
+EMPRESA ..> LOG : "pendencias"
+
+' ============================================
+' LEGENDA
+' ============================================
+
+legend right
+  |= Cor |= Tipo |= Descricao |
+  |<#E1BEE7>| Application | Orquestra o fluxo |
+  |<#FFE0B2>| Core Domain | Regras de negocio essenciais |
+  |<#C8E6C9>| Supporting | Suporte ao dominio principal |
+  |<#BBDEFB>| Generic | Infraestrutura reutilizavel |
+  
+  **Estrategia de Refatoracao: Strangler Fig**
+  --------------------------------------
+  **Fase 1** - PL/SQL: Extrair para packages
+  **Fase 2** - Expor via ORDS/APIs
+  **Fase 3** - Migrar para microsservicos
+endlegend
+
+@enduml

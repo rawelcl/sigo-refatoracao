@@ -1,0 +1,139 @@
+@startuml c4-2-container-to-be
+!include <C4/C4_Container>
+
+LAYOUT_WITH_LEGEND()
+
+title [C4 Model - Nivel 2] Diagrama de Containers - **TO-BE** (Estado Alvo - Fase 2)\n18 Packages PL/SQL organizados por Bounded Context (DDD)
+
+' -----------------------------------
+' ATORES
+' -----------------------------------
+
+Person(vendedor, "Vendedor / Corretor")
+Person(operador, "Operador ADM")
+
+' -----------------------------------
+' BOUNDARY DO SISTEMA REFATORADO
+' -----------------------------------
+
+System_Boundary(sistema_novo, "Sistema de Cadastramento - REFATORADO (Packages DDD)") {
+
+    Container(orquestrador, "pk_cadastramento_empresa\n(Orquestrador)", "PL/SQL Package", "Application Service\n~50 linhas\nCoordenacao do fluxo\nGerenciamento transacional\nTratamento de erros")
+
+    Container(taffix, "Tela TAFFIX", "Oracle Forms / Web", "Interface interna de\ncadastro de propostas")
+
+    Container(bitix, "BITIX\n(Ferramenta de Vendas)", "Web Application", "Plataforma de vendas\nusada pelo vendedor/corretor\npara cadastrar propostas")
+
+    Container(job, "Job Processamento", "Oracle Scheduler", "Executa processamento\nperiodico de propostas")
+}
+
+' -----------------------------------
+' CORE DOMAIN PACKAGES
+' -----------------------------------
+
+System_Boundary(core_domain, "Core Domain Packages") {
+
+    Container(pk_modelo, "pk_modelo_negocio", "PL/SQL Package\n~150 linhas", "**BC-06: Modelo Negocio**\n- Parametros SIGO/BITIX\n- Coligadas\n- Canal de venda\n- Tabela geral")
+
+    Container(pk_preco, "pk_precificacao", "PL/SQL Package\n~250 linhas", "**BC-07: Precificacao**\n- Tabela preco principal\n- Tabela agregados\n- Valores de plano\n- Descontos")
+
+    Container(pk_empresa, "pk_empresa_conveniada", "PL/SQL Package\n~400 linhas", "**BC-08: Empresa Conv.**\n- Gera codigo empresa\n- Contrato completo\n- Unidades/Parametros\n- RN 279/309\n- Breakeven")
+
+    Container(pk_copart, "pk_coparticipacao", "PL/SQL Package\n~200 linhas", "**BC-09: Coparticipacao**\n- Fator empresa\n- Franquias\n- Internacao PJ\n- Isencoes\n- Reembolso")
+
+    Container(pk_carencia, "pk_carencia", "PL/SQL Package\n~150 linhas", "**BC-10: Carencia**\n- Compra carencia\n- Grupos/Modulos\n- Odontologico")
+}
+
+' -----------------------------------
+' SUPPORTING DOMAIN PACKAGES
+' -----------------------------------
+
+System_Boundary(support_domain, "Supporting Domain Packages") {
+
+    Container(pk_validacao, "pk_validacao_proposta", "PL/SQL Package\n~300 linhas", "**BC-02: Validacao**\n- CNPJ/CPF/CAEPF\n- Dados cadastrais\n- Endereco completo\n- E-mail, datas\n- Lista negra\n- Vendedor")
+
+    Container(pk_pessoa, "pk_pessoa_juridica", "PL/SQL Package\n~100 linhas", "**BC-03: Pessoa Juridica**\n- Cria/Atualiza tb_pessoa\n- Validacao existencia CNPJ\n- Tipo pessoa (PF/PJ)")
+
+    Container(pk_endereco, "pk_endereco_comunicacao", "PL/SQL Package\n~200 linhas", "**BC-04: Endereco**\n- Endereco correspondencia\n- Contatos\n- Meios comunicacao")
+
+    Container(pk_filial, "pk_filial_area_venda", "PL/SQL Package\n~80 linhas", "**BC-05: Filial**\n- Resolve filial\n- Empresa plano\n- Override TAFFIX")
+
+    Container(pk_fidel, "pk_fidelizacao", "PL/SQL Package\n~30 linhas", "**BC-11: Fidelizacao**\n- Regras Middle Market")
+
+    Container(pk_odonto, "pk_integracao_odonto", "PL/SQL Package\n~80 linhas", "**BC-13: Integracao Odonto**\n- Espelhamento\n- Super Simples")
+
+    Container(pk_reemb, "pk_reembolso", "PL/SQL Package\n~100 linhas", "**BC-15: Reembolso**\n- Prazos/Tipos\n- Tabelas/Composicao")
+
+    Container(pk_minimo, "pk_minimo_contratual", "PL/SQL Package\n~50 linhas", "**BC-16: Minimo Contratual**\n- Vigencia/Multas")
+
+    Container(pk_desconto, "pk_desconto_pim", "PL/SQL Package\n~50 linhas", "**BC-18: Desconto/PIM**\n- Descontos administrativos\n- FL_ATIVA_PIM_ADM\n- pr_desconto_empresa")
+}
+
+' -----------------------------------
+' GENERIC / INFRAESTRUTURA
+' -----------------------------------
+
+System_Boundary(generic_domain, "Generic / Infraestrutura") {
+
+    Container(pk_acesso, "pk_acesso_internet", "PL/SQL Package\n~150 linhas", "**BC-12: Acesso Internet**\n- Acesso/Controles\n- Titulares/Dependentes")
+
+    Container(pk_log, "pk_log_auditoria", "PL/SQL Package\n~50 linhas", "**BC-14: Log**\n- Log baixa controle\n- Pendencias\n- Erros")
+
+    Container(pk_notif, "pk_notificacao_email", "PL/SQL Package\n~60 linhas", "**BC-17: Notificacao**\n- E-mail efetivacao\n- Hapvida vs RN Saude\n- pr_send_mail / html_rn")
+}
+
+' -----------------------------------
+' DATABASE
+' -----------------------------------
+
+ContainerDb(oracle_db, "Oracle Database\n(HUMASTER)", "Oracle 19c+", "30+ tabelas do dominio")
+
+' -----------------------------------
+' SISTEMAS EXTERNOS
+' -----------------------------------
+
+System_Ext(odonto_ext, "Sistema Odontologico")
+System_Ext(pim_ext, "Sistema PIM")
+
+' -----------------------------------
+' RELACIONAMENTOS - Fluxo principal
+' -----------------------------------
+
+Rel_D(vendedor, taffix, "Cadastra proposta\n(tela interna)")
+Rel_D(vendedor, bitix, "Cadastra proposta\n(plataforma de vendas)")
+Rel_D(job, orquestrador, "Executa")
+
+' Orquestrador --> Core (ORDEM CORRIGIDA: fail fast)
+Rel_D(orquestrador, pk_validacao, "1. Valida proposta")
+Rel_D(orquestrador, pk_filial, "2. Resolve filial")
+Rel_D(orquestrador, pk_modelo, "3. Resolve parametros")
+Rel_D(orquestrador, pk_pessoa, "4. Cria pessoa PJ")
+Rel_D(orquestrador, pk_preco, "5. Cria preco")
+Rel_D(orquestrador, pk_empresa, "6. Cria empresa conv.")
+Rel_D(orquestrador, pk_copart, "7. Copart.")
+Rel_D(orquestrador, pk_carencia, "8. Carencia")
+
+' Orquestrador --> Supporting
+Rel_D(orquestrador, pk_endereco, "9. Endereco")
+Rel_D(orquestrador, pk_acesso, "10. Acesso internet")
+Rel_D(orquestrador, pk_fidel, "11. Fidelizacao")
+Rel_D(orquestrador, pk_reemb, "12. Reembolso")
+Rel_D(orquestrador, pk_minimo, "13. Min. contratual")
+
+' Orquestrador --> Generic (pre e pos-commit)
+Rel_D(orquestrador, pk_log, "Log/Auditoria")
+Rel_D(orquestrador, pk_odonto, "14. Integra odonto\n(pos-commit)")
+Rel_D(orquestrador, pk_notif, "15. Notifica e-mail\n(pos-commit)")
+Rel_D(orquestrador, pk_desconto, "16. Desconto PIM\n(pos-commit)")
+
+' Todos --> DB
+Rel_D(pk_validacao, oracle_db, "Le")
+Rel_D(pk_empresa, oracle_db, "Grava")
+Rel_D(pk_preco, oracle_db, "Grava")
+Rel_D(pk_pessoa, oracle_db, "Grava")
+
+' Integracoes externas
+Rel_D(pk_odonto, odonto_ext, "Espelha")
+Rel_D(pk_desconto, pim_ext, "Desconto PIM/ADM")
+
+@enduml

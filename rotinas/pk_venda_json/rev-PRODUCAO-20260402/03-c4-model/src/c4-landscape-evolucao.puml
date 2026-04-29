@@ -1,0 +1,80 @@
+@startuml c4-landscape-pk-venda-json
+!include <C4/C4_Context>
+LAYOUT_LEFT_TO_RIGHT()
+title C4 Model Visao de Evolucao Arquitetural -- PK_VENDA_JSON
+' Subtitulo: 3 Fases da Refatoracao -- Strangler Fig Pattern
+
+' ============================================================
+' FASE 1 -- AS-IS (Monolito PL/SQL)
+' ============================================================
+System_Boundary(fase1, "FASE 1 - AS-IS (Monolito PL/SQL)") {
+
+  Person(ator_f1_bitix, "BITIX", "Sistema externo -- JSON CLOB")
+  Person(ator_f1_job, "JOB Oracle", "Batch periodico")
+  Person(ator_f1_op, "Operador T229B", "Manual")
+
+  System(monolito, "PK_VENDA_JSON\n(*) ~6.334 linhas monoliticas\n(*) 15 variaveis globais de package\n(*) 20+ tabelas acopladas\n(*) Codigo triplicado (3 rotinas de efetivacao)\n(*) Funcao com efeito colateral de escrita\n(*) Parsing fragil de string (S03)\n(*) WHEN OTHERS THEN NULL silencioso (S01)\n(*) Cursor N+1 em titulares (S05)\n(*) ACL misturado com dominio de efetivacao\n(*) Sem controle transacional centralizado",
+    "PL/SQL Package -- HUMASTER")
+
+  Rel(ator_f1_bitix, monolito, "pr_pim_insere_cnpj(JSON)")
+  Rel(ator_f1_job, monolito, "pr_efetiva()")
+  Rel(ator_f1_op, monolito, "pr_efetiva_baixa_manual(nu_controle)")
+}
+
+' ============================================================
+' FASE 2 -- TO-BE (Packages DDD -- PL/SQL refatorado)
+' ============================================================
+System_Boundary(fase2, "FASE 2 - TO-BE (Packages DDD -- PL/SQL Oracle)") {
+
+  Person(ator_f2_bitix, "BITIX", "Sistema externo")
+  Person(ator_f2_job, "JOB Oracle", "Batch")
+  Person(ator_f2_op, "Operador T229B", "Manual")
+
+  System(acl_f2, "BITIXAdapterService\n[+] ACL isolado do dominio\n[+] ~150 linhas (vs 1.400 no legado)\n[+] JSON desserializado via fn_set_empresa_internet refatorada\n[+] Retorno tipado (vs JSON livre)\nBC-VJ-01",
+    "PL/SQL Package (novo)")
+
+  System(efetivacao_f2, "EfetivacaoService\n[+] Rotina central unica (elimina codigo triplicado)\n[+] StatusFinalService extraido\n[+] GrupoColigadoService extraido\n[+] Sem estado global de package\n[+] Variaveis locais por execucao\nBC-VJ-03 + BC-VJ-04 + BC-VJ-05",
+    "PL/SQL Package (refatorado)")
+
+  System(motor_f2, "MotorCriticasQuery +\nAplicarStatusErroCommand\n[+] CQRS: leitura separada de escrita\n[+] Efeito colateral de UPDATE eliminado\n[+] Testavel independentemente\nBC-VJ-02",
+    "PL/SQL Functions/Procedures (refatoradas)")
+
+  System(suporte_f2, "GrupoColigadoService\nMapeamentoSaudeOdontoService\nFluxoPOSService\nPendenciaUsuarioService\n[+] Responsabilidades isoladas\n[+] Interfaces definidas por parametro",
+    "PL/SQL Supporting Packages")
+
+  Rel(ator_f2_bitix, acl_f2, "pr_pim_insere_cnpj(JSON)")
+  Rel(ator_f2_job, efetivacao_f2, "pr_efetiva_batch()")
+  Rel(ator_f2_op, efetivacao_f2, "pr_efetiva_especifica(nu_controle, 'T229B')")
+  Rel(acl_f2, efetivacao_f2, "Auto-baixa POS (delega)")
+  Rel(efetivacao_f2, motor_f2, "Consulta criticas (Query)")
+  Rel(efetivacao_f2, suporte_f2, "Delega por servico")
+}
+
+' ============================================================
+' FASE 3 -- FUTURO (Microservicos .NET 8+ / Azure Cloud-Native)
+' ============================================================
+System_Boundary(fase3, "FASE 3 - FUTURO (Microservicos .NET 8+ / Azure Cloud-Native)") {
+
+  Person(ator_f3_bitix, "BITIX", "Sistema externo -- REST API")
+  Person(ator_f3_op, "Operador", "Portal web / REST")
+
+  System(gateway_f3, "API Gateway\nAzure API Management\n[+] Autenticacao centralizada\n[+] Rate limiting\n[+] Versionamento de API",
+    "Azure")
+
+  System(core_svc_f3, "BITIXAdapterService\nEfetivacaoService\nMotorCriticasService\n[+] Deploy independente por servico\n[+] Escala horizontal por carga\n[+] IAsyncEnumerable (vs cursor N+1)\n[+] ILogger<T> + App Insights\n[+] Contratos tipados (vs parsing string)",
+    ".NET 8 / Azure Container Apps")
+
+  System(infra_f3, "Azure Service Bus\n(topics: proposta.efetivada, etc.)\nAzure Functions (batch -- Timer Trigger)\nAzure Application Insights\n[+] Event-Driven Architecture\n[+] Observabilidade total\n[+] Desacoplamento entre servicos",
+    "Azure Infraestrutura")
+
+  System(acl_transicao_f3, "ACL Legado Oracle\n(fase de transicao)\n[+] Isola chamadas ao Oracle legado\n[+] Permite migracao incremental\n[MIGRACAO] Removido quando Oracle for aposentado",
+    ".NET 8 / Azure Container App")
+
+  Rel(ator_f3_bitix, gateway_f3, "HTTPS / REST")
+  Rel(ator_f3_op, gateway_f3, "HTTPS / REST")
+  Rel(gateway_f3, core_svc_f3, "Roteia por servico")
+  Rel(core_svc_f3, infra_f3, "Publica eventos / dispara batch")
+  Rel(core_svc_f3, acl_transicao_f3, "Chama legado via ACL (transicao)")
+}
+
+@enduml
