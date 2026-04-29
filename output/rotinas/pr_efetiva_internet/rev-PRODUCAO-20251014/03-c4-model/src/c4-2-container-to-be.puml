@@ -19,7 +19,7 @@ System_Boundary(sigo, "SIGO -- Hapvida (HUMASTER)\n[MIGRACAO] Hapvida.Insurance.
     Container(benef, "PK_BAIXA_BENEFICIARIO", "PL/SQL Package", "Baixa de beneficiarios -- BC-EI-06 -- BULK COLLECT + FORALL\n[MIGRACAO] IEnumerable<T> + BulkUpdate (ADR-22)")
     Container(log_svc, "PK_LOG_BAIXA_PIM", "PL/SQL Package", "Servico de log -- BC-EI-08 -- SEQUENCE para cd_log\n[MIGRACAO] ILogger estruturado + ULID/UUID")
 
-    Container(cad_empresa, "PR_CADASTRAMENTO_EMPRESA_PROV", "PL/SQL Procedure", "Criacao empresa conveniada -- contrato canonico Opcao D Hibrida:\nFase 1-2 assinatura legado (Adapter/Facade); Fase 3 RECORD t_resultado_efetivacao\n[REF DD-01] [REF rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/]")
+    Container(cad_empresa, "PR_CADASTRAMENTO_EMPRESA_PROV", "PL/SQL Procedure", "Criacao empresa conveniada -- contrato canonico Opcao D Hibrida:\nFase 1-2 assinatura legado (Adapter/Facade); Fase 3 RECORD t_resultado_efetivacao\n[REF DD-01] [REF output/rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/]")
     Container(cad_internet2, "PR_CADASTRAMENTO_INTERNET2", "PL/SQL Procedure", "Efetivacao de beneficiario (mantido como servico externo)\n[MIGRACAO] Candidato a microsservico Beneficiarios")
     Container(odon_empresa, "PR_ODON_CAD_EMPRESA_PROV", "PL/SQL Procedure", "Criacao empresa odonto (mantido como servico externo)\n[MIGRACAO] Integrado via IOperadoraStrategy.OdontoStrategy")
 }

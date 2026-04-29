@@ -12,13 +12,13 @@
 #
 # Exemplos:
 #   Arquivo unico:
-#     python scripts/projeto/gerar-svg.py rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1/03-c4-model/src/c4-2-container-as-is.puml
+#     python scripts/projeto/gerar-svg.py output/rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1/03-c4-model/src/c4-2-container-as-is.puml
 #
 #   Pasta inteira (todos os .puml dentro de src/):
-#     python scripts/projeto/gerar-svg.py rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1/03-c4-model/src
+#     python scripts/projeto/gerar-svg.py output/rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1/03-c4-model/src
 #
 #   Rotina completa (C4 + fluxos de uma vez):
-#     python scripts/projeto/gerar-svg.py rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1
+#     python scripts/projeto/gerar-svg.py output/rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1
 #
 # Prerequisitos:
 #   - Java instalado e disponivel no PATH
@@ -163,8 +163,8 @@ def main():
         print("[ERRO] Uso: python gerar-svg.py [ARQUIVO.puml | PASTA]")
         print()
         print("  Exemplos:")
-        print("    python scripts/projeto/gerar-svg.py rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1/03-c4-model/src/c4-2-container-as-is.puml")
-        print("    python scripts/projeto/gerar-svg.py rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1")
+        print("    python scripts/projeto/gerar-svg.py output/rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1/03-c4-model/src/c4-2-container-as-is.puml")
+        print("    python scripts/projeto/gerar-svg.py output/rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1")
         sys.exit(1)
 
     alvo = Path(sys.argv[1])

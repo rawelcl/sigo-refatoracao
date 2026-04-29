@@ -104,7 +104,7 @@ Registrar aqui para evitar reabrir debates ja resolvidos.
 **Data:** 17/04/2026 (criacao) | **Atualizacao:** 24/04/2026 (alinhamento ao contrato canonico da modelagem em execucao)
 **Contexto:** RN-T01 -- Parsing fragil via substr/instr em `w_erro/p_erro_controle` OUT VARCHAR2 (`'procedimento efetuado para empresa,' || cd_empresa`). 4 chamadores afetados (TAFFIX, BITIX, EI, VJ).
 
-**Decisao canonica (Opcao D Hibrida):** adotada pela modelagem em execucao de `pr_cadastramento_empresa_prov` em `rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/pr_cadastramento_empresa_prov/ESTRATEGIA-REFATORACAO-PLSQL.md` e `apresentacao/APRESENTACAO-REFATORACAO-DDD.md`.
+**Decisao canonica (Opcao D Hibrida):** adotada pela modelagem em execucao de `pr_cadastramento_empresa_prov` em `output/rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/pr_cadastramento_empresa_prov/ESTRATEGIA-REFATORACAO-PLSQL.md` e `apresentacao/APRESENTACAO-REFATORACAO-DDD.md`.
 
 - **Fase 1-2 (packages + orquestrador interno):** a assinatura publica permanece `(p_nu_controle IN NUMBER, p_erro_controle OUT VARCHAR2)` -- retrocompatibilidade total com TAFFIX, BITIX, EI, VJ. Internamente, o novo package `pk_cadastramento_empresa` orquestra 18 packages via `t_contexto_cadastro IN OUT` (RECORD compartilhado).
 - **Fase 3 (PL/SQL to-be canonico):** nova assinatura `(p_nu_controle IN NUMBER, p_resultado OUT pk_efetivacao_types.t_resultado_efetivacao)`. A procedure legado permanece como **Adapter/Facade**, chamando a nova e traduzindo o RECORD para a string legado. Chamadores migram gradualmente.
@@ -137,9 +137,9 @@ TYPE t_resultado_efetivacao IS RECORD (
 **Status:** [EM-CURSO] Fase 1-2 em andamento na sprint de refatoracao de pr_cadastramento_empresa_prov. Fase 3 (RECORD canonico) no backlog PL/SQL daquela rotina.
 
 **Referencia:**
-- `rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/pr_cadastramento_empresa_prov/ESTRATEGIA-REFATORACAO-PLSQL.md`
-- `rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/pr_cadastramento_empresa_prov/apresentacao/APRESENTACAO-REFATORACAO-DDD.md`
-- `rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/pr_cadastramento_empresa_prov/c4-model/c4-3-component-orquestrador.puml`
+- `output/rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/pr_cadastramento_empresa_prov/ESTRATEGIA-REFATORACAO-PLSQL.md`
+- `output/rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/pr_cadastramento_empresa_prov/apresentacao/APRESENTACAO-REFATORACAO-DDD.md`
+- `output/rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/pr_cadastramento_empresa_prov/c4-model/c4-3-component-orquestrador.puml`
 - RN-T01 em `catalogo-regras-negocio.md`
 - Conflito 5 RESOLVIDO em `_shared/analise-comparativa-ddd-ei-vj.md`
 

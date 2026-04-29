@@ -42,8 +42,8 @@ escrito pode ser tao importante quanto o que esta. Sinalize toda ambiguidade.
       → Se nao: prosseguir
 [ ] Verificar status do objeto via MCP: dba_objects WHERE object_name = UPPER('[OBJETO]')
 [ ] Verificar ou criar estrutura de pastas:
-      rotinas/[nome]/README-rotina.md
-      rotinas/[nome]/rev-[TAG_RESOLVIDA]/01-engenharia-reversa/
+      output/rotinas/[nome]/README-rotina.md
+      output/rotinas/[nome]/rev-[TAG_RESOLVIDA]/01-engenharia-reversa/
 ```
 
 ### Passo 1 — Leitura Estrutural
@@ -144,7 +144,7 @@ Cada risco: token `[ANS]` na regra + registro em `_shared/base-conhecimento/risc
 
 ## Template de Output — `reversa-[nome].md`
 
-Salvar em: `rotinas/[nome]/rev-[TAG]/01-engenharia-reversa/reversa-[nome].md`
+Salvar em: `output/rotinas/[nome]/rev-[TAG]/01-engenharia-reversa/reversa-[nome].md`
 
 ```markdown
 # Engenharia Reversa: [NOME_DA_ROTINA]
@@ -298,6 +298,6 @@ Ao concluir a eng. reversa, atualizar obrigatoriamente:
 [ ] _shared/base-conhecimento/riscos-ans.md        → todos os [ANS] identificados
 [ ] _shared/base-conhecimento/pendencias-abertas.md → todos os [ATENCAO] e [BLOQUEADO]
 [ ] _shared/base-conhecimento/padroes-identificados.md → smells e padroes transversais
-[ ] rotinas/[nome]/README-rotina.md                → atualizar status da versao
+[ ] output/rotinas/[nome]/README-rotina.md                → atualizar status da versao
 [ ] README.md (raiz)                               → atualizar tabela de status (E1 = [OK])
 ```

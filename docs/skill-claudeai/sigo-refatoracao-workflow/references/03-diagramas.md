@@ -11,8 +11,8 @@ O modelo C4 organiza a arquitetura em 4 niveis de zoom:
 | Nivel | Diagrama | Escopo | Onde fica no projeto |
 |---|---|---|---|
 | 1 | System Context | O sistema inteiro e seus usuarios/sistemas externos | `_shared/c4-model/src/` |
-| 2 | Container | Aplicacoes, bancos, servicos dentro do sistema | `rotinas/[nome]/03-c4-model/src/` |
-| 3 | Component | Componentes dentro de um container (procedures, packages) | `rotinas/[nome]/03-c4-model/src/` |
+| 2 | Container | Aplicacoes, bancos, servicos dentro do sistema | `output/rotinas/[nome]/03-c4-model/src/` |
+| 3 | Component | Componentes dentro de um container (procedures, packages) | `output/rotinas/[nome]/03-c4-model/src/` |
 | 4 | Code | Classes, funcoes (opcional — raramente usado) | N/A neste projeto |
 
 **Regra:** O nivel 1 e compartilhado — nunca duplicar por rotina. Niveis 2 e 3 sao por rotina.
@@ -207,8 +207,8 @@ stop
 [ ] C4 nivel 2 AS-IS gerado (container-as-is.puml)
 [ ] C4 nivel 2 TO-BE gerado (container-to-be.puml)
 [ ] C4 nivel 3 gerado para componente principal
-[ ] Todos os .puml salvos em: rotinas/[nome]/03-c4-model/src/
-[ ] SVGs exportados para: rotinas/[nome]/03-c4-model/svg/
+[ ] Todos os .puml salvos em: output/rotinas/[nome]/03-c4-model/src/
+[ ] SVGs exportados para: output/rotinas/[nome]/03-c4-model/svg/
 [ ] README.md raiz atualizado (C4 = ?)
 ```
 
@@ -217,7 +217,7 @@ stop
 [ ] Fluxo AS-IS gerado — cobre TODOS os caminhos da engenharia reversa
 [ ] Fluxo TO-BE gerado — incorpora melhorias do DDD e decisoes de design
 [ ] Validacao: cada RN da Etapa 1 aparece em algum decision diamond do AS-IS
-[ ] Todos os .puml salvos em: rotinas/[nome]/04-fluxos/src/
-[ ] SVGs exportados para: rotinas/[nome]/04-fluxos/svg/
+[ ] Todos os .puml salvos em: output/rotinas/[nome]/04-fluxos/src/
+[ ] SVGs exportados para: output/rotinas/[nome]/04-fluxos/svg/
 [ ] README.md raiz atualizado (Fluxos = ?)
 ```

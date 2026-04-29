@@ -17,7 +17,7 @@
 | Tamanho           | 6.334 linhas body, 275 KB                                          |
 | Status Producao   | PACKAGE VALID (02/04/2026); SYNONYM PUBLIC VALID (26/03/2026); PACKAGE BODY nao visivel via all_objects |
 | Parametros IN     | Varia por rotina -- ver spec                                       |
-| Eng. Reversa      | [OK] `rotinas/pk_venda_json/rev-PRODUCAO-20260402/01-engenharia-reversa/reversa-pk-venda-json.md` |
+| Eng. Reversa      | [OK] `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/01-engenharia-reversa/reversa-pk-venda-json.md` |
 
 **Responsabilidade:** Package de integracao JSON (origem BITIX) e efetivacao automatica de propostas PIM/PME/POS provenientes dessa ferramenta de venda.
 Ponto de entrada para propostas via sistema BITIX (pr_pim_insere_cnpj).
@@ -115,7 +115,7 @@ Processa 9 fases sequenciais: PME modelo, PIM principal, odonto puro, inclusoes,
 | Versao CVS   | PRODUCAO-20260402 (02/04/2026)           |
 | Tamanho      | 5.025 linhas, 202 KB                     |
 | Status MCP   | Sinonimo PUBLICO VALID (16/04/2026)      |
-| Eng. Reversa | [OK] `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/01-engenharia-reversa/reversa-pr-cadastramento-empresa-prov.md` |
+| Eng. Reversa | [OK] `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/01-engenharia-reversa/reversa-pr-cadastramento-empresa-prov.md` |
 | Chamado por  | PR_EFETIVA_INTERNET, PR_BAIXA_EMPRESA_COLIGADA, PR_BAIXA_EMP_COLIGADA_SAUDE, PR_EFETIVA_BAIXA_COLIGADA, PK_PIM |
 
 **Responsabilidade:** Efetiva cadastramento definitivo de empresa conveniada a partir de proposta em tb_empresa_internet (fl_status IN 0,8). Cria contrato em tb_empresa_conveniada e parametriza mais de 40 tabelas operacionais. Suporta apenas tp_operacao='1' (inclusao).

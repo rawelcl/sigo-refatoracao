@@ -3,8 +3,8 @@
 > Gerado em: 24/04/2026
 > Autor: Agente DDD (GitHub Copilot)
 > Baseado em:
-> - `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/ddd-modelagem-dominio.md`
-> - `rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`
+> - `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/ddd-modelagem-dominio.md`
+> - `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`
 > ADRs referenciadas: ADR-02, ADR-03, ADR-05, ADR-18, ADR-21, ADR-22, ADR-74
 
 ---
@@ -176,8 +176,8 @@ leitor futuro assuma fluxo cruzado. Nao e bloqueador -- e clarificacao documenta
 
 [OK 24/04/2026] RESOLVIDO. Acoes aplicadas:
 
-- Nota adicionada em BC-EI-07 do DDD PR_EFETIVA_INTERNET (`rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/ddd-modelagem-dominio.md`) explicitando os dois produtores disjuntos (WEBHAP via Portal do Corretor Super Simples; BITIX via PR_VE_DIVERGENCIA_NEOWAY chamada pelo VJ) e o particionamento por `cd_operados`.
-- Referencia simetrica adicionada na RN14 do DDD PK_VENDA_JSON (`rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`) deixando claro que o caminho BITIX atua EXCLUSIVAMENTE sobre `cd_operados='BITIX'` e apontando para o caminho WEBHAP disjunto consumido pelo EI em BC-EI-07.
+- Nota adicionada em BC-EI-07 do DDD PR_EFETIVA_INTERNET (`output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/ddd-modelagem-dominio.md`) explicitando os dois produtores disjuntos (WEBHAP via Portal do Corretor Super Simples; BITIX via PR_VE_DIVERGENCIA_NEOWAY chamada pelo VJ) e o particionamento por `cd_operados`.
+- Referencia simetrica adicionada na RN14 do DDD PK_VENDA_JSON (`output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`) deixando claro que o caminho BITIX atua EXCLUSIVAMENTE sobre `cd_operados='BITIX'` e apontando para o caminho WEBHAP disjunto consumido pelo EI em BC-EI-07.
 - Atualizacao aplicada tanto no bloco de invariantes do agregado `BeneficiarioBitix` quanto na tabela de mapeamento RN->Padrao DDD.
 - Regra canonica consolidada na base em RN-T08 de `_shared/base-conhecimento/catalogo-regras-negocio.md` (ja existente antes desta acao).
 
@@ -224,8 +224,8 @@ via `PR_VE_DIVERGENCIA_NEOWAY` + `fl_status_processamento='17'`.
 
 [OK 24/04/2026] RESOLVIDO. Acoes aplicadas:
 
-- Nota adicionada em SP11 `DivergenciaNeowaySpec` do DDD PR_EFETIVA_INTERNET (`rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/ddd-modelagem-dominio.md`) explicitando que propostas BITIX recebem o equivalente funcional de CD_PENDENCIA=12 via `PR_VE_DIVERGENCIA_NEOWAY` + `fl_status_processamento='17'` pelo VJ, com referencia a VJ RN14 e RN-T07 da base.
-- Referencia simetrica adicionada na linha RN14 da tabela RN->Padrao DDD do PK_VENDA_JSON (`rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`) explicitando que CD_PENDENCIA=12 contabilizado pelo motor de criticas modo 'E' no caminho BITIX e o equivalente funcional da Pendencia 12 (SP11) do EI para WEBHAP/TAFFIX, com disjuncao por `cd_operados`.
+- Nota adicionada em SP11 `DivergenciaNeowaySpec` do DDD PR_EFETIVA_INTERNET (`output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/ddd-modelagem-dominio.md`) explicitando que propostas BITIX recebem o equivalente funcional de CD_PENDENCIA=12 via `PR_VE_DIVERGENCIA_NEOWAY` + `fl_status_processamento='17'` pelo VJ, com referencia a VJ RN14 e RN-T07 da base.
+- Referencia simetrica adicionada na linha RN14 da tabela RN->Padrao DDD do PK_VENDA_JSON (`output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`) explicitando que CD_PENDENCIA=12 contabilizado pelo motor de criticas modo 'E' no caminho BITIX e o equivalente funcional da Pendencia 12 (SP11) do EI para WEBHAP/TAFFIX, com disjuncao por `cd_operados`.
 - Regra canonica ja consolidada na base em RN-T07 de `_shared/base-conhecimento/catalogo-regras-negocio.md` (mantida sem alteracao).
 
 Modelo de referencia aplicado:
@@ -261,7 +261,7 @@ um trabalho de mapeamento nao documentado.
 
 [OK 24/04/2026] RESOLVIDO. Acoes aplicadas:
 
-- Secao 5 do DDD PK_VENDA_JSON (`rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`) reprojetada em conformidade com ADR-18, espelhando a estrutura da Secao 5 do DDD PR_EFETIVA_INTERNET:
+- Secao 5 do DDD PK_VENDA_JSON (`output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`) reprojetada em conformidade com ADR-18, espelhando a estrutura da Secao 5 do DDD PR_EFETIVA_INTERNET:
   - IDs adicionados: **DE-VJ-01 a DE-VJ-14** (14 eventos).
   - Topicos em kebab-case EN com prefixo `hap-ins-bitix-{evento}` (tempo passado).
   - Publisher explicito por evento (BC-VJ-01/02/03/06/08/11).
@@ -280,7 +280,7 @@ um trabalho de mapeamento nao documentado.
 
 ### Resolucao (24/04/2026)
 
-A avaliacao da modelagem em execucao de `pr_cadastramento_empresa_prov` (em `rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/`) revelou que a decisao canonica **ja foi tomada** e e diferente tanto da proposta original do EI (OUT params tipados `p_cd_empresa, p_status, p_mensagem`) quanto da hipotese replicada pelo VJ. A decisao canonica e a **Opcao D Hibrida** (Adapter/Facade + RECORD tipado na Fase 3), documentada em `ESTRATEGIA-REFATORACAO-PLSQL.md`, `APRESENTACAO-REFATORACAO-DDD.md` e `c4-3-component-orquestrador.puml`.
+A avaliacao da modelagem em execucao de `pr_cadastramento_empresa_prov` (em `output/rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/`) revelou que a decisao canonica **ja foi tomada** e e diferente tanto da proposta original do EI (OUT params tipados `p_cd_empresa, p_status, p_mensagem`) quanto da hipotese replicada pelo VJ. A decisao canonica e a **Opcao D Hibrida** (Adapter/Facade + RECORD tipado na Fase 3), documentada em `ESTRATEGIA-REFATORACAO-PLSQL.md`, `APRESENTACAO-REFATORACAO-DDD.md` e `c4-3-component-orquestrador.puml`.
 
 **Contrato canonico (Fase 3):**
 
@@ -311,14 +311,14 @@ PROCEDURE pr_cadastramento_empresa_prov(
 **Acoes aplicadas em 24/04/2026:**
 
 - **`_shared/base-conhecimento/decisoes-design.md` DD-01** reescrito: marca a proposta original (OUT multiplos params) como SUPERSEDED, documenta Opcao D Hibrida com bloco SQL do RECORD canonico, detalha faseamento e impacto por consumidor, e aponta para os tres artefatos canonicos da modelagem em execucao.
-- **DDD EI** (`rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/ddd-modelagem-dominio.md`):
+- **DDD EI** (`output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/ddd-modelagem-dominio.md`):
   - Linha de Decisao de Design "Contrato de retorno pr_cadastramento_emp" reescrita para apontar o contrato Hibrido canonico e remover referencia a proposta-novo-contrato-retorno.md como solucao de design (arquivo fica apenas como evidencia historica do diagnostico).
   - Pendencia A05 marcada [OK 24/04/2026] RESOLVIDO com justificativa completa.
   - **MIG-09** reescrito: AS-IS detalhado (substr/instr + checagem ORA-); TO-BE passa a citar explicitamente `pk_efetivacao_types.t_resultado_efetivacao` e o papel do Adapter/Facade. ADR associada ampliada para ADR-03 / ADR-05.
-- **DDD VJ** (`rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`):
+- **DDD VJ** (`output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`):
   - Decisao de Design reescrita com Hibrida + referencia DD-01.
   - **MIG-VJ-10** reescrito para apontar ao contrato canonico Fase 3 (3 call sites do VJ: pr_efetiva, pr_efetiva_pme, pr_efetiva_coligada).
-- **Arquivo historico** `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/backup/01-engenharia-reversa/proposta-novo-contrato-retorno.md` permanece como evidencia do diagnostico do parsing fragil; a Opcao A (TYPE RECORD em package de tipos) citada naquele arquivo e agora instanciada de forma canonica via `pk_efetivacao_types.t_resultado_efetivacao` na modelagem em execucao de pr_cadastramento_empresa_prov. A Opcao B (multiplos OUTs) que EI e VJ originalmente copiaram foi descartada.
+- **Arquivo historico** `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/backup/01-engenharia-reversa/proposta-novo-contrato-retorno.md` permanece como evidencia do diagnostico do parsing fragil; a Opcao A (TYPE RECORD em package de tipos) citada naquele arquivo e agora instanciada de forma canonica via `pk_efetivacao_types.t_resultado_efetivacao` na modelagem em execucao de pr_cadastramento_empresa_prov. A Opcao B (multiplos OUTs) que EI e VJ originalmente copiaram foi descartada.
 
 **Resultado:** risco de duas solucoes divergentes eliminado -- existe agora uma unica solucao canonica validada pelo PO, referenciada por EI, VJ e base de conhecimento.
 
@@ -337,7 +337,7 @@ o mesmo problema na mesma sub-rotina.
 ### Evidencia no EI
 
 - ACL02 documentada com detalhe
-- Arquivo dedicado: `rotinas/pr_efetiva_internet/01-engenharia-reversa/proposta-novo-contrato-retorno.md` (hoje em `backup/`)
+- Arquivo dedicado: `output/rotinas/pr_efetiva_internet/01-engenharia-reversa/proposta-novo-contrato-retorno.md` (hoje em `backup/`)
 - Marcacoes [CRITICO] S11, S20, DD-01
 - Decisao de Design (AS-IS da analise): OUT parameter tipado -- SUPERSEDED pela Opcao D Hibrida
 
@@ -380,7 +380,7 @@ em todos, distinguindo explicitamente Read Model de Write Model.
 
 [OK 24/04/2026] RESOLVIDO. Acoes aplicadas:
 
-- Secao 6 do DDD PK_VENDA_JSON (`rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`) reestruturada:
+- Secao 6 do DDD PK_VENDA_JSON (`output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`) reestruturada:
   - `PropostaVendaRepository` + `EmpresaInternetRepository` consolidados em **`R-VJ-01 PropostaEmpresaBitixRepository`** (um unico repositorio para o AR `PropostaEmpresaBitix`), cumprindo a regra ADR-22 "1 AR = 1 Repository".
   - IDs **R-VJ-01 a R-VJ-10** adicionados para paridade com a Secao 6 do DDD PR_EFETIVA_INTERNET (R01..R18).
   - Notas adicionadas: [ATENCAO ADR-22 -- Padrao Repositorio] e [ADR-AUSENTE -- CQRS ADR-03] espelhando o padrao do EI.
@@ -418,7 +418,7 @@ nao saberao imediatamente que "criticas" no VJ inclui "pendencias" no sentido do
 [OK 24/04/2026] RESOLVIDO. Acoes aplicadas:
 
 - **Ubiquitous Language consolidada** em `_shared/dicionario-dominio.md` (nova secao "Padronizacao de Building Blocks DDD (canonico entre EI e VJ)"), definindo os nomes canonicos para: `CodigoProvisorio` (VO), `Coligada SIGO`, `Coligada BITIX`, `Critica` (beneficiario), `Pendencia` (empresa), `MotorCriticasService`, `AvaliacaoPendenciasService`, `DivergenciaNeowaySpec`, `StatusProcessamentoBenef`, com regra de nomenclatura "nomear a falha" para Specs.
-- **DDD PK_VENDA_JSON** (`rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`):
+- **DDD PK_VENDA_JSON** (`output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`):
   - VO `CodigoProvisorioEmpresa` renomeado para **`CodigoProvisorio`** (alinhado ao EI).
   - Spec `SemDivergenciaNeowaySpec` renomeada para **`DivergenciaNeowaySpec`**, com semantica invertida (`true` passa a indicar PRESENCA de divergencia). Tabela RN->Padrao DDD (RN14) tambem atualizada.
   - `MotorCriticasService` recebeu nota explicita de escopo semantico, deixando claro que abrange tanto `Critica` (beneficiario) quanto `Pendencia` (empresa) do vocabulario EI, e que a migracao futura deve preservar essa distincao.
@@ -462,8 +462,8 @@ validacoes de grupo) sempre le a tabela canonica.
 - Regra canonica consolidada em **RN-T10** em `_shared/base-conhecimento/catalogo-regras-negocio.md`.
 - Descricao de `PR_COLIGA_EMPRESA_BITIX` em `_shared/base-conhecimento/catalogo-objetos-plsql.md` reescrita explicitando a responsabilidade de transferir staging->canonica.
 - `_shared/dicionario-dominio.md`: termos `Coligada SIGO`, `Coligada BITIX`, `Proposta Coligada BITIX` atualizados com referencia a RN-T10 e clarificacao de que nao sao hierarquias paralelas.
-- DDD EI (`rotinas/pr_efetiva_internet/.../ddd-modelagem-dominio.md`): BC-EI-14 e DS13a recebem nota [REF RN-T10] explicitando que TB_EMPRESA_COLIGADA e a tabela canonica unica e que PR_COLIGA_EMPRESA_BITIX migra para o VJ (nao e sub-rotina independente).
-- DDD VJ (`rotinas/pk_venda_json/.../ddd-modelagem-dominio.md`): relacao ACL com BC-EI-14 e dependencia externa PR_COLIGA_EMPRESA_BITIX atualizadas com [REF RN-T10].
+- DDD EI (`output/rotinas/pr_efetiva_internet/.../ddd-modelagem-dominio.md`): BC-EI-14 e DS13a recebem nota [REF RN-T10] explicitando que TB_EMPRESA_COLIGADA e a tabela canonica unica e que PR_COLIGA_EMPRESA_BITIX migra para o VJ (nao e sub-rotina independente).
+- DDD VJ (`output/rotinas/pk_venda_json/.../ddd-modelagem-dominio.md`): relacao ACL com BC-EI-14 e dependencia externa PR_COLIGA_EMPRESA_BITIX atualizadas com [REF RN-T10].
 - Pendencia **A6** em `_shared/base-conhecimento/pendencias-abertas.md` marcada como `[OK] RESOLVIDO`.
 
 ---
@@ -486,7 +486,7 @@ Padronizacao estrutural do DDD VJ executada conforme prioridade alta:
 Prioridade baixa (colunas adicionais `ADR de Referencia` nas Decisoes de Design e `Nota Migracao` por Domain Service) fica registrada como evolucao incremental -- nao bloqueia o alinhamento estrutural e pode ser atendida via leitura cruzada com a nova Secao 13 (MIG-VJ-XX).
 
 **Arquivos atualizados:**
-- `rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md` (Secao 0, IDs AG/DS/SP/F/ACL, Secao 13, renumeracao do adendo para Secao 14)
+- `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md` (Secao 0, IDs AG/DS/SP/F/ACL, Secao 13, renumeracao do adendo para Secao 14)
 
 ---
 

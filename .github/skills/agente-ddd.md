@@ -36,7 +36,7 @@ Nenhuma decisao de modelagem sem rastreabilidade para uma RN do artefato de orig
 [ ] Ler _shared/context-map-dominio.puml — entender bounded contexts existentes
 [ ] Ler _shared/base-conhecimento/catalogo-regras-negocio.md — evitar duplicar regras
 [ ] Ler _shared/base-conhecimento/decisoes-design.md — respeitar decisoes tomadas
-[ ] Confirmar versao ativa: rotinas/[nome]/README-rotina.md
+[ ] Confirmar versao ativa: output/rotinas/[nome]/README-rotina.md
 [ ] Ler ADRs relevantes do repositorio de arquitetura:
       C:\Users\thiagorc\Documents\Repos\Refatoracao\adrs arquitetura hapvida
       ? Identificar ADRs que se aplicam ao dominio, tipo de objeto ou padrao de integracao
@@ -116,7 +116,7 @@ Anticorruption Layer entre dois contextos.
 
 ### Template de Output — `ddd-modelagem-dominio.md`
 
-Salvar em: `rotinas/[nome]/rev-[TAG]/02-ddd/ddd-modelagem-dominio.md`
+Salvar em: `output/rotinas/[nome]/rev-[TAG]/02-ddd/ddd-modelagem-dominio.md`
 
 **Principio central do documento:** cada secao deve documentar nao apenas O QUE foi
 decidido, mas POR QUE — qual conceito DDD se aplica, qual o raciocinio logico que
@@ -575,7 +575,7 @@ title Container -- [NOME] (TO-BE)\nRev: [TAG] | REF: ddd-modelagem-dominio.md (S
 O arquivo abaixo e o padrao de referencia para novos diagramas TO-BE:
 
 ```
-rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-to-be.puml
+output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-to-be.puml
 ```
 
 Antes de gerar qualquer novo diagrama TO-BE: ler esse arquivo para verificar
@@ -611,7 +611,7 @@ a estrutura esperada de anotacoes DDD.
 | 5 | `c4-3-component-orquestrador.puml` | 3 | Componentes do package orquestrador |
 | 6 | `c4-landscape-evolucao.puml` | — | Visao das 3 fases lado a lado — Strangler Fig |
 
-Todos salvos em: `rotinas/[nome]/rev-[TAG]/03-c4-model/src/`
+Todos salvos em: `output/rotinas/[nome]/rev-[TAG]/03-c4-model/src/`
 Exceto o nivel 1: `_shared/c4-model/src/` — nunca duplicar por rotina.
 
 ### Geracao de SVG — Acao Obrigatoria Apos Cada .puml
@@ -622,7 +622,7 @@ python scripts/projeto/gerar-svg.py [caminho-do-arquivo.puml]
 
 SVG gerado automaticamente em `svg/` correspondente:
 ```
-[OK] SVG gerado: rotinas/[nome]/rev-[TAG]/03-c4-model/svg/[arquivo].svg
+[OK] SVG gerado: output/rotinas/[nome]/rev-[TAG]/03-c4-model/svg/[arquivo].svg
 ```
 
 Se PlantUML nao disponivel:
@@ -992,7 +992,7 @@ fluxo-[nome]-to-be.puml   ? comportamento refatorado (incorpora DDD + decisoes d
 
 Salvar `.puml` em `04-fluxos/src/` e executar imediatamente:
 ```
-python scripts/projeto/gerar-svg.py rotinas/[nome]/rev-[TAG]/04-fluxos/src/[arquivo].puml
+python scripts/projeto/gerar-svg.py output/rotinas/[nome]/rev-[TAG]/04-fluxos/src/[arquivo].puml
 ```
 O `.svg` sera gerado automaticamente em `04-fluxos/svg/`.
 
@@ -1096,11 +1096,11 @@ Utilizar os artefatos produzidos como unica fonte de verdade para a geracao.
 ### Pasta de Destino
 
 ```
-rotinas/[nome]/rev-[TAG]/05-refact/
+output/rotinas/[nome]/rev-[TAG]/05-refact/
 ```
 
 Criar automaticamente se nao existir. Nunca bloquear por ausencia da pasta.
-Registrar `[OK] Criado: rotinas/[nome]/rev-[TAG]/05-refact/` ao criar.
+Registrar `[OK] Criado: output/rotinas/[nome]/rev-[TAG]/05-refact/` ao criar.
 
 ### Artefatos a Gerar
 
@@ -1200,6 +1200,6 @@ Ao concluir as etapas 2, 3, 4 e 5, atualizar:
 [ ] _shared/base-conhecimento/padroes-identificados.md -- padroes de fluxo recorrentes
 [ ] _shared/dicionario-dominio.md                    -- novos termos identificados
 [ ] _shared/context-map-dominio.puml                 -- bounded context novo ou atualizado
-[ ] rotinas/[nome]/README-rotina.md                  -- atualizar status
+[ ] output/rotinas/[nome]/README-rotina.md                  -- atualizar status
 [ ] README.md (raiz)                                 -- E2=[OK], E3=[OK], E4=[OK], E5=[OK]
 ```

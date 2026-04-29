@@ -93,7 +93,7 @@ with open(caminho, 'r') as f:
 ### Saida Padrao — tokens textuais do projeto
 
 ```python
-print("[OK] Estrutura criada em: rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1/")
+print("[OK] Estrutura criada em: output/rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1/")
 print("[ATENCAO] Tag PRODUCAO nao encontrada para: PR_VALIDA_CONTRATO")
 print("[BLOQUEADO] Objeto nao localizado no CVS: FN_CALCULA_CARENCIA")
 print("[ERRO] Falha ao acessar: catalogo-objetos-plsql.md")

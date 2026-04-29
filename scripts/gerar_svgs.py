@@ -5,10 +5,10 @@ BASE = pathlib.Path(r"c:\Users\thiagorc\Documents\Repos\Refatoracao\sigo-pr_efet
 
 groups = [
     (BASE / "_shared/c4-model/src", BASE / "_shared/c4-model/svg"),
-    (BASE / "rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src",
-     BASE / "rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/svg"),
-    (BASE / "rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/src",
-     BASE / "rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/svg"),
+    (BASE / "output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src",
+     BASE / "output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/svg"),
+    (BASE / "output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/src",
+     BASE / "output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/svg"),
 ]
 
 ok = 0

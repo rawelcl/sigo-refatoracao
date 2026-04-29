@@ -14,7 +14,7 @@ def join_continuation(content):
             i += 1
     return '\n'.join(result)
 
-base = pathlib.Path('c:/Users/thiagorc/Documents/Repos/Refatoracao/sigo-pr_efetiva_internet/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402')
+base = pathlib.Path('c:/Users/thiagorc/Documents/Repos/Refatoracao/sigo-pr_efetiva_internet/output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402')
 for f in base.rglob('*.puml'):
     content = f.read_text(encoding='utf-8')
     fixed = join_continuation(content)

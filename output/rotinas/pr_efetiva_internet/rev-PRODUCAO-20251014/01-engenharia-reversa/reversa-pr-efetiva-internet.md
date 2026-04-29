@@ -561,7 +561,7 @@ end if;
 2. Extrai cd_empresa do retorno via parsing fragil: `substr(p_return, instr(p_return, ',') + 1)`
 3. Verifica se o retorno contem 'ORA-' (indica erro) -- se sim, anula o cd_empresa
 **Resultado:** Empresa saude cadastrada definitivamente
-**Ambiguidade:** [CRITICO] Parsing de string em `p_return` para extrair cd_empresa e extremamente fragil. Qualquer virgula extra na mensagem de sucesso ou erro ORA- subtil pode resultar em cd_empresa invalido. Ver `proposta-novo-contrato-retorno.md` (em `backup/01-engenharia-reversa/` -- evidencia historica do diagnostico). **Solucao canonica adotada em 24/04/2026:** Opcao D Hibrida -- Fase 1-2 mantem assinatura legado via Adapter/Facade; Fase 3 introduz RECORD `pk_efetivacao_types.t_resultado_efetivacao` (6 campos). [REF DD-01 -- _shared/base-conhecimento/decisoes-design.md] [REF rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/].
+**Ambiguidade:** [CRITICO] Parsing de string em `p_return` para extrair cd_empresa e extremamente fragil. Qualquer virgula extra na mensagem de sucesso ou erro ORA- subtil pode resultar em cd_empresa invalido. Ver `proposta-novo-contrato-retorno.md` (em `backup/01-engenharia-reversa/` -- evidencia historica do diagnostico). **Solucao canonica adotada em 24/04/2026:** Opcao D Hibrida -- Fase 1-2 mantem assinatura legado via Adapter/Facade; Fase 3 introduz RECORD `pk_efetivacao_types.t_resultado_efetivacao` (6 campos). [REF DD-01 -- _shared/base-conhecimento/decisoes-design.md] [REF output/rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/].
 
 **Evidencia:**
 ```sql
@@ -973,7 +973,7 @@ A `pr_efetiva_internet` e um batch orquestrador executado periodicamente. Ao ini
 [HANDOFF-DDD]
 Eng. reversa concluida. Artefato pronto para consumo pelo Agente DDD.
 Leitura obrigatoria antes de iniciar DDD:
-- Este arquivo: `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/01-engenharia-reversa/reversa-pr-efetiva-internet.md`
-- `rotinas/pr_efetiva_internet/02-ddd/ddd-modelagem-dominio.md` (ja existente)
+- Este arquivo: `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/01-engenharia-reversa/reversa-pr-efetiva-internet.md`
+- `output/rotinas/pr_efetiva_internet/02-ddd/ddd-modelagem-dominio.md` (ja existente)
 - `_shared/base-conhecimento/catalogo-tabelas.md`
 - `_shared/dicionario-dominio.md`

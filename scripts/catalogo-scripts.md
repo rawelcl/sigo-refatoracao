@@ -35,13 +35,13 @@ python scripts/projeto/gerar-svg.py [ARQUIVO.puml | PASTA-SRC | PASTA-VERSAO]
 **Exemplos:**
 ```
 # Arquivo unico
-python scripts/projeto/gerar-svg.py rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/src/c4-2-container-as-is.puml
+python scripts/projeto/gerar-svg.py output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/src/c4-2-container-as-is.puml
 
 # Pasta src/ direta
-python scripts/projeto/gerar-svg.py rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/src
+python scripts/projeto/gerar-svg.py output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/src
 
 # Rotina completa (varre 03-c4-model/src e 04-fluxos/src)
-python scripts/projeto/gerar-svg.py rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014
+python scripts/projeto/gerar-svg.py output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014
 ```
 
 **Pre-requisitos:** `pip install plantuml` (ou `tools/plantuml.jar` + Java)
@@ -72,13 +72,13 @@ python scripts/projeto/organizar-e-gerar-svg.py [PASTA-VERSAO] [ESCOPO]
 **Exemplos:**
 ```
 # Completo (C4 + fluxos)
-python scripts/projeto/organizar-e-gerar-svg.py rotinas/pk_venda_json/rev-PRODUCAO-20260402
+python scripts/projeto/organizar-e-gerar-svg.py output/rotinas/pk_venda_json/rev-PRODUCAO-20260402
 
 # Apenas C4
-python scripts/projeto/organizar-e-gerar-svg.py rotinas/pk_venda_json/rev-PRODUCAO-20260402 c4
+python scripts/projeto/organizar-e-gerar-svg.py output/rotinas/pk_venda_json/rev-PRODUCAO-20260402 c4
 
 # Apenas fluxos
-python scripts/projeto/organizar-e-gerar-svg.py rotinas/pk_venda_json/rev-PRODUCAO-20260402 fluxos
+python scripts/projeto/organizar-e-gerar-svg.py output/rotinas/pk_venda_json/rev-PRODUCAO-20260402 fluxos
 ```
 
 **Pre-requisitos:** `pip install plantuml`

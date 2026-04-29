@@ -114,7 +114,7 @@ partition "EfetivarMovimentacoesPIMUseCase (orquestrador)" {
                   ds_mensagem, ds_etapa_erro, cd_sqlcode, ds_sqlerrm) -- acesso por campo,
                   elimina parsing fragil (DD-01, S11, S20, A05 RESOLVIDO).
                 [MIG-09] [REF ADR-03 -- CQRS CommandHandler]
-                [REF rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/]
+                [REF output/rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/]
               end note
               if (p_resultado.fl_status = 'S' (sucesso)?) then (Sim)
                 :l_cd_empresa = p_resultado.cd_empresa;

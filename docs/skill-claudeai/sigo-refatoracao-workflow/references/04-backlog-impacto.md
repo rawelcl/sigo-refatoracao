@@ -263,7 +263,7 @@ Para que o codigo seja autoexplicativo e alinhado com a linguagem do negocio
 [ ] Jobs e integracoes verificados
 [ ] Plano de rollback definido
 [ ] Riscos mapeados com mitigacoes
-[ ] Arquivo salvo em: rotinas/[nome]/05-analise-impacto/analise-impacto.md
+[ ] Arquivo salvo em: output/rotinas/[nome]/05-analise-impacto/analise-impacto.md
 [ ] README.md raiz atualizado (Impacto = ?)
 ```
 
@@ -275,6 +275,6 @@ Para que o codigo seja autoexplicativo e alinhado com a linguagem do negocio
 [ ] Rastreabilidade: cada story referencia a RN de origem
 [ ] Stories de correcao de smells incluidas
 [ ] Story Points estimados (ou marcados para refinamento)
-[ ] Arquivo salvo em: rotinas/[nome]/06-backlog/BACKLOG-EPICO-FEATURES-USERSTORIES.md
+[ ] Arquivo salvo em: output/rotinas/[nome]/06-backlog/BACKLOG-EPICO-FEATURES-USERSTORIES.md
 [ ] README.md raiz atualizado (Backlog = ?)
 ```

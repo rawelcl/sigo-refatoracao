@@ -86,7 +86,7 @@ WS-PROJETO-REFACT-SIGO/
 ?   ??? base-conhecimento/                 # Scripts de manutencao da base de conhecimento
 ?   ??? projeto/                           # Scripts de governanca e estrutura
 ?
-??? rotinas/                               # RAIZ de todas as rotinas refatoradas
+??? output/rotinas/                               # RAIZ de todas as rotinas refatoradas
 ?   ??? [nome-da-rotina]/                  # Uma pasta por rotina
 ?       ??? README-rotina.md               # Historico de versoes analisadas desta rotina
 ?       ??? rev-[TAG_CVS]/                 # UMA PASTA POR VERSAO — nomeada pela tag CVS
@@ -125,9 +125,9 @@ rev-[TAG_CVS]
 ```
 Exemplos:
 ```
-rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1/
-rotinas/pr_efetiva_internet/rev-PRODUCAO-3.0.0/
-rotinas/fn_calcula_carencia/rev-PRODUCAO-1.1.2/
+output/rotinas/pr_efetiva_internet/rev-PRODUCAO-2.4.1/
+output/rotinas/pr_efetiva_internet/rev-PRODUCAO-3.0.0/
+output/rotinas/fn_calcula_carencia/rev-PRODUCAO-1.1.2/
 ```
 
 **Quando criar uma nova subpasta de versao:**
@@ -162,12 +162,12 @@ Para cada rotina, siga OBRIGATORIAMENTE a sequencia abaixo. Nunca pule etapas se
 
 ```
 ETAPA 0 — Consulta a Base de Conhecimento  ? _shared/base-conhecimento/indice.md
-ETAPA 1 — Engenharia Reversa               ? rotinas/[nome]/rev-[TAG]/01-engenharia-reversa/reversa-[nome].md
-ETAPA 2 — Modelagem DDD                    ? rotinas/[nome]/rev-[TAG]/02-ddd/ddd-modelagem-dominio.md
-ETAPA 3 — Diagramas C4                     ? rotinas/[nome]/rev-[TAG]/03-c4-model/src/*.puml  +  svg/*.svg
-ETAPA 4 — Fluxogramas                      ? rotinas/[nome]/rev-[TAG]/04-fluxos/src/*.puml    +  svg/*.svg
-ETAPA 5 — Analise de Impacto               ? rotinas/[nome]/rev-[TAG]/05-analise-impacto/analise-impacto.md
-ETAPA 6 — Backlog                          ? rotinas/[nome]/rev-[TAG]/06-backlog/BACKLOG-EPICO-FEATURES-USERSTORIES.md
+ETAPA 1 — Engenharia Reversa               ? output/rotinas/[nome]/rev-[TAG]/01-engenharia-reversa/reversa-[nome].md
+ETAPA 2 — Modelagem DDD                    ? output/rotinas/[nome]/rev-[TAG]/02-ddd/ddd-modelagem-dominio.md
+ETAPA 3 — Diagramas C4                     ? output/rotinas/[nome]/rev-[TAG]/03-c4-model/src/*.puml  +  svg/*.svg
+ETAPA 4 — Fluxogramas                      ? output/rotinas/[nome]/rev-[TAG]/04-fluxos/src/*.puml    +  svg/*.svg
+ETAPA 5 — Analise de Impacto               ? output/rotinas/[nome]/rev-[TAG]/05-analise-impacto/analise-impacto.md
+ETAPA 6 — Backlog                          ? output/rotinas/[nome]/rev-[TAG]/06-backlog/BACKLOG-EPICO-FEATURES-USERSTORIES.md
 ETAPA F — Retroalimentacao da Base         ? _shared/base-conhecimento/*.md  (obrigatoria)
 ```
 
@@ -192,8 +192,8 @@ Quando o usuario indicar que vai comecar uma nova rotina, execute OBRIGATORIAMEN
 2. **Confirmar a fonte do codigo** — o codigo-fonte aceito e EXCLUSIVAMENTE o recuperado do CVS com a tag `PRODUCAO`. Se a tag nao existir ou o arquivo nao for encontrado, PARAR e notificar o usuario
 3. **Confirmar o nome** da procedure/function/package e a **tag CVS** que identifica a versao sendo analisada
 4. **Criar ou verificar a estrutura de pastas:**
-   - Se `rotinas/[nome]/` nao existir: criar a pasta e o `README-rotina.md`
-   - Se `rotinas/[nome]/rev-[TAG]/` nao existir: criar a subpasta de versao a partir do `_templates/rotina-template/`
+   - Se `output/rotinas/[nome]/` nao existir: criar a pasta e o `README-rotina.md`
+   - Se `output/rotinas/[nome]/rev-[TAG]/` nao existir: criar a subpasta de versao a partir do `_templates/rotina-template/`
    - Se a pasta de versao ja existir: verificar se ha analise anterior e perguntar ao usuario se deseja continuar ou iniciar nova revisao
 5. **Consultar** `_shared/dicionario-dominio.md` para aproveitar linguagem ubiqua ja definida
 6. **Confirmar** em qual etapa o usuario quer comecar (padrao: Etapa 1)

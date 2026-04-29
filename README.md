@@ -28,19 +28,19 @@
 ## Artefatos por Rotina
 
 ### PR_EFETIVA_INTERNET
-- Reversa: `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/01-engenharia-reversa/`
-- DDD: `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/`
-- C4: `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/`
-- Fluxos: `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/04-fluxos/`
+- Reversa: `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/01-engenharia-reversa/`
+- DDD: `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/`
+- C4: `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/`
+- Fluxos: `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/04-fluxos/`
 
 ### PR_CADASTRAMENTO_EMPRESA_PROV
-- Reversa: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/01-engenharia-reversa/`
-- DDD: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/02-ddd/`
-- C4 (5 diagramas + 5 SVGs): `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/`
-- Fluxos (2 fluxogramas + 2 SVGs): `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/`
+- Reversa: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/01-engenharia-reversa/`
+- DDD: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/02-ddd/`
+- C4 (5 diagramas + 5 SVGs): `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/`
+- Fluxos (2 fluxogramas + 2 SVGs): `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/`
 
 ### PK_VENDA_JSON
-- Reversa: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/01-engenharia-reversa/`
-- DDD: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/`
-- C4: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/`
-- Fluxos: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/04-fluxos/`
+- Reversa: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/01-engenharia-reversa/`
+- DDD: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/`
+- C4: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/`
+- Fluxos: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/04-fluxos/`

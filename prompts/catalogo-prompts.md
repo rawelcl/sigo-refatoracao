@@ -116,7 +116,7 @@ Objeto : [NOME_DA_ROTINA]
 Schema : [SCHEMA]
 ```
 
-> O codigo sera armazenado em `rotinas/[nome]/rev-[TAG]/05-refact/`.
+> O codigo sera armazenado em `output/rotinas/[nome]/rev-[TAG]/05-refact/`.
 > A pasta sera criada automaticamente se nao existir.
 > Arquivos gerados: `pk_[nome]_const.sql`, `pk_[nome].pks`, `pk_[nome].pkb`, `README-refact.md`.
 
@@ -153,13 +153,13 @@ Escopo da revisao:
    - Revisar os arquivos .puml existentes em 03-c4-model/src/
    - Atualizar o que for necessario para refletir as correcoes da revisao
    - Gerar o SVG de cada .puml revisado:
-       python scripts/projeto/gerar-svg.py rotinas/[nome]/rev-[TAG]/03-c4-model/src
+       python scripts/projeto/gerar-svg.py output/rotinas/[nome]/rev-[TAG]/03-c4-model/src
 
 4. Fluxogramas
    - Revisar os arquivos .puml existentes em 04-fluxos/src/
    - Atualizar o fluxo to-be se as decisoes de design foram alteradas
    - Gerar o SVG de cada .puml revisado:
-       python scripts/projeto/gerar-svg.py rotinas/[nome]/rev-[TAG]/04-fluxos/src
+       python scripts/projeto/gerar-svg.py output/rotinas/[nome]/rev-[TAG]/04-fluxos/src
 
 Ao concluir:
 - Atualizar ddd-modelagem-dominio.md com as correcoes

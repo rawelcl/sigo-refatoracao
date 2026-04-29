@@ -113,40 +113,40 @@ Conflito 8 em analise-comparativa-ddd-ei-vj.md]
 ## Links Rapidos por Rotina
 
 ### PR_EFETIVA_INTERNET
-- Eng. Reversa: `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/01-engenharia-reversa/reversa-pr-efetiva-internet.md`
-- DDD (versionado): `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/ddd-modelagem-dominio.md`
-- DDD (legado/referencia): `rotinas/pr_efetiva_internet/02-ddd/ddd-modelagem-dominio.md`
-- C4 AS-IS: `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/c4-2-container-as-is.puml`
-- C4 TO-BE: `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/c4-2-container-to-be.puml`
-- Componente: `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/c4-3-component-pr-efetiva-internet.puml`
-- Fluxo AS-IS: `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/04-fluxos/fluxo-pr-efetiva-internet-as-is.puml`
-- Fluxo TO-BE: `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/04-fluxos/fluxo-pr-efetiva-internet-to-be.puml`
-- Analise de Impacto: `rotinas/pr_efetiva_internet/01-engenharia-reversa/analise-impacto-pr-efetiva-internet.md`
-- Proposta de Contrato: `rotinas/pr_efetiva_internet/01-engenharia-reversa/proposta-novo-contrato-retorno.md`
+- Eng. Reversa: `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/01-engenharia-reversa/reversa-pr-efetiva-internet.md`
+- DDD (versionado): `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/02-ddd/ddd-modelagem-dominio.md`
+- DDD (legado/referencia): `output/rotinas/pr_efetiva_internet/02-ddd/ddd-modelagem-dominio.md`
+- C4 AS-IS: `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/c4-2-container-as-is.puml`
+- C4 TO-BE: `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/c4-2-container-to-be.puml`
+- Componente: `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/03-c4-model/c4-3-component-pr-efetiva-internet.puml`
+- Fluxo AS-IS: `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/04-fluxos/fluxo-pr-efetiva-internet-as-is.puml`
+- Fluxo TO-BE: `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/04-fluxos/fluxo-pr-efetiva-internet-to-be.puml`
+- Analise de Impacto: `output/rotinas/pr_efetiva_internet/01-engenharia-reversa/analise-impacto-pr-efetiva-internet.md`
+- Proposta de Contrato: `output/rotinas/pr_efetiva_internet/01-engenharia-reversa/proposta-novo-contrato-retorno.md`
 
 ### PK_VENDA_JSON
-- Eng. Reversa: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/01-engenharia-reversa/reversa-pk-venda-json.md`
-- DDD: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`
-- C4 Contexto: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-1-system-context.puml` + `rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/svg/c4-1-system-context.svg`
-- C4 AS-IS: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-as-is.puml`
-- C4 TO-BE: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-to-be.puml`
-- C4 TO-BE Fase 3: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-to-be-fase3.puml`
-- C4 Landscape: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-landscape-evolucao.puml`
-- Componente: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-3-component-pk-venda-json.puml`
-- Fluxo AS-IS: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/04-fluxos/src/fluxo-pk-venda-json-as-is.puml`
-- Fluxo TO-BE: `rotinas/pk_venda_json/rev-PRODUCAO-20260402/04-fluxos/src/fluxo-pk-venda-json-to-be.puml`
+- Eng. Reversa: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/01-engenharia-reversa/reversa-pk-venda-json.md`
+- DDD: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`
+- C4 Contexto: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-1-system-context.puml` + `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/svg/c4-1-system-context.svg`
+- C4 AS-IS: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-as-is.puml`
+- C4 TO-BE: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-to-be.puml`
+- C4 TO-BE Fase 3: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-to-be-fase3.puml`
+- C4 Landscape: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-landscape-evolucao.puml`
+- Componente: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/03-c4-model/src/c4-3-component-pk-venda-json.puml`
+- Fluxo AS-IS: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/04-fluxos/src/fluxo-pk-venda-json-as-is.puml`
+- Fluxo TO-BE: `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/04-fluxos/src/fluxo-pk-venda-json-to-be.puml`
 - Dicionario de Dominio: `_shared/dicionario-dominio.md`
 
 ### PR_CADASTRAMENTO_EMPRESA_PROV
-- Eng. Reversa: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/01-engenharia-reversa/reversa-pr-cadastramento-empresa-prov.md`
-- DDD: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`
+- Eng. Reversa: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/01-engenharia-reversa/reversa-pr-cadastramento-empresa-prov.md`
+- DDD: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`
 - C4 Contexto: `_shared/c4-model/src/c4-1-system-context.puml` + `_shared/c4-model/svg/c4-1-system-context.svg`
-- C4 AS-IS: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-as-is.puml`
-- C4 TO-BE: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-to-be.puml`
-- C4 TO-BE Fase 3: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-to-be-fase3.puml`
-- C4 Componente: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src/c4-3-component-orquestrador.puml`
-- C4 Landscape: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src/c4-landscape-evolucao.puml`
-- SVGs: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/svg/`
-- Fluxo AS-IS: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/src/fluxo-pr-cadastramento-empresa-prov-as-is.puml`
-- Fluxo TO-BE: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/src/fluxo-pr-cadastramento-empresa-prov-to-be.puml`
-- SVGs Fluxos: `rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/svg/`
+- C4 AS-IS: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-as-is.puml`
+- C4 TO-BE: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-to-be.puml`
+- C4 TO-BE Fase 3: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src/c4-2-container-to-be-fase3.puml`
+- C4 Componente: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src/c4-3-component-orquestrador.puml`
+- C4 Landscape: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/src/c4-landscape-evolucao.puml`
+- SVGs: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/03-c4-model/svg/`
+- Fluxo AS-IS: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/src/fluxo-pr-cadastramento-empresa-prov-as-is.puml`
+- Fluxo TO-BE: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/src/fluxo-pr-cadastramento-empresa-prov-to-be.puml`
+- SVGs Fluxos: `output/rotinas/pr_cadastramento_empresa_prov/rev-PRODUCAO-20260402/04-fluxos/svg/`

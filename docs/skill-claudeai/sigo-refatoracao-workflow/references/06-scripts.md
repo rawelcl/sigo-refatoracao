@@ -124,7 +124,7 @@ if __name__ == '__main__':
 Use os tokens textuais do projeto nas mensagens de saida:
 
 ```python
-print("[OK] Estrutura criada em: rotinas/pr_efetiva_internet/")
+print("[OK] Estrutura criada em: output/rotinas/pr_efetiva_internet/")
 print("[ATENCAO] Tag PRODUCAO nao encontrada para: PR_VALIDA_CONTRATO")
 print("[BLOQUEADO] Objeto nao localizado no CVS: FN_CALCULA_CARENCIA")
 print("[ERRO] Falha ao acessar: catalogo-objetos-plsql.md")

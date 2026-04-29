@@ -184,7 +184,7 @@ os artefatos do anterior diretamente nos arquivos — nunca via contexto de conver
 
 ```
 Agente Eng. Reversa
-  ? produz : rotinas/[nome]/rev-[TAG]/01-engenharia-reversa/reversa-[nome].md
+  ? produz : output/rotinas/[nome]/rev-[TAG]/01-engenharia-reversa/reversa-[nome].md
   ? atualiza: _shared/base-conhecimento/ (objetos, tabelas, riscos, pendencias)
   ? sinaliza: [HANDOFF-DDD] no final do artefato
 
@@ -256,7 +256,7 @@ WS-PROJETO-REFACT-SIGO/
 ?   ??? base-conhecimento/
 ?   ??? projeto/
 ?
-??? rotinas/
+??? output/rotinas/
     ??? [nome-da-rotina]/
         ??? README-rotina.md              ? historico de versoes desta rotina
         ??? rev-[TAG_CVS]/               ? UMA PASTA POR VERSAO
@@ -278,7 +278,7 @@ Convencao de nomenclatura da subpasta de versao: `rev-[TAG_CVS]`
 
 | Situacao | Acao |
 |---|---|
-| Primeira analise de uma rotina | Criar `rotinas/[nome]/rev-[TAG]/` |
+| Primeira analise de uma rotina | Criar `output/rotinas/[nome]/rev-[TAG]/` |
 | Continuar etapas da mesma tag CVS | Usar a pasta existente |
 | Nova tag CVS (codigo mudou no legado) | Criar nova subpasta `rev-[NOVA_TAG]/` |
 | Corrigir artefato de versao ja analisada | Editar na pasta da versao correspondente |

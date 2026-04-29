@@ -12,9 +12,9 @@
 # Escopo  : completo (default) | c4 | fluxos
 #
 # Exemplos:
-#   python scripts/projeto/organizar-e-gerar-svg.py rotinas/pk_venda_json/rev-PRODUCAO-20260402
-#   python scripts/projeto/organizar-e-gerar-svg.py rotinas/pk_venda_json/rev-PRODUCAO-20260402 c4
-#   python scripts/projeto/organizar-e-gerar-svg.py rotinas/pk_venda_json/rev-PRODUCAO-20260402 fluxos
+#   python scripts/projeto/organizar-e-gerar-svg.py output/rotinas/pk_venda_json/rev-PRODUCAO-20260402
+#   python scripts/projeto/organizar-e-gerar-svg.py output/rotinas/pk_venda_json/rev-PRODUCAO-20260402 c4
+#   python scripts/projeto/organizar-e-gerar-svg.py output/rotinas/pk_venda_json/rev-PRODUCAO-20260402 fluxos
 #
 # Comportamento:
 #   1. Detecta .puml em 03-c4-model/ e 04-fluxos/ (legado -- sem src/)

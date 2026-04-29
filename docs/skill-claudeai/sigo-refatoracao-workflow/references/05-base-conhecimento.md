@@ -83,7 +83,7 @@ Ultima atualizacao: [data]
 ## Rotinas Analisadas
 | Rotina | Tipo | Etapas | Data | Analista | Link |
 |---|---|---|---|---|---|
-| pr_efetiva_internet | Procedure | E0-E6+EF | [data] | [nome] | [REF rotinas/pr_efetiva_internet/] |
+| pr_efetiva_internet | Procedure | E0-E6+EF | [data] | [nome] | [REF output/rotinas/pr_efetiva_internet/] |
 
 ## Objetos PL/SQL Referenciados (nao analisados como rotina principal)
 | Objeto | Tipo | Referenciado por | Analise Propria |
@@ -125,7 +125,7 @@ Funcao: repositorio de todos os objetos PL/SQL encontrados no projeto, com statu
 
 | Tag CVS | Analisado como principal | Referenciado por | Status | Link |
 |---|---|---|---|---|
-| rev-PRODUCAO-2.4.1 | Sim | — | [OK] | [REF rotinas/[nome]/rev-PRODUCAO-2.4.1/] |
+| rev-PRODUCAO-2.4.1 | Sim | — | [OK] | [REF output/rotinas/[nome]/rev-PRODUCAO-2.4.1/] |
 | rev-PRODUCAO-3.0.0 | Nao | pr_efetiva_internet | [OK] | — |
 
 **Versao ativa:** rev-[TAG_ATUAL]  
@@ -178,7 +178,7 @@ Funcao: repositorio de regras de negocio extraidas de multiplas rotinas, organiz
 **Duplicidade identificada:** Sim ([lista de rotinas com logica equivalente]) / Nao  
 **Inconsistencia identificada:** [ATENCAO] [descricao] — ou — N/A  
 **Status de consolidacao:** Unica fonte / Duplicada / Conflitante  
-**Origem:** [REF rotinas/[nome]/01-engenharia-reversa/reversa-[nome].md — RN0X]  
+**Origem:** [REF output/rotinas/[nome]/01-engenharia-reversa/reversa-[nome].md — RN0X]  
 ```
 
 ---

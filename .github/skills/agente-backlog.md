@@ -38,10 +38,10 @@ claro. Cada risco de impacto deve ter um plano de mitigacao.
       ? riscos ja catalogados que podem ampliar o impacto desta rotina
 [ ] Verificar _shared/base-conhecimento/pendencias-abertas.md
       ? pendencias [BLOQUEADO] que podem impedir items de backlog
-[ ] Confirmar versao ativa: rotinas/[nome]/README-rotina.md
+[ ] Confirmar versao ativa: output/rotinas/[nome]/README-rotina.md
 [ ] Verificar ou criar estrutura de pastas:
-      rotinas/[nome]/rev-[TAG]/05-analise-impacto/
-      rotinas/[nome]/rev-[TAG]/06-backlog/
+      output/rotinas/[nome]/rev-[TAG]/05-analise-impacto/
+      output/rotinas/[nome]/rev-[TAG]/06-backlog/
 ```
 
 Se `[HANDOFF-BACKLOG]` nao constar no artefato DDD: PARAR e notificar o usuario
@@ -100,7 +100,7 @@ regulatorio e amplificado — registrar como `[CRITICO]`.
 
 ### Template de Output — `analise-impacto.md`
 
-Salvar em: `rotinas/[nome]/rev-[TAG]/05-analise-impacto/analise-impacto.md`
+Salvar em: `output/rotinas/[nome]/rev-[TAG]/05-analise-impacto/analise-impacto.md`
 
 ```markdown
 # Analise de Impacto: [NOME_DA_ROTINA]
@@ -211,7 +211,7 @@ EPICO       ? valor de negocio entregue
 
 ### Template de Output — `BACKLOG-EPICO-FEATURES-USERSTORIES.md`
 
-Salvar em: `rotinas/[nome]/rev-[TAG]/06-backlog/BACKLOG-EPICO-FEATURES-USERSTORIES.md`
+Salvar em: `output/rotinas/[nome]/rev-[TAG]/06-backlog/BACKLOG-EPICO-FEATURES-USERSTORIES.md`
 
 ```markdown
 # Backlog de Refatoracao: [NOME_DA_ROTINA]
@@ -287,6 +287,6 @@ Ao concluir as etapas 5 e 6, atualizar:
 [ ] _shared/base-conhecimento/catalogo-tabelas.md    ? novos comportamentos de escrita
 [ ] _shared/base-conhecimento/riscos-ans.md          ? riscos ampliados marcados
 [ ] _shared/base-conhecimento/pendencias-abertas.md  ? pendencias de impacto registradas
-[ ] rotinas/[nome]/README-rotina.md                  ? status atualizado
+[ ] output/rotinas/[nome]/README-rotina.md                  ? status atualizado
 [ ] README.md (raiz)                                 ? E5=[OK], E6=[OK]
 ```

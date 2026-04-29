@@ -211,6 +211,6 @@ Ao final de cada modelagem DDD, os novos termos identificados devem ser incorpor
 [ ] Domain Events mapeados para os commits significativos
 [ ] Repositorios listados com operacoes
 [ ] Todas as RNs da Etapa 1 mapeadas para conceitos DDD
-[ ] Arquivo salvo em: rotinas/[nome]/02-ddd/ddd-modelagem-dominio.md
+[ ] Arquivo salvo em: output/rotinas/[nome]/02-ddd/ddd-modelagem-dominio.md
 [ ] README.md raiz atualizado (DDD = ?)
 ```

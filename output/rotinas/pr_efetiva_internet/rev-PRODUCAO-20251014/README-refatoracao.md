@@ -1,13 +1,13 @@
 # Roadmap de Refatoracao DDD -- pr_efetiva_internet
 
-> **[OK 24/04/2026 -- Localizacao]** Arquivo realocado para `rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/README-refatoracao.md` conforme Estrutura Canonica do projeto (CLAUDE.md). Na raiz da rotina permanece apenas `README-rotina.md`.
+> **[OK 24/04/2026 -- Localizacao]** Arquivo realocado para `output/rotinas/pr_efetiva_internet/rev-PRODUCAO-20251014/README-refatoracao.md` conforme Estrutura Canonica do projeto (CLAUDE.md). Na raiz da rotina permanece apenas `README-rotina.md`.
 >
 > **[REF]** Decisoes canonicas referenciadas neste roadmap:
 > - [REF DD-01 -- `_shared/base-conhecimento/decisoes-design.md`] Contrato canonico de `pr_cadastramento_empresa_prov` (Opcao D Hibrida: Adapter/Facade + RECORD `pk_efetivacao_types.t_resultado_efetivacao` na Fase 3).
 > - [REF DD-05] VJ (PK_VENDA_JSON) totalmente desacoplado do EI -- scheduler proprio.
 > - [REF MIG-16 em `ddd-modelagem-dominio.md` Secao 13] Bloco BITIX do EI (DS13a + AG07 + R12 + RN30 + SP11 clausula BITIX) e `[REMOVER-NO-TO-BE]` -- migra para o VJ.
 > - [REF `_shared/analise-comparativa-ddd-ei-vj.md`] Conflitos 1..10, em especial 3, 5 e 10.
-> - [REF `rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/`] Modelagem canonica em execucao para o contrato de retorno.
+> - [REF `output/rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/`] Modelagem canonica em execucao para o contrato de retorno.
 
 ## Visao Geral
 
@@ -229,7 +229,7 @@ BEGIN
 END pr_efetiva_internet;
 ```
 
-> **[REF DD-01 -- Contrato canonico de pr_cadastramento_empresa_prov]** A chamada dentro de `pk_efetivacao_empresa_pim.pr_efetivar` segue a Opcao D Hibrida: enquanto a Fase 3 canonica de `pr_cadastramento_empresa_prov` nao entrar em producao, o EI continua consumindo a assinatura legado `(p_nu_controle IN, p_erro_controle OUT VARCHAR2)` com parsing via ACL02. Quando a Fase 3 canonica for liberada (nova assinatura com `OUT pk_efetivacao_types.t_resultado_efetivacao`), `pk_efetivacao_empresa_pim` migra para acesso por campo (`v_res.cd_empresa`, `v_res.fl_status`, `v_res.ds_etapa_erro`) e o ACL02 e descontinuado -- **sem breaking change** (a procedure antiga permanece como Adapter/Facade). [REF MIG-09 -- Secao 13 do DDD] [REF `rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/`]
+> **[REF DD-01 -- Contrato canonico de pr_cadastramento_empresa_prov]** A chamada dentro de `pk_efetivacao_empresa_pim.pr_efetivar` segue a Opcao D Hibrida: enquanto a Fase 3 canonica de `pr_cadastramento_empresa_prov` nao entrar em producao, o EI continua consumindo a assinatura legado `(p_nu_controle IN, p_erro_controle OUT VARCHAR2)` com parsing via ACL02. Quando a Fase 3 canonica for liberada (nova assinatura com `OUT pk_efetivacao_types.t_resultado_efetivacao`), `pk_efetivacao_empresa_pim` migra para acesso por campo (`v_res.cd_empresa`, `v_res.fl_status`, `v_res.ds_etapa_erro`) e o ACL02 e descontinuado -- **sem breaking change** (a procedure antiga permanece como Adapter/Facade). [REF MIG-09 -- Secao 13 do DDD] [REF `output/rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/`]
 
 ---
 
@@ -269,7 +269,7 @@ END pr_efetiva_internet;
     (Topics + Subscriptions)           (Distributed Tracing)
 ```
 
-> **[REF MIG-16]** A `ColigadaBitixActivity` foi removida do inventario de microsservicos do EI. Toda a logica BITIX passa a ser responsabilidade do microsservico derivado do VJ (`Hapvida.Insurance.VendaJson.*`), acionado por seu proprio scheduler (Azure Function Timer Trigger). Ver `rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`.
+> **[REF MIG-16]** A `ColigadaBitixActivity` foi removida do inventario de microsservicos do EI. Toda a logica BITIX passa a ser responsabilidade do microsservico derivado do VJ (`Hapvida.Insurance.VendaJson.*`), acionado por seu proprio scheduler (Azure Function Timer Trigger). Ver `output/rotinas/pk_venda_json/rev-PRODUCAO-20260402/02-ddd/ddd-modelagem-dominio.md`.
 
 ### Eventos de dominio (Azure Service Bus Topics) -- [REF ADR-18]
 
@@ -326,7 +326,7 @@ END pr_efetiva_internet;
 1. **50+ blocos WHEN OTHERS THEN NULL**: Erros engolidos silenciosamente. Muitos problemas em producao sao invisiveis. [REF PADRAO-01 -- `_shared/base-conhecimento/padroes-identificados.md`]
 2. **Duplicacao Saude/Odonto (~40%)**: Cada correcao precisa ser aplicada em dois lugares. Alto risco de regressao. [REF MIG-10]
 3. **Commits intermediarios**: A procedure faz COMMIT dentro de loops, impedindo rollback completo. Uma falha parcial deixa dados inconsistentes. [REF MIG-05]
-4. **Dependencia forte de pr_cadastramento_empresa_prov -- MITIGADA [24/04/2026]**: Antes era um risco bloqueante (parsing fragil via substr/instr sobre VARCHAR2 + acoplamento de assinatura). **Mitigado** pela adocao da Opcao D Hibrida em DD-01: a Fase 1-2 da refatoracao de `pr_cadastramento_empresa_prov` preserva a assinatura legado (zero breaking change no EI); a Fase 3 introduz o RECORD canonico `pk_efetivacao_types.t_resultado_efetivacao` e a procedure antiga permanece como Adapter/Facade. O EI e `pr_cadastramento_empresa_prov` podem evoluir em ondas independentes. **Risco residual:** o ACL02 (parsing fragil) continua ativo no EI enquanto a Fase 3 canonica nao entrar em producao. [REF DD-01] [REF MIG-09] [REF `rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/`]
+4. **Dependencia forte de pr_cadastramento_empresa_prov -- MITIGADA [24/04/2026]**: Antes era um risco bloqueante (parsing fragil via substr/instr sobre VARCHAR2 + acoplamento de assinatura). **Mitigado** pela adocao da Opcao D Hibrida em DD-01: a Fase 1-2 da refatoracao de `pr_cadastramento_empresa_prov` preserva a assinatura legado (zero breaking change no EI); a Fase 3 introduz o RECORD canonico `pk_efetivacao_types.t_resultado_efetivacao` e a procedure antiga permanece como Adapter/Facade. O EI e `pr_cadastramento_empresa_prov` podem evoluir em ondas independentes. **Risco residual:** o ACL02 (parsing fragil) continua ativo no EI enquanto a Fase 3 canonica nao entrar em producao. [REF DD-01] [REF MIG-09] [REF `output/rotinas/pr_cadastramento_empresa_prov/modelagem-em-execucao/`]
 5. **25 variaveis globais com reset manual**: Esquecer de resetar uma variavel causa comportamento incorreto na proxima iteracao do loop. [REF MIG-15]
 6. **Migracao codigo provisorio -> definitivo**: Multiplos updates separados por commits. Falha entre eles deixa titulares com codigo provisorio e dependentes com definitivo (ou vice-versa). [REF DE08]
 7. **JOB sem idempotencia**: Se o JOB falhar e re-executar, pode reprocessar propostas parcialmente efetivadas.

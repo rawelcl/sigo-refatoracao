@@ -91,7 +91,7 @@ Ao concluir a consulta, reportar ao usuario:
 - **Verificar antes de inserir** — se o objeto/tabela/regra ja existe, atualizar o registro existente em vez de criar um novo
 - **Nunca remover registros** — marcar como `[OK]` quando resolvido, nunca deletar
 - **Referenciar sempre** — cada entrada nova deve ter `[REF]` apontando para o artefato de origem
-- **Versao na referencia** — incluir a tag CVS na referencia: `[REF rotinas/[nome]/rev-[TAG]/...]`
+- **Versao na referencia** — incluir a tag CVS na referencia: `[REF output/rotinas/[nome]/rev-[TAG]/...]`
 
 ---
 
@@ -155,7 +155,7 @@ Ultima atualizacao: [data]
 
 | Tag CVS | Como Analisado | Referenciado por | Status | Link |
 |---|---|---|---|---|
-| rev-[TAG] | Rotina principal | — | [OK] | [REF rotinas/[nome]/rev-[TAG]/] |
+| rev-[TAG] | Rotina principal | — | [OK] | [REF output/rotinas/[nome]/rev-[TAG]/] |
 | rev-[TAG] | Sub-rotina | [rotina pai] | [OK] | — |
 
 **Versao ativa:** rev-[TAG]
@@ -198,7 +198,7 @@ Ultima atualizacao: [data]
 **Implementada em:** [lista de rotinas]
 **Duplicidade:** Sim ([rotinas com logica equivalente]) / Nao
 **Inconsistencia:** [ATENCAO] [descricao] — ou — N/A
-**Origem:** [REF rotinas/[nome]/rev-[TAG]/01-engenharia-reversa/reversa-[nome].md — RN0X]
+**Origem:** [REF output/rotinas/[nome]/rev-[TAG]/01-engenharia-reversa/reversa-[nome].md — RN0X]
 ```
 
 ---

@@ -300,7 +300,7 @@ Atencao especial a:
 [ ] Excecoes mapeadas
 [ ] Fluxo de decisao descrito em linguagem de negocio
 [ ] Painel de Decisao preenchido com pontos para o PO
-[ ] Arquivo salvo em: rotinas/[nome]/01-engenharia-reversa/reversa-[nome].md
+[ ] Arquivo salvo em: output/rotinas/[nome]/01-engenharia-reversa/reversa-[nome].md
 [ ] indice-base-conhecimento.md atualizado (retroalimentacao obrigatoria)
 [ ] README.md raiz atualizado (Eng. Reversa = [OK])
 ```
@@ -460,6 +460,6 @@ Atencao especial a:
 [ ] Smells e problemas identificados
 [ ] Excecoes mapeadas
 [ ] Pontos de validacao com o PO identificados
-[ ] Arquivo salvo em: rotinas/[nome]/01-engenharia-reversa/reversa-[nome].md
+[ ] Arquivo salvo em: output/rotinas/[nome]/01-engenharia-reversa/reversa-[nome].md
 [ ] README.md raiz atualizado (Eng. Reversa = ?)
 ```
