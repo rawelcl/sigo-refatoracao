@@ -232,8 +232,8 @@ PASTAS = [
     "02-ddd",
     "03-c4-model/src", "03-c4-model/svg",
     "04-fluxos/src",   "04-fluxos/svg",
-    "05-analise-impacto",
-    "06-backlog",
+    "05-refact",
+    "07-backlog",
 ]
 
 def validar(objeto, tag):
@@ -395,7 +395,7 @@ from datetime import date
 
 ROTINAS_DIR = "rotinas"
 ETAPAS      = ["01-engenharia-reversa", "02-ddd", "03-c4-model",
-               "04-fluxos", "05-analise-impacto", "06-backlog"]
+               "04-fluxos", "05-refact", "07-backlog"]
 
 def status_etapa(pasta_versao, etapa):
     return "[OK]" if os.path.isdir(os.path.join(pasta_versao, etapa)) and \

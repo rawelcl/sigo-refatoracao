@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+:root {
+  /* Linear / Cursor / Vercel: neutro escuro com um unico acento violeta */
+  --background: #0a0a0c;
+  --foreground: #f4f4f5;
+  --foreground-muted: #a1a1aa;
+  --foreground-dim: #71717a;
+  --surface: #131316;       /* card */
+  --surface-2: #1a1a1f;     /* input, cabecalho de tabela */
+  --surface-3: #232329;     /* hover */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --accent: #8b5cf6;          /* violet-500 - primario */
+  --accent-hover: #7c3aed;    /* violet-600 */
+  --accent-soft: rgba(139, 92, 246, 0.14);
+  --accent-2: #22d3ee;        /* ciano - reservado para etapa ativa */
+  --success: #22c55e;
+  --danger: #ef4444;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+html {
+  color-scheme: dark;
+  font-size: 13px; /* base compacta */
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    var(--font-sans), "Inter", system-ui, -apple-system, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-feature-settings: "ss01" on, "cv11" on, "cv02" on;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+code, pre, kbd, samp {
+  font-family: var(--font-mono), "JetBrains Mono", ui-monospace,
+    SFMono-Regular, Menlo, Consolas, monospace;
+  font-feature-settings: "calt" on, "ss02" on;
+}
+
+/* Fundo: glow violeta sutil no topo + grade pontilhada discreta */
+.app-bg {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(
+      ellipse 70% 35% at 50% -10%,
+      rgba(139, 92, 246, 0.10),
+      transparent 70%
+    ),
+    radial-gradient(
+      circle at 1px 1px,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 0
+    );
+  background-size: auto, 24px 24px;
+  background-attachment: fixed, fixed;
+}
+
+/* Cartao */
+.card-tech {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  position: relative;
+}
+.card-tech::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(139, 92, 246, 0.6),
+    rgba(34, 211, 238, 0.4),
+    transparent
+  );
+  opacity: 0.85;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+}
+
+.glow-accent {
+  box-shadow:
+    0 0 0 1px rgba(139, 92, 246, 0.30),
+    0 8px 30px -8px rgba(139, 92, 246, 0.45);
+}
+.text-mono-tight {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  letter-spacing: -0.01em;
+}
+
+/* Markdown */
+.markdown { color: inherit; line-height: 1.65; }
+.markdown h1 { font-size: 1.875rem; font-weight: 700; margin: 1.5rem 0 0.75rem; }
+.markdown h2 { font-size: 1.5rem; font-weight: 600; margin: 1.5rem 0 0.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
+.markdown h3 { font-size: 1.25rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
+.markdown h4 { font-size: 1.05rem; font-weight: 600; margin: 1rem 0 0.5rem; }
+.markdown p { margin: 0.75rem 0; }
+.markdown ul, .markdown ol { margin: 0.75rem 0; padding-left: 1.5rem; }
+.markdown ul { list-style: disc; }
+.markdown ol { list-style: decimal; }
+.markdown li { margin: 0.25rem 0; }
+.markdown code { background: rgba(255, 255, 255, 0.08); padding: 0.1rem 0.35rem; border-radius: 4px; font-size: 0.85em; }
+.markdown pre { background: var(--surface-2); padding: 1rem; border-radius: 8px; overflow: auto; margin: 1rem 0; font-size: 0.85rem; border: 1px solid var(--border); }
+.markdown pre code { background: transparent; padding: 0; }
+.markdown table { border-collapse: collapse; margin: 1rem 0; width: 100%; font-size: 0.9rem; }
+.markdown th, .markdown td { border: 1px solid var(--border); padding: 0.4rem 0.6rem; text-align: left; }
+.markdown th { background: rgba(255, 255, 255, 0.05); font-weight: 600; }
+.markdown blockquote { border-left: 4px solid var(--accent); padding: 0.25rem 1rem; color: var(--foreground-muted); margin: 1rem 0; }
+.markdown a { color: var(--accent); text-decoration: underline; }
+.markdown hr { border: 0; border-top: 1px solid var(--border); margin: 1.5rem 0; }

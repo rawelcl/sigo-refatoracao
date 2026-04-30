@@ -1,0 +1,18 @@
+@startuml
+!include _shared/c4-model/src/c4-plantuml.puml
+
+LAYOUT_TOP_DOWN()
+
+title C4 - Contexto: pr_critica_internet_saude_15
+
+Person(Usuario, "Usuário", "Interage com o sistema para validação de beneficiários")
+System_Boundary(SIGO, "Sistema SIGO") {
+  Container_Boundary(BC_Beneficiario, "Bounded Context: Beneficiário") {
+    Component(ValidacaoBeneficiarioService, "ValidacaoBeneficiarioService", "Domain Service", "Valida critérios de idade e status de processamento.")
+    ContainerDb(BeneficiarioDB, "BeneficiarioDB", "Oracle", "Armazena dados de titulares, dependentes e críticas.")
+  }
+}
+
+Rel(Usuario, ValidacaoBeneficiarioService, "Solicita validações")
+Rel(ValidacaoBeneficiarioService, BeneficiarioDB, "Consulta e registra dados")
+@enduml

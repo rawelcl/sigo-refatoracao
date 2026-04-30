@@ -1,7 +1,7 @@
 # Agente: Modelagem DDD, Diagramas C4 e Fluxogramas
 
 > Carregado pelo Claude Code quando a tarefa envolve modelagem de dominio, diagramas C4
-> ou fluxogramas. As regras compartilhadas estao em `@CLAUDE.md` — leia-o antes de prosseguir.
+> ou fluxogramas. As regras compartilhadas estao em `@CLAUDE.md` ï¿½ leia-o antes de prosseguir.
 
 ---
 
@@ -31,11 +31,11 @@ Nenhuma decisao de modelagem sem rastreabilidade para uma RN do artefato de orig
 
 ```
 [ ] Ler _shared/base-conhecimento/indice.md
-[ ] Ler reversa-[nome].md (etapa anterior) — obrigatorio, sem excecoes
-[ ] Ler _shared/dicionario-dominio.md — aproveitar termos ja definidos
-[ ] Ler _shared/context-map-dominio.puml — entender bounded contexts existentes
-[ ] Ler _shared/base-conhecimento/catalogo-regras-negocio.md — evitar duplicar regras
-[ ] Ler _shared/base-conhecimento/decisoes-design.md — respeitar decisoes tomadas
+[ ] Ler reversa-[nome].md (etapa anterior) ï¿½ obrigatorio, sem excecoes
+[ ] Ler _shared/dicionario-dominio.md ï¿½ aproveitar termos ja definidos
+[ ] Ler _shared/context-map-dominio.puml ï¿½ entender bounded contexts existentes
+[ ] Ler _shared/base-conhecimento/catalogo-regras-negocio.md ï¿½ evitar duplicar regras
+[ ] Ler _shared/base-conhecimento/decisoes-design.md ï¿½ respeitar decisoes tomadas
 [ ] Confirmar versao ativa: output/rotinas/[nome]/README-rotina.md
 [ ] Ler ADRs relevantes do repositorio de arquitetura:
       C:\Users\thiagorc\Documents\Repos\Refatoracao\adrs arquitetura hapvida
@@ -45,11 +45,11 @@ Nenhuma decisao de modelagem sem rastreabilidade para uma RN do artefato de orig
 ```
 
 Se `reversa-[nome].md` nao existir ou nao conter `[HANDOFF-DDD]`: PARAR e notificar
-o usuario — a eng. reversa deve ser concluida antes da modelagem DDD.
+o usuario ï¿½ a eng. reversa deve ser concluida antes da modelagem DDD.
 
 ---
 
-## Etapa 2 — Modelagem DDD
+## Etapa 2 ï¿½ Modelagem DDD
 
 ### Conceitos Aplicados ao Dominio SIGO
 
@@ -59,17 +59,17 @@ As rotinas refatoradas permanecem em PL/SQL Oracle, mas o modelo DDD deve ser va
 tanto para a implementacao atual quanto para uma futura migracao para microsservico.
 Isso significa:
 
-- Modelar **como se fosse um microsservico** — o Bounded Context de hoje e o candidato
+- Modelar **como se fosse um microsservico** ï¿½ o Bounded Context de hoje e o candidato
   a microsservico de amanha
-- **Isolar cada regra de negocio** — cada RN deve ser identificavel e extraivel
+- **Isolar cada regra de negocio** ï¿½ cada RN deve ser identificavel e extraivel
   individualmente como metodo de Domain Service
 - **Sinalizar pontos de ruptura** com `[MIGRACAO]`: trechos que exigirao atencao
   especial na migracao (cursores, bulk collect, packages Oracle proprietarios,
   integracao direta com tabelas sem abstracao)
-- **Nomear com intencao** — usar a Ubiquitous Language nos nomes, facilitando o
+- **Nomear com intencao** ï¿½ usar a Ubiquitous Language nos nomes, facilitando o
   mapeamento futuro para classes e servicos
 
-**ADRs — consulta obrigatoria antes de qualquer decisao de design:**
+**ADRs ï¿½ consulta obrigatoria antes de qualquer decisao de design:**
 
 ```
 Repositorio: C:\Users\thiagorc\Documents\Repos\Refatoracao\adrs arquitetura hapvida
@@ -77,7 +77,7 @@ Repositorio: C:\Users\thiagorc\Documents\Repos\Refatoracao\adrs arquitetura hapv
 
 Para cada decisao de design a tomar:
 1. Verificar se existe ADR cobrindo o padrao ou cenario
-2. Se existir: seguir a ADR e referenciar `[REF ADR-00N — titulo]` na decisao
+2. Se existir: seguir a ADR e referenciar `[REF ADR-00N ï¿½ titulo]` na decisao
 3. Se nao existir: registrar `[ADR-AUSENTE]`, descrever a lacuna e notificar o usuario
 4. Nunca contradizer ADR vigente sem explicitar a divergencia
 
@@ -91,7 +91,7 @@ Para cada decisao de design a tomar:
 | Financeiro | Fatura, cobranca, inadimplencia |
 | Regulatorio | Carencia, portabilidade, nota tecnica, ANS |
 
-Ao modelar: identificar a qual contexto a rotina pertence — ou se e um
+Ao modelar: identificar a qual contexto a rotina pertence ï¿½ ou se e um
 Anticorruption Layer entre dois contextos.
 
 **Identificar para cada rotina:**
@@ -114,12 +114,12 @@ Anticorruption Layer entre dois contextos.
 |---|---|---|---|
 | RN01 | [desc] | Invariante / Domain Service / Policy | [Agregado / Service] |
 
-### Template de Output — `ddd-modelagem-dominio.md`
+### Template de Output ï¿½ `ddd-modelagem-dominio.md`
 
 Salvar em: `output/rotinas/[nome]/rev-[TAG]/02-ddd/ddd-modelagem-dominio.md`
 
 **Principio central do documento:** cada secao deve documentar nao apenas O QUE foi
-decidido, mas POR QUE — qual conceito DDD se aplica, qual o raciocinio logico que
+decidido, mas POR QUE ï¿½ qual conceito DDD se aplica, qual o raciocinio logico que
 levou a essa conclusao, e como a evidencia do codigo legado sustenta a decisao.
 
 ```markdown
@@ -140,7 +140,7 @@ levou a essa conclusao, e como a evidencia do codigo legado sustenta a decisao.
 
 [Descrever o problema central que o DDD resolve nesta rotina. Exemplo:
 "A pr_efetiva_internet acumula 8 responsabilidades distintas em um unico objeto
-monolitico — validacao de elegibilidade, calculo de carencia, persistencia de
+monolitico ï¿½ validacao de elegibilidade, calculo de carencia, persistencia de
 contrato, integracao com BITIX e 4 outras. O DDD permite identificar os limites
 naturais entre essas responsabilidades e nomea-las com precisao, criando a base
 para a decomposicao em Packages na Fase 2 e microsservicos na Fase 3."]
@@ -167,7 +167,7 @@ Qual o risco de uma migracao direta. Como o padrao mitiga esse risco.]
 
 > **Bounded Context** define o limite dentro do qual um modelo de dominio e valido
 > e consistente. E a fronteira onde os termos da Ubiquitous Language tem um
-> significado unico e preciso — fora desse contexto, o mesmo termo pode ter
+> significado unico e preciso ï¿½ fora desse contexto, o mesmo termo pode ter
 > significado diferente.
 
 ### Identificacao do contexto
@@ -176,13 +176,13 @@ Qual o risco de uma migracao direta. Como o padrao mitiga esse risco.]
 
 **Raciocinio de identificacao:**
 [Descrever como chegou a conclusao de que esta rotina pertence a este BC.
-Quais evidencias do codigo — nomes de tabelas, parametros, logica de negocio —
+Quais evidencias do codigo ï¿½ nomes de tabelas, parametros, logica de negocio ï¿½
 apontaram para este contexto. Exemplo:
 "A rotina recebe cd_proposta como parametro central e sua acao principal e
 transformar uma proposta aprovada em um contrato efetivado. Isso a posiciona
-claramente no BC de Implantacao — o dominio que trata da efetivacao de contratos
+claramente no BC de Implantacao ï¿½ o dominio que trata da efetivacao de contratos
 a partir de propostas comerciais aprovadas. Nao pertence ao BC Comercial porque
-nao cria nem avalia propostas — apenas as consome como input ja validado."]
+nao cria nem avalia propostas ï¿½ apenas as consome como input ja validado."]
 
 **Descricao do contexto:** [o que este BC representa no negocio]
 
@@ -243,11 +243,11 @@ de manter o termo tecnico no modelo.
 
 > **Aggregate** e um cluster de objetos de dominio tratados como uma unidade para
 > fins de mudanca de dados. A **Aggregate Root** e a unica porta de entrada para
-> o agregado — ninguem acessa as entidades internas diretamente.
+> o agregado ï¿½ ninguem acessa as entidades internas diretamente.
 >
 > **Regra fundamental:** uma transacao nao atravessa a fronteira de dois agregados.
 > Se precisar de dois agregados numa transacao, isso e sinal de que os limites
-> estao errados — ou de que um Domain Event e necessario.
+> estao errados ï¿½ ou de que um Domain Event e necessario.
 
 ### Identificacao dos agregados
 
@@ -256,15 +256,15 @@ de manter o termo tecnico no modelo.
 Exemplo:
 "Analisei quais conjuntos de tabelas sao sempre escritos juntos na mesma transacao
 da eng. reversa. T_EMPRESA, T_EMPRESA_PLANO e T_EMPRESA_FILIAL sao sempre
-inseridas/atualizadas juntas — isso indica que pertencem ao mesmo agregado,
+inseridas/atualizadas juntas ï¿½ isso indica que pertencem ao mesmo agregado,
 com T_EMPRESA como Aggregate Root (ela tem o cd_empresa, a identidade central).
 T_BENEFICIARIO, por outro lado, tem seu proprio ciclo de vida e identidade
-separada — e um agregado distinto, mesmo sendo referenciado pela empresa."]
+separada ï¿½ e um agregado distinto, mesmo sendo referenciado pela empresa."]
 
 **Criterios usados para separar agregados:**
-- [criterio 1 — ex: "tabelas escritas juntas na mesma transacao pertencem ao mesmo agregado"]
-- [criterio 2 — ex: "objetos com ciclo de vida independente sao agregados separados"]
-- [criterio 3 — ex: "se o objeto tem identidade propria no negocio (nao apenas FK), e entidade ou aggregate root"]
+- [criterio 1 ï¿½ ex: "tabelas escritas juntas na mesma transacao pertencem ao mesmo agregado"]
+- [criterio 2 ï¿½ ex: "objetos com ciclo de vida independente sao agregados separados"]
+- [criterio 3 ï¿½ ex: "se o objeto tem identidade propria no negocio (nao apenas FK), e entidade ou aggregate root"]
 
 ### Agregado: [Nome]
 
@@ -275,23 +275,23 @@ separada — e um agregado distinto, mesmo sendo referenciado pela empresa."]
 demais entidades nao podem existir sem ela. Exemplo:
 "EmpresaConveniada e a Aggregate Root porque cd_empresa e a identidade central
 do contrato no negocio. Filial, PlanoContratado e Coparticipacao nao existem
-sem uma EmpresaConveniada — sao sempre criados no contexto de uma empresa
+sem uma EmpresaConveniada ï¿½ sao sempre criados no contexto de uma empresa
 especifica e nunca referenciados de forma independente no dominio."]
 
 **Invariantes e seu raciocinio:**
 | Invariante | Regra de Negocio | Origem | Por que e invariante (nao apenas validacao) |
 |---|---|---|---|
-| [Empresa deve ter pelo menos um plano ativo] | [RN0X] | [tabela/codigo] | [Se violada, o agregado esta em estado inconsistente para o negocio — nao e apenas uma validacao de entrada, e uma regra de consistencia permanente] |
+| [Empresa deve ter pelo menos um plano ativo] | [RN0X] | [tabela/codigo] | [Se violada, o agregado esta em estado inconsistente para o negocio ï¿½ nao e apenas uma validacao de entrada, e uma regra de consistencia permanente] |
 
 **Entidades do Agregado:**
 | Entidade | Identidade de Negocio | Por que e Entidade (nao Value Object) | Tabela Oracle |
 |---|---|---|---|
-| [Filial] | [cd_filial] | [Tem ciclo de vida proprio — pode ser incluida/excluida independentemente do plano] | [T_FILIAL] |
+| [Filial] | [cd_filial] | [Tem ciclo de vida proprio ï¿½ pode ser incluida/excluida independentemente do plano] | [T_FILIAL] |
 
 **Value Objects do Agregado:**
 | Value Object | Atributos | Por que e Value Object (nao Entidade) | Regra de Validacao |
 |---|---|---|---|
-| [FaixaEtaria] | [idade_min, idade_max] | [Nao tem identidade propria — duas faixas com os mesmos valores sao identicas] | [idade_min < idade_max] |
+| [FaixaEtaria] | [idade_min, idade_max] | [Nao tem identidade propria ï¿½ duas faixas com os mesmos valores sao identicas] | [idade_min < idade_max] |
 
 ---
 
@@ -314,12 +314,12 @@ especifica e nunca referenciados de forma independente no dominio."]
 da procedure nao se encaixavam em nenhuma entidade. Exemplo:
 "O calculo de carencia envolve a data de nascimento do beneficiario, a data de
 inicio do contrato, as regras da ANS e os parametros de carencia do plano.
-Nenhuma dessas entidades e a 'dona' natural do calculo — ele depende de todas.
+Nenhuma dessas entidades e a 'dona' natural do calculo ï¿½ ele depende de todas.
 Por isso e um Domain Service: CalculoCarenciaService."]
 
 | Service | Responsabilidade | Entidades Envolvidas | Raciocinio | Origem no Legado |
 |---|---|---|---|---|
-| [CalculoCarenciaService] | [Calcula periodo de carencia do beneficiario] | [Beneficiario, Plano, ParamentroCarencia] | [Logica que nao pertence a nenhuma entidade isolada — depende de 3 agregados] | [bloco lines 340-410 de pr_efetiva_internet] |
+| [CalculoCarenciaService] | [Calcula periodo de carencia do beneficiario] | [Beneficiario, Plano, ParamentroCarencia] | [Logica que nao pertence a nenhuma entidade isolada ï¿½ depende de 3 agregados] | [bloco lines 340-410 de pr_efetiva_internet] |
 
 ---
 
@@ -329,7 +329,7 @@ Por isso e um Domain Service: CalculoCarenciaService."]
 
 > **Domain Event** representa algo que aconteceu no dominio e que e relevante
 > para outras partes do sistema. E sempre nomeado no passado: "PropostaEfetivada",
-> "BeneficiarioImplantado". Nao e um comando — e um fato consumado.
+> "BeneficiarioImplantado". Nao e um comando ï¿½ e um fato consumado.
 >
 > **Por que Domain Events importam para a migracao:**
 > Cada Domain Event identificado hoje e um topico candidato no Azure Service Bus
@@ -342,7 +342,7 @@ Por isso e um Domain Service: CalculoCarenciaService."]
 [Como os events foram identificados. Quais commits/inserts significativos no
 codigo legado representam fatos de negocio. Exemplo:
 "Todo COMMIT bem-sucedido na pr_efetiva_internet representa um fato de negocio
-consumado: uma proposta foi efetivada. Outros sistemas precisam saber disso —
+consumado: uma proposta foi efetivada. Outros sistemas precisam saber disso ï¿½
 o sistema de faturamento precisa criar a primeira fatura, o sistema de email
 precisa notificar o corretor. Esses sao consumidores naturais de um evento
 'PropostaDigitalEfetivada'. O evento evita que a procedure precise chamar
@@ -359,11 +359,11 @@ diretamente esses sistemas (acoplamento)."]
 ### Conceito aplicado
 
 > **Repository** abstrai o mecanismo de persistencia de um Aggregate Root.
-> Nao e um DAO — nao expoe operacoes por tabela, mas por agregado.
+> Nao e um DAO ï¿½ nao expoe operacoes por tabela, mas por agregado.
 > O repositorio e a unica forma de recuperar ou persistir um agregado.
 >
 > **No contexto PL/SQL:** o repositorio e implementado como um Package com
-> procedures especializadas por agregado — isola o acesso direto as tabelas
+> procedures especializadas por agregado ï¿½ isola o acesso direto as tabelas
 > do restante da logica de dominio.
 
 ### Identificacao dos repositorios
@@ -396,8 +396,8 @@ externos viraram consultas de repositorio."]
 
 | ID RN | Descricao da Regra | Conceito DDD | Onde Vive | Raciocinio da Classificacao |
 |---|---|---|---|---|
-| RN01 | [descricao] | Invariante de Agregado | [EmpresaConveniada] | [Esta regra deve ser verdadeira em qualquer estado do agregado — nao e apenas validacao de entrada] |
-| RN02 | [descricao] | Domain Service | [CalculoCarenciaService] | [Depende de 3 entidades distintas — nao pertence a nenhuma delas isoladamente] |
+| RN01 | [descricao] | Invariante de Agregado | [EmpresaConveniada] | [Esta regra deve ser verdadeira em qualquer estado do agregado ï¿½ nao e apenas validacao de entrada] |
+| RN02 | [descricao] | Domain Service | [CalculoCarenciaService] | [Depende de 3 entidades distintas ï¿½ nao pertence a nenhuma delas isoladamente] |
 | RN03 | [descricao] | Metodo de Entidade | [Beneficiario.ativar()] | [E uma transicao de estado da propria entidade, sem dependencia externa] |
 | RN04 | [descricao] | Domain Event | [PropostaEfetivada] | [E um fato consumado que outros BCs precisam conhecer] |
 
@@ -414,16 +414,16 @@ Exemplo:
 e ADR-007 (Padrao de contexto compartilhado via TYPE Record). A ADR-003 definiu
 que o criterio de decomposicao e um package por Bounded Context identificado,
 nao por tabela. A ADR-007 definiu que o mecanismo de passagem de contexto entre
-packages e sempre via TYPE Record — nunca via parametros individuais."]
+packages e sempre via TYPE Record ï¿½ nunca via parametros individuais."]
 
 | # | Decisao | ADR de Referencia | Opcoes Avaliadas | Escolha | Raciocinio Detalhado |
 |---|---|---|---|---|---|
-| DD01 | [Como decompor a procedure em packages] | [REF ADR-003] | [Por tabela / Por BC / Por camada] | [Por BC] | [A decomposicao por tabela criaria 30+ packages sem coesao de negocio. A decomposicao por camada ignora os limites do dominio. A decomposicao por BC alinha a estrutura tecnica com a estrutura do negocio — cada package tem uma razao de existir clara.] |
-| DD02 | [Mecanismo de passagem de dados entre packages] | [REF ADR-007] | [Parametros individuais / Cursor / TYPE Record] | [TYPE Record: t_contexto_[dominio]] | [Parametros individuais criariam procedures com 20+ argumentos, frageis a qualquer mudanca. Cursor nao e adequado para dados escalares. TYPE Record permite evoluir o contrato sem quebrar chamadores — adiciona campos sem alterar assinaturas.] |
+| DD01 | [Como decompor a procedure em packages] | [REF ADR-003] | [Por tabela / Por BC / Por camada] | [Por BC] | [A decomposicao por tabela criaria 30+ packages sem coesao de negocio. A decomposicao por camada ignora os limites do dominio. A decomposicao por BC alinha a estrutura tecnica com a estrutura do negocio ï¿½ cada package tem uma razao de existir clara.] |
+| DD02 | [Mecanismo de passagem de dados entre packages] | [REF ADR-007] | [Parametros individuais / Cursor / TYPE Record] | [TYPE Record: t_contexto_[dominio]] | [Parametros individuais criariam procedures com 20+ argumentos, frageis a qualquer mudanca. Cursor nao e adequado para dados escalares. TYPE Record permite evoluir o contrato sem quebrar chamadores ï¿½ adiciona campos sem alterar assinaturas.] |
 
 ---
 
-## 9. Estrategia de Migracao — Pontos de Atencao
+## 9. Estrategia de Migracao ï¿½ Pontos de Atencao
 
 ### Raciocinio sobre migrabilidade
 
@@ -431,17 +431,17 @@ packages e sempre via TYPE Record — nunca via parametros individuais."]
 esta contaminado por detalhes de infraestrutura. Quais sao os maiores
 obstaculos para a migracao para .NET/Azure. Exemplo:
 "O maior obstaculo de migracao desta rotina e o uso extensivo de CURSOR
-com BULK COLLECT — um padrao Oracle especifico sem equivalente direto.
+com BULK COLLECT ï¿½ um padrao Oracle especifico sem equivalente direto.
 Na Fase 3, sera substituido por streaming via IAsyncEnumerable em .NET 8.
-O segundo obstaculo e a dependencia de DBMS_OUTPUT para logging — sera
+O segundo obstaculo e a dependencia de DBMS_OUTPUT para logging ï¿½ sera
 substituido por ILogger com Azure Application Insights."]
 
 | ID | Trecho / Padrao Oracle | Motivo da Atencao | Equivalente em .NET 8 / Azure | Esforco Estimado |
 |---|---|---|---|---|
-| MIG01 | [CURSOR c_xxx / BULK COLLECT] | [Padrao Oracle sem equivalente direto — requer reescrita de logica de iteracao] | [IAsyncEnumerable<T> + Entity Framework streaming] | [Alto] |
-| MIG02 | [DBMS_OUTPUT / pkg_log] | [Logging acoplado ao Oracle] | [ILogger<T> + Azure Application Insights] | [Baixo — troca direta] |
+| MIG01 | [CURSOR c_xxx / BULK COLLECT] | [Padrao Oracle sem equivalente direto ï¿½ requer reescrita de logica de iteracao] | [IAsyncEnumerable<T> + Entity Framework streaming] | [Alto] |
+| MIG02 | [DBMS_OUTPUT / pkg_log] | [Logging acoplado ao Oracle] | [ILogger<T> + Azure Application Insights] | [Baixo ï¿½ troca direta] |
 | MIG03 | [DBMS_SCHEDULER / jobs] | [Agendamento Oracle proprietario] | [Azure Functions com Timer Trigger] | [Medio] |
-| MIG04 | [Sequences Oracle] | [Geracao de ID acoplada ao banco] | [UUIDs / Azure SQL Identity] | [Medio — impacta chaves estrangeiras] |
+| MIG04 | [Sequences Oracle] | [Geracao de ID acoplada ao banco] | [UUIDs / Azure SQL Identity] | [Medio ï¿½ impacta chaves estrangeiras] |
 
 ---
 
@@ -452,21 +452,25 @@ qual informacao de negocio esta faltando, e qual o impacto de seguir sem ela.]
 
 | # | Pendencia | Decisao Bloqueada | Impacto de Nao Resolver |
 |---|---|---|---|
-| P01 | [Confirmar se BeneficiarioPJ e uma Entidade separada ou um Value Object de EmpresaConveniada] | [Definicao do Agregado principal] | [Se for Entidade, precisa de repositorio proprio — muda a decomposicao em packages] |
+| P01 | [Confirmar se BeneficiarioPJ e uma Entidade separada ou um Value Object de EmpresaConveniada] | [Definicao do Agregado principal] | [Se for Entidade, precisa de repositorio proprio ï¿½ muda a decomposicao em packages] |
 
 ---
 
 [HANDOFF-BACKLOG]
 DDD concluido. Diagramas C4 e fluxogramas gerados (ver etapas 3 e 4).
-Leitura obrigatoria antes de iniciar backlog:
+Proxima etapa: Agente Backlog (`.github/agents/agente-backlog.md`)
+Leitura obrigatoria antes de iniciar o backlog:
 - Este arquivo: ddd-modelagem-dominio.md
-- reversa-[nome].md
+- reversa-[nome].md (incl. secoes 11-15 de impacto)
 - _shared/base-conhecimento/catalogo-regras-negocio.md
+
+Apos aprovacao do backlog, o Agente Refatoracao implementa as user stories
+em `output/rotinas/[nome]/rev-[TAG]/05-refact/`.
 ```
 
 ---
 
-## Etapa 3 — Diagramas C4
+## Etapa 3 ï¿½ Diagramas C4
 
 ### Padrao de Referencia
 
@@ -600,21 +604,21 @@ a estrutura esperada de anotacoes DDD.
 
 ---
 
-### Artefatos Obrigatorios — 5 diagramas + 1 landscape
+### Artefatos Obrigatorios ï¿½ 5 diagramas + 1 landscape
 
 | # | Arquivo | Nivel | Descricao |
 |---|---|---|---|
-| 1 | `c4-1-system-context.puml` | 1 | Contexto do sistema — atualizar o compartilhado em `_shared/` |
+| 1 | `c4-1-system-context.puml` | 1 | Contexto do sistema ï¿½ atualizar o compartilhado em `_shared/` |
 | 2 | `c4-2-container-as-is.puml` | 2 | Monolito atual com smells quantificados |
-| 3 | `c4-2-container-to-be.puml` | 2 | Packages DDD — Fase 2 (estado alvo PL/SQL) |
-| 4 | `c4-2-container-to-be-fase3.puml` | 2 | Microservicos Azure — Fase 3 (futuro) |
+| 3 | `c4-2-container-to-be.puml` | 2 | Packages DDD ï¿½ Fase 2 (estado alvo PL/SQL) |
+| 4 | `c4-2-container-to-be-fase3.puml` | 2 | Microservicos Azure ï¿½ Fase 3 (futuro) |
 | 5 | `c4-3-component-orquestrador.puml` | 3 | Componentes do package orquestrador |
-| 6 | `c4-landscape-evolucao.puml` | — | Visao das 3 fases lado a lado — Strangler Fig |
+| 6 | `c4-landscape-evolucao.puml` | ï¿½ | Visao das 3 fases lado a lado ï¿½ Strangler Fig |
 
 Todos salvos em: `output/rotinas/[nome]/rev-[TAG]/03-c4-model/src/`
-Exceto o nivel 1: `_shared/c4-model/src/` — nunca duplicar por rotina.
+Exceto o nivel 1: `_shared/c4-model/src/` ï¿½ nunca duplicar por rotina.
 
-### Geracao de SVG — Acao Obrigatoria Apos Cada .puml
+### Geracao de SVG ï¿½ Acao Obrigatoria Apos Cada .puml
 
 ```
 python scripts/projeto/gerar-svg.py [caminho-do-arquivo.puml]
@@ -634,7 +638,7 @@ Se PlantUML nao disponivel:
 
 ---
 
-### Diagrama 1 — System Context (Nivel 1)
+### Diagrama 1 ï¿½ System Context (Nivel 1)
 
 Arquivo: `_shared/c4-model/src/c4-1-system-context.puml`
 
@@ -650,7 +654,7 @@ title [C4 Model - Nivel 1] Diagrama de Contexto do Sistema
 ' Subtitulo: [Dominio da Rotina] - Hapvida/SIGO
 
 ' --- Atores ---
-Person(ator_principal, "[Nome do Ator Principal]", "[O que faz — ex: Cadastra propostas via TAFFIX ou BITIX]")
+Person(ator_principal, "[Nome do Ator Principal]", "[O que faz ï¿½ ex: Cadastra propostas via TAFFIX ou BITIX]")
 Person(ator_adm, "Operador Administrativo", "Monitora processamento e resolve pendencias")
 
 ' --- Sistema Principal ---
@@ -661,9 +665,9 @@ System_Ext(sistema_ext1, "[Nome]", "[O que e e como se relaciona]")
 System_Ext(sistema_ext2, "[Nome]", "[O que e e como se relaciona]")
 
 ' --- Relacionamentos ---
-Rel(ator_principal, sigo, "[Acao]", "[canal — ex: TAFFIX / BITIX / Tela interna]")
+Rel(ator_principal, sigo, "[Acao]", "[canal ï¿½ ex: TAFFIX / BITIX / Tela interna]")
 Rel(ator_adm, sigo, "Monitora e resolve pendencias")
-Rel(sigo, sistema_ext1, "[Acao]", "[protocolo — ex: PL/SQL]")
+Rel(sigo, sistema_ext1, "[Acao]", "[protocolo ï¿½ ex: PL/SQL]")
 Rel(sigo, sistema_ext2, "[Acao]", "[protocolo]")
 
 @enduml
@@ -671,11 +675,11 @@ Rel(sigo, sistema_ext2, "[Acao]", "[protocolo]")
 
 ---
 
-### Diagrama 2 — Container AS-IS (Nivel 2)
+### Diagrama 2 ï¿½ Container AS-IS (Nivel 2)
 
 Arquivo: `c4-2-container-as-is.puml`
 
-Representa o estado atual — o monolito com todos os seus problemas explicitados.
+Representa o estado atual ï¿½ o monolito com todos os seus problemas explicitados.
 Os smells devem ser **quantificados** a partir da eng. reversa.
 
 ```plantuml
@@ -712,7 +716,7 @@ Rel(proc, ext2, "[Acao]", "[PL/SQL call]")
 
 ---
 
-### Diagrama 3 — Container TO-BE Fase 2 (Nivel 2)
+### Diagrama 3 ï¿½ Container TO-BE Fase 2 (Nivel 2)
 
 Arquivo: `c4-2-container-to-be.puml`
 
@@ -776,7 +780,7 @@ Rel(pk_log, oracle, "Registra auditoria")
 
 ---
 
-### Diagrama 4 — Container TO-BE Fase 3 (Nivel 2)
+### Diagrama 4 ï¿½ Container TO-BE Fase 3 (Nivel 2)
 
 Arquivo: `c4-2-container-to-be-fase3.puml`
 
@@ -831,7 +835,7 @@ System_Boundary(dbs, "Databases (Database per Service - Azure)") {
   ContainerDb(db1, "[Dominio1] DB", "PostgreSQL / Azure SQL",
     "Dados do servico [Dominio1]")
   ContainerDb(oracle_leg, "Oracle Legado", "Oracle 19c",
-    "Dados legados — acesso via ACL\naté migracao completa")
+    "Dados legados ï¿½ acesso via ACL\natï¿½ migracao completa")
 }
 
 Rel(ator, apigw, "Requisicoes", "HTTPS")
@@ -848,7 +852,7 @@ Rel(svc1, log_svc, "Envia metricas e traces")
 
 ---
 
-### Diagrama 5 — Component Orquestrador (Nivel 3)
+### Diagrama 5 ï¿½ Component Orquestrador (Nivel 3)
 
 Arquivo: `c4-3-component-orquestrador.puml`
 
@@ -901,9 +905,9 @@ System_Boundary(generic, "Generic / Infraestrutura") {
 
 Rel(c_entrada, c_ctx, "Aprovado")
 Rel(c_ctx, c_coord, "Contexto montado")
-Rel(c_coord, pk_core1, "Delega — [responsabilidade]", "t_contexto_[dominio]")
-Rel(c_coord, pk_core2, "Delega — [responsabilidade]", "t_contexto_[dominio]")
-Rel(c_coord, pk_sup1, "Delega — [responsabilidade]")
+Rel(c_coord, pk_core1, "Delega ï¿½ [responsabilidade]", "t_contexto_[dominio]")
+Rel(c_coord, pk_core2, "Delega ï¿½ [responsabilidade]", "t_contexto_[dominio]")
+Rel(c_coord, pk_sup1, "Delega ï¿½ [responsabilidade]")
 Rel(c_coord, pk_log, "Registra auditoria")
 Rel(c_coord, c_commit, "Tudo concluido")
 
@@ -912,12 +916,12 @@ Rel(c_coord, c_commit, "Tudo concluido")
 
 ---
 
-### Diagrama 6 — Landscape de Evolucao
+### Diagrama 6 ï¿½ Landscape de Evolucao
 
 Arquivo: `c4-landscape-evolucao.puml`
 
 Visao das 3 fases lado a lado. Smells marcados com `[!]`, melhorias com `[+]`.
-Padrao Strangler Fig — cada fase pode coexistir com a anterior.
+Padrao Strangler Fig ï¿½ cada fase pode coexistir com a anterior.
 
 ```plantuml
 @startuml c4-landscape-evolucao
@@ -928,11 +932,11 @@ title [C4 Model] Visao de Evolucao Arquitetural
 ' Subtitulo: 3 Fases da Refatoracao - Strangler Fig Pattern
 
 ' ============================================================
-' FASE 1 — AS-IS
+' FASE 1 ï¿½ AS-IS
 ' ============================================================
 System_Boundary(fase1, "FASE 1 - AS-IS (Monolito PL/SQL)") {
 
-  Person(ator_f1, "[Ator]", "[Canal — ex: TAFFIX / BITIX]")
+  Person(ator_f1, "[Ator]", "[Canal ï¿½ ex: TAFFIX / BITIX]")
 
   System(monolito, "[NOME_DA_ROTINA]\n[!] ~[N] linhas monoliticas\n[!] [N]+ variaveis globais\n[!] [N]+ tabelas acopladas\n[!] Sem testes unitarios\n[!] Codigo repetido (log)\n[!] Logica [DOMINIO1]+[DOMINIO2]\n    misturada",
     "PL/SQL Procedure")
@@ -941,7 +945,7 @@ System_Boundary(fase1, "FASE 1 - AS-IS (Monolito PL/SQL)") {
 }
 
 ' ============================================================
-' FASE 2 — TO-BE (Packages DDD)
+' FASE 2 ï¿½ TO-BE (Packages DDD)
 ' ============================================================
 System_Boundary(fase2, "FASE 2 - TO-BE (Packages DDD)") {
 
@@ -958,11 +962,11 @@ System_Boundary(fase2, "FASE 2 - TO-BE (Packages DDD)") {
 }
 
 ' ============================================================
-' FASE 3 — FUTURO (Microservicos)
+' FASE 3 ï¿½ FUTURO (Microservicos)
 ' ============================================================
 System_Boundary(fase3, "FASE 3 - FUTURO (Microservicos .NET 8+ / Azure)") {
 
-  Person(ator_f3, "[Ator]", "[Canal — API / Portal]")
+  Person(ator_f3, "[Ator]", "[Canal ï¿½ API / Portal]")
 
   System(gateway, "API Gateway\n(Azure API Mgmt)", "Azure")
 
@@ -982,7 +986,7 @@ System_Boundary(fase3, "FASE 3 - FUTURO (Microservicos .NET 8+ / Azure)") {
 
 ---
 
-## Etapa 4 — Fluxogramas
+## Etapa 4 ï¿½ Fluxogramas
 
 **Nomenclatura:**
 ```
@@ -996,15 +1000,15 @@ python scripts/projeto/gerar-svg.py output/rotinas/[nome]/rev-[TAG]/04-fluxos/sr
 ```
 O `.svg` sera gerado automaticamente em `04-fluxos/svg/`.
 
-### Template — Fluxo AS-IS
+### Template ï¿½ Fluxo AS-IS
 
-O AS-IS deve ser fiel ao codigo — cada RN da eng. reversa deve aparecer
+O AS-IS deve ser fiel ao codigo ï¿½ cada RN da eng. reversa deve aparecer
 em algum losango de decisao. Validar cobertura antes de considerar concluido.
 
 ```plantuml
 @startuml fluxo-[nome]-as-is
 !theme plain
-title Fluxo de Execucao — [Nome] (AS-IS)
+title Fluxo de Execucao ï¿½ [Nome] (AS-IS)
 
 start
 
@@ -1032,7 +1036,7 @@ stop
 @enduml
 ```
 
-### Template — Fluxo TO-BE
+### Template ï¿½ Fluxo TO-BE
 
 O TO-BE incorpora as melhorias do DDD. Deve indicar explicitamente
 o que mudou em relacao ao AS-IS.
@@ -1040,13 +1044,13 @@ o que mudou em relacao ao AS-IS.
 ```plantuml
 @startuml fluxo-[nome]-to-be
 !theme plain
-title Fluxo de Execucao — [Nome] (TO-BE)
+title Fluxo de Execucao ï¿½ [Nome] (TO-BE)
 
 note right
   Melhorias aplicadas:
-  - [melhoria 1 — ex: separacao de responsabilidades]
-  - [melhoria 2 — ex: tratamento de excecao granular]
-  - [melhoria 3 — ex: eliminacao de hardcode]
+  - [melhoria 1 ï¿½ ex: separacao de responsabilidades]
+  - [melhoria 2 ï¿½ ex: tratamento de excecao granular]
+  - [melhoria 3 ï¿½ ex: eliminacao de hardcode]
 end note
 
 start
@@ -1079,118 +1083,38 @@ stop
 
 ---
 
-## Etapa 5 — Geracao do Codigo Inicial Refatorado
+## Etapas 5 e 6 -- Backlog e Refatoracao (delegadas)
 
-**Acionamento:** executar automaticamente ao concluir as Etapas 2 (DDD), 3 (C4) e 4 (Fluxos).
-Utilizar os artefatos produzidos como unica fonte de verdade para a geracao.
+A partir do modelo DDD aprovado, dois agentes especializados conduzem o
+restante do workflow:
 
-### Pre-requisitos
+- **Agente Backlog (etapa 5)** -- gera as user stories e o plano de
+  refatoracao em `07-backlog/BACKLOG-*.md`. Token de entrada:
+  `[HANDOFF-BACKLOG]` (emitido por este agente DDD). Token de saida:
+  `[HANDOFF-REFACT]` (emitido pelo agente backlog, apos aprovacao do
+  usuario).
+- **Agente Refatoracao (etapa 6)** -- materializa o backlog aprovado em
+  codigo PL/SQL refatorado em `05-refact/`. Token de saida:
+  `[WORKFLOW-CONCLUIDO]`.
 
-```
-[ ] ddd-modelagem-dominio.md concluido e aprovado (Etapa 2)
-[ ] Diagramas C4 gerados (Etapa 3)
-[ ] Fluxogramas as-is e to-be gerados (Etapa 4)
-[ ] Eng. reversa disponivel: reversa-[nome].md (Etapa 1)
-```
+> Arquivos:
+> - `.github/agents/agente-backlog.md`
+> - `.github/agents/agente-refatoracao.md`
 
-### Pasta de Destino
+O agente DDD deve apenas:
 
-```
-output/rotinas/[nome]/rev-[TAG]/05-refact/
-```
-
-Criar automaticamente se nao existir. Nunca bloquear por ausencia da pasta.
-Registrar `[OK] Criado: output/rotinas/[nome]/rev-[TAG]/05-refact/` ao criar.
-
-### Artefatos a Gerar
-
-| Arquivo | Conteudo |
-|---|---|
-| `pk_[nome]_const.sql` | Package de constantes — elimina valores magicos e hardcodes identificados na eng. reversa |
-| `pk_[nome].pks` | Package spec refatorada — contratos tipados, zero variaveis globais, assinaturas limpas |
-| `pk_[nome].pkb` | Package body refatorado — logica organizada por Bounded Context, Domain Services, CQRS |
-| `README-refact.md` | Descricao das decisoes aplicadas, rastreabilidade RN->codigo, pontos [MIGRACAO] |
-
-### Regras de Geracao
-
-**Baseado exclusivamente nos artefatos da modelagem:**
-- Todo Domain Service identificado na Secao 4 do DDD deve virar uma procedure/function privada ou publica correspondente
-- Todo Agregado identificado na Secao 3 deve ter sua estrutura de dados representada (TYPE RECORD ou parametros tipados)
-- Toda Specification da Secao 7 deve virar uma function booleana isolada
-- Todo Domain Event da Secao 5 deve ter um comentario `-- [EVENTO: NomeDoEvento]` no ponto de disparo
-- Toda decisao de design da Secao 11 deve estar implementada no codigo gerado
-
-**Smells a eliminar (identificados na eng. reversa):**
-- Variaveis globais de package (S04) — converter para parametros locais
-- Codigo triplicado entre rotinas de efetivacao (S02/S07) — extrair rotina privada central
-- Funcoes com efeito colateral de escrita (S12) — separar query de command (`[REF ADR-03 CQRS]`)
-- Retorno por parsing de string com SUBSTR/INSTR — usar TYPE RECORD ou OUT tipados
-- `WHEN OTHERS THEN NULL` silencioso (S01) — log estruturado + RAISE seletivo
-- Valores magicos e hardcodes — constantes no package de constantes
-
-**Marcadores obrigatorios no codigo:**
-- `-- [REF RN-XX]` para cada bloco que implementa uma regra de negocio
-- `-- [REF ADR-00N]` para cada decisao de design com ADR correspondente
-- `-- [MIGRACAO]` para cada trecho que exigira atencao na migracao para microsservico
-- `-- [ATENCAO]` para cada ambiguidade conhecida (da lista de pendencias com o PO)
-
-**Restricoes:**
-- O codigo gerado e PL/SQL Oracle 19c — sem dependencias de ferramentas externas
-- Nomes de objetos devem usar a Linguagem Ubiqua definida na Secao 2 do DDD
-- Nenhuma regra de negocio deve estar inline sem comentario de rastreabilidade
-- Encoding UTF-8 sem BOM em todos os arquivos
-
-### Template de README-refact.md
-
-```markdown
-# Codigo Refatorado: [NOME_DA_ROTINA]
-
-**Baseado em:** ddd-modelagem-dominio.md (rev-[TAG])
-**Data:** [data]
-**Artefatos de referencia:**
-- reversa-[nome].md
-- ddd-modelagem-dominio.md
-- c4-2-container-to-be.puml
-- fluxo-[nome]-to-be.puml
+1. Concluir Etapas 2, 3 e 4 (DDD, C4, Fluxos)
+2. Garantir que `ddd-modelagem-dominio.md` esteja completo e contenha a
+   Secao 11 (decisoes de design) com rastreabilidade completa para as RNs
+3. Emitir `[HANDOFF-BACKLOG]` no final do `ddd-modelagem-dominio.md`,
+   listando os artefatos que o Agente Backlog deve consumir
+4. **Nao gerar** arquivos `.pks`, `.pkb`, `.sql` ou itens de backlog --
+   isso e responsabilidade dos agentes Backlog e Refatoracao
 
 ---
-
-## Decisoes Aplicadas
-
-| Decisao | Artefato de Origem | Trecho no Codigo |
-|---|---|---|
-| [Eliminar variaveis globais] | [DDD Secao 11 DD0X] | [pkg_const + parametros locais] |
-| [CQRS: query separada de command] | [DDD Secao 11 DD0X / REF ADR-03] | [fn_xxx_query + pr_xxx_command] |
-
----
-
-## Rastreabilidade RN -> Codigo
-
-| RN | Descricao | Arquivo | Procedure/Function |
-|---|---|---|---|
-| RN01 | [descricao] | pk_[nome].pkb | [nome_da_rotina] |
-
----
-
-## Pontos de Atencao para Migracao
-
-| ID | Trecho | Equivalente Microsservico |
-|---|---|---|
-| MIG01 | [CURSOR / BULK COLLECT] | [IAsyncEnumerable .NET 8] |
-
----
-
-## Pendencias de Implementacao
-
-- [ ] [Pendencia 1 — ex: sub-rotina ainda nao catalogada]
-- [ ] [Pendencia 2]
-```
-
----
-
 ## Retroalimentacao Obrigatoria (Etapa F)
 
-Ao concluir as etapas 2, 3, 4 e 5, atualizar:
+Ao concluir as etapas 2, 3 e 4, atualizar:
 
 ```
 [ ] Todos os .puml gerados tem .svg correspondente em svg/ (verificar com gerar-svg.py)
@@ -1201,5 +1125,5 @@ Ao concluir as etapas 2, 3, 4 e 5, atualizar:
 [ ] _shared/dicionario-dominio.md                    -- novos termos identificados
 [ ] _shared/context-map-dominio.puml                 -- bounded context novo ou atualizado
 [ ] output/rotinas/[nome]/README-rotina.md                  -- atualizar status
-[ ] README.md (raiz)                                 -- E2=[OK], E3=[OK], E4=[OK], E5=[OK]
+[ ] README.md (raiz)                                 -- E2=[OK], E3=[OK], E4=[OK]
 ```

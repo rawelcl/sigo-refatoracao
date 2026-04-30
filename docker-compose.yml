@@ -1,0 +1,51 @@
+services:
+  portal:
+    build:
+      context: .
+      dockerfile: portal/Dockerfile
+    image: sigo-refact/portal:dev
+    container_name: sigo-portal
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      REPO_ROOT: /repo
+      # Caminhos internos do container (montados via volumes abaixo).
+      CVS_ROOT: /cvs/health_install
+      ADRS_ROOT: /adrs
+      # Token GitHub para a Copilot Chat API. Definir em .env (gitignored).
+      # Alternativas: COPILOT_TOKEN (token Copilot direto) ou login OAuth via /auth.
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      COPILOT_TOKEN: ${COPILOT_TOKEN:-}
+      # Proxy corporativo (opcional).
+      HTTPS_PROXY: ${HTTPS_PROXY:-}
+      HTTP_PROXY: ${HTTP_PROXY:-}
+      NO_PROXY: ${NO_PROXY:-}
+      # Limites do orquestrador (opcionais).
+      EXEC_MAX_ITER: ${EXEC_MAX_ITER:-50}
+      EXEC_MAX_CONCURRENT: ${EXEC_MAX_CONCURRENT:-1}
+      TOOL_RESULT_MAX_CHARS: ${TOOL_RESULT_MAX_CHARS:-24000}
+      RUN_COMMAND_TIMEOUT_MS: ${RUN_COMMAND_TIMEOUT_MS:-60000}
+    volumes:
+      # ----- ESCRITA (rw) -----
+      # Artefatos gerados pelo agente (output/rotinas/) + auth/exec stores
+      # (output/.auth/ e output/.execucoes/).
+      - ./output:/repo/output:rw
+      # Base de conhecimento e dicionarios (escrita pelo agente em _shared/base-conhecimento/).
+      - ./_shared:/repo/_shared:rw
+
+      # ----- LEITURA (ro) -----
+      - ./.github/agents:/repo/.github/agents:ro
+      - ./_templates:/repo/_templates:ro
+      - ./CLAUDE.md:/repo/CLAUDE.md:ro
+      - ./README.md:/repo/README.md:ro
+      - ./prompts:/repo/prompts:ro
+      - ./scripts:/repo/scripts:ro
+
+      # ----- FONTES EXTERNAS (ro) -----
+      # CVS legado SIGO. Sobrescreva CVS_HOST_PATH em .env se a estrutura local for diferente.
+      - ${CVS_HOST_PATH:-C:/CVS/health_install}:/cvs/health_install:ro
+      # ADRs de arquitetura Hapvida.
+      - ${ADRS_HOST_PATH:-C:/Users/thiagorc/Documents/Repos/Refatoracao/adrs arquitetura hapvida}:/adrs:ro
+    restart: unless-stopped
+

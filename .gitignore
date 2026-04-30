@@ -28,6 +28,12 @@ log_sessao_atual.md
 # Arquivos temporarios
 *.tmp
 *.bak
+
+# Docker / variaveis de ambiente
+.env
+.env.local
+.env.*.local
+
 *~
 
 # Build / Dist

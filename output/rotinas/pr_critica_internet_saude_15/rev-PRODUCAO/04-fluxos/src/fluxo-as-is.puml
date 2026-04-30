@@ -1,0 +1,16 @@
+@startuml
+start
+:Receber dados do titular e dependente;
+if (Empresa é nova?) then (Sim)
+  :Ignorar críticas específicas;
+else (Não)
+  :Validar idade crítica;
+  if (Idade fora dos limites?) then (Sim)
+    :Registrar crítica;
+  else (Não)
+    :Prosseguir sem críticas;
+  endif
+endif
+:Registrar críticas no banco;
+stop
+@enduml

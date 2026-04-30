@@ -140,6 +140,60 @@ Verificar se a rotina toca areas reguladas pela ANS:
 
 Cada risco: token `[ANS]` na regra + registro em `_shared/base-conhecimento/riscos-ans.md`.
 
+### Passo 6 — Analise de Impacto (subetapa obrigatoria)
+
+> A analise de impacto NAO e mais uma etapa separada do workflow. Ela e parte
+> integrante da Engenharia Reversa e deve ser preenchida nas secoes 11 a 15
+> do mesmo arquivo `reversa-[nome].md`. Sem isso, nao emita `[HANDOFF-DDD]`.
+
+Dimensoes de analise:
+
+**6.1 Objetos Oracle Dependentes** — via MCP (HAPVIDA PRODUCAO):
+
+```sql
+-- Quem chama esta rotina
+SELECT owner, name, type
+FROM   dba_dependencies
+WHERE  referenced_name = UPPER('[OBJETO]')
+  AND  referenced_type IN ('PROCEDURE','FUNCTION','PACKAGE','PACKAGE BODY')
+ORDER BY type, name;
+
+-- Jobs Oracle que podem chamar esta rotina
+SELECT job_name, enabled, state, last_run_duration
+FROM   dba_scheduler_jobs
+WHERE  job_action LIKE '%[OBJETO]%';
+```
+
+Para cada dependente avaliar:
+- Contrato (assinatura) muda? Se sim: todos os chamadores sao afetados
+- Precisa recompilacao?
+- Precisa ajuste logico (nao so recompilacao)?
+
+**6.2 Impacto em Dados**
+
+Para cada tabela escrita pela rotina:
+- O comportamento de escrita pode mudar na versao refatorada?
+- Campos novos preenchidos / campos que deixam de ser preenchidos?
+- Logica de validacao alterada pode afetar dados existentes?
+- Volume estimado de registros afetados (consultar via MCP se necessario)
+
+**6.3 Jobs e Schedulers**
+
+Verificar se a rotina e chamada por jobs Oracle ou schedulers da aplicacao.
+Mapear frequencia e janela de execucao — impacta o plano de implantacao.
+
+**6.4 Integracoes**
+
+Verificar se a rotina e chamada por APIs, middlewares ou sistemas externos
+(via dependencias, comentarios no codigo ou tabela de logs). Qualquer mudanca
+de contrato exige alinhamento com os times de integracao.
+
+**6.5 Riscos ANS Ampliados**
+
+Cruzar os riscos `[ANS]` levantados no Passo 5 com o mapa de dependentes
+do Passo 6.1: se uma regra com risco ANS e chamada por multiplos objetos,
+o impacto regulatorio e amplificado — registrar como `[CRITICO]`.
+
 ---
 
 ## Template de Output — `reversa-[nome].md`
@@ -274,6 +328,55 @@ Salvar em: `output/rotinas/[nome]/rev-[TAG]/01-engenharia-reversa/reversa-[nome]
 - [ ] Aprovado — seguir com as regras extraidas
 - [ ] Aprovado com ressalvas: [detalhar]
 - [ ] Reprovado — redesenhar antes de continuar
+
+---
+
+## 11. Mapa de Dependentes (Analise de Impacto)
+
+| Objeto | Tipo | Schema | Como Usa | Impacto | Acao Necessaria |
+|---|---|---|---|---|---|
+| [nome] | Procedure/Job | [schema] | [como chama] | Nenhum/Contrato/Recompilacao | [acao] |
+
+**Total de dependentes:** [N]
+**Dependentes criticos:** [N]
+
+---
+
+## 12. Impacto em Dados
+
+| Tabela | Comportamento Atual | Risco em Refatoracao | Volume Estimado |
+|---|---|---|---|
+| [T_XXXX] | INSERT sem idempotencia | Medio: dependentes esperam efeito colateral | [N registros/dia] |
+
+---
+
+## 13. Jobs e Integracoes
+
+| Job / Sistema | Frequencia / Canal | Impacto | Acao Necessaria |
+|---|---|---|---|
+| [JOB_EFETIVACAO] | Diario 02:00 | Nenhum | — |
+
+---
+
+## 14. Riscos ANS Ampliados
+
+| Risco ANS | Rotinas Dependentes Afetadas | Severidade Ampliada | Acao |
+|---|---|---|---|
+| [ANS01] | [lista] | [CRITICO] | [acao urgente] |
+
+---
+
+## 15. Plano de Rollback / Mitigacoes
+
+**Estrategia:** [schema de backup / feature flag / versionamento de package]
+
+**Condicoes para ativar rollback:**
+- [condicao 1]
+- [condicao 2]
+
+| Risco de Refatoracao | Probabilidade | Impacto | Mitigacao |
+|---|---|---|---|
+| [risco] | Alta/Media/Baixa | Alto/Medio/Baixo | [acao] |
 
 ---
 

@@ -39,9 +39,10 @@ ao Agente Base de Conhecimento sem inicializar workflow.
 | Etapa | Agente | Arquivo |
 |---|---|---|
 | 0 — Consulta base | Agente Base | `.github/agents/agente-base-conhecimento.md` |
-| 1 — Eng. Reversa | Agente Eng. Reversa | `.github/agents/agente-eng-reversa.md` |
+| 1 — Eng. Reversa (incl. Analise de Impacto) | Agente Eng. Reversa | `.github/agents/agente-eng-reversa.md` |
 | 2/3/4 — DDD + C4 + Fluxos | Agente DDD | `.github/agents/agente-ddd.md` |
-| 5/6 — Impacto + Backlog | Agente Backlog | `.github/agents/agente-backlog.md` |
+| 5 — Backlog | Agente Backlog | `.github/agents/agente-backlog.md` |
+| 6 — Refatoracao (PL/SQL) | Agente Refatoracao | `.github/agents/agente-refatoracao.md` |
 | F — Retroalimentacao | Agente Base | `.github/agents/agente-base-conhecimento.md` |
 | Scripts | Agente Scripts | `.github/agents/agente-scripts.md` |
 
@@ -70,8 +71,9 @@ PASSO 1  Ler .github/agents/agente-base-conhecimento.md
          Reportar o que ja existe sobre o objeto
 
 PASSO 2  Ler .github/agents/agente-eng-reversa.md
-         Executar Etapa 1 — engenharia reversa completa
-         Salvar reversa-[nome].md
+         Executar Etapa 1 — engenharia reversa completa (inclui Passo 6 —
+         Analise de Impacto, registrada nas secoes 11-15 do mesmo arquivo)
+         Salvar reversa-[nome].md (com secoes 11-15 preenchidas)
          Executar Etapa F parcial — atualizar base (objetos, tabelas, riscos, pendencias)
          >> PAUSA: apresentar artefato ao usuario e aguardar aprovacao <<
          Token esperado do usuario: "aprovado" / "aprovado com ressalvas: [obs]" / "reprovar"
@@ -85,15 +87,29 @@ PASSO 3  [somente se aprovado]
          Executar Etapa F parcial — atualizar base (regras, decisoes, padroes)
          >> PAUSA: apresentar artefatos ao usuario e aguardar aprovacao <<
 
-PASSO 4  [somente se aprovado]
+PASSO 4  [executa apos DDD com [HANDOFF-BACKLOG]]
          Ler .github/agents/agente-backlog.md
-         Executar Etapa 5 — analise de impacto
-         Executar Etapa 6 — backlog (epicos, features, user stories)
-         Salvar artefatos em 06-analise-impacto/, 07-backlog/
+         Executar Etapa 5 — backlog (epicos, features, user stories)
+         Insumos: ddd-modelagem-dominio.md + reversa-[nome].md (incl. 11-15)
+                  + catalogo-regras-negocio.md
+         Salvar artefatos em 07-backlog/ (pasta com numeracao historica)
+         >> PAUSA: apresentar backlog ao usuario e aguardar aprovacao <<
+         Token esperado do usuario: "aprovado" / "aprovado com ressalvas: [obs]" / "reprovar"
+         Token de saida: [HANDOFF-REFACT] no final do BACKLOG-*.md
+
+PASSO 5  [somente se backlog aprovado]
+         Ler .github/agents/agente-refatoracao.md
+         Executar Etapa 6 — geracao do codigo PL/SQL refatorado
+         Insumos primarios: 07-backlog/BACKLOG-*.md (user stories aprovadas)
+         Insumos de apoio : ddd-modelagem-dominio.md + reversa-[nome].md
+                            + 03-c4-model/src/*.puml + 04-fluxos/src/*.puml
+         Salvar artefatos em 05-refact/ (pasta com numeracao historica):
+           - pk_*.pks, pk_*.pkb, pk_*_const.sql, README-refact.md
+         Token de saida: [WORKFLOW-CONCLUIDO] no README-refact.md
          Executar Etapa F final — atualizar base completa
          Atualizar README.md raiz e README-rotina.md
 
-PASSO 5  Apresentar resumo final:
+PASSO 6  Apresentar resumo final:
          - Artefatos gerados e seus caminhos
          - Riscos ANS identificados
          - Pendencias abertas
@@ -116,8 +132,11 @@ Objeto : [NOME] | Tipo : [TIPO] | Schema : [SCHEMA] | Etapa : eng-reversa
 # DDD apenas (requer eng. reversa concluida)
 Objeto : [NOME] | Etapa : ddd
 
-# Backlog apenas (requer DDD concluido)
+# Backlog apenas (requer DDD concluido com [HANDOFF-BACKLOG])
 Objeto : [NOME] | Etapa : backlog
+
+# Refatoracao apenas (requer backlog aprovado com [HANDOFF-REFACT])
+Objeto : [NOME] | Etapa : refatoracao
 
 # Atualizar base de conhecimento
 Objeto : [NOME] | Etapa : retroalimentacao
@@ -136,6 +155,8 @@ usuario.
   artefato produzido contem o token de handoff esperado antes de prosseguir
   - Eng. Reversa concluida -> artefato deve conter `[HANDOFF-DDD]`
   - DDD concluido -> artefato deve conter `[HANDOFF-BACKLOG]`
+  - Backlog aprovado -> `07-backlog/BACKLOG-*.md` deve conter `[HANDOFF-REFACT]`
+  - Refatoracao concluida -> `05-refact/README-refact.md` deve conter `[WORKFLOW-CONCLUIDO]`
   - Se o token estiver ausente: registrar `[ATENCAO]` e notificar o usuario antes de continuar
 
 - **Pausas obrigatorias:** o orquestrador SEMPRE pausa para aprovacao humana
@@ -163,7 +184,8 @@ usuario.
 |---|---|---|---|
 | `[HANDOFF-DDD]` | Agente Eng. Reversa | Orquestrador | Eng. reversa aprovada, DDD pode iniciar |
 | `[HANDOFF-BACKLOG]` | Agente DDD | Orquestrador | DDD aprovado, backlog pode iniciar |
-| `[WORKFLOW-CONCLUIDO]` | Agente Backlog | Orquestrador | Ciclo completo da rotina encerrado |
+| `[HANDOFF-REFACT]` | Agente Backlog | Orquestrador | Backlog aprovado, refatoracao pode iniciar |
+| `[WORKFLOW-CONCLUIDO]` | Agente Refatoracao | Orquestrador | Codigo refatorado entregue, ciclo encerrado |
 | `[WORKFLOW-PAUSADO]` | Orquestrador | Usuario | Aguardando aprovacao ou decisao |
 | `[WORKFLOW-BLOQUEADO]` | Orquestrador | Usuario | Falha critica — requer intervencao |
 
@@ -182,15 +204,23 @@ Agente Eng. Reversa
 
 Agente DDD
   -> le     : reversa-[nome].md + dicionario-dominio.md + catalogo-tabelas.md
-  -> produz : 02-ddd/, 03-c4-model/src+svg/, 04-fluxos/src+svg/, 05-refact/
+  -> produz : 02-ddd/, 03-c4-model/src+svg/, 04-fluxos/src+svg/
   -> atualiza: _shared/base-conhecimento/ (regras, decisoes, padroes)
   -> sinaliza: [HANDOFF-BACKLOG] no final do ddd-modelagem-dominio.md
 
 Agente Backlog
-  -> le     : reversa-[nome].md + ddd-modelagem-dominio.md + catalogo-regras-negocio.md
-  -> produz : 06-analise-impacto/analise-impacto.md + 07-backlog/BACKLOG-*.md
-  -> atualiza: _shared/base-conhecimento/ (todas as secoes)
-  -> sinaliza: [WORKFLOW-CONCLUIDO] no README-rotina.md
+  -> le     : ddd-modelagem-dominio.md + reversa-[nome].md (incl. 11-15)
+              + catalogo-regras-negocio.md
+  -> produz : 07-backlog/BACKLOG-*.md
+  -> atualiza: _shared/base-conhecimento/ (regras consolidadas, riscos, pendencias)
+  -> sinaliza: [HANDOFF-REFACT] no final do BACKLOG-*.md (apos aprovacao do usuario)
+
+Agente Refatoracao
+  -> le     : 07-backlog/BACKLOG-*.md (fonte primaria) + ddd-modelagem-dominio.md
+              + reversa-[nome].md + 03-c4-model/src/*.puml + 04-fluxos/src/*.puml
+  -> produz : 05-refact/pk_*.pks + pk_*.pkb + pk_*_const.sql + README-refact.md
+  -> atualiza: _shared/base-conhecimento/ (decisoes-design, padroes, pendencias)
+  -> sinaliza: [WORKFLOW-CONCLUIDO] no README-refact.md
 ```
 
 ---
@@ -210,7 +240,7 @@ Agente Backlog
 6. Apos cada PASSO: validar token de handoff -> se ausente: [ATENCAO] e notificar.
 7. Em pausas: emitir [WORKFLOW-PAUSADO] e aguardar instrucao do usuario.
 8. Em falhas: emitir [WORKFLOW-BLOQUEADO] e aguardar.
-9. No fim: apresentar resumo (PASSO 5).
+9. No fim: apresentar resumo (PASSO 6).
 ```
 
 ---

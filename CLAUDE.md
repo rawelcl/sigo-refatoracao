@@ -63,9 +63,12 @@ C:\Users\thiagorc\Documents\Repos\Refatoracao\adrs arquitetura hapvida
 |---|---|---|
 | Orquestracao | Agente Orquestrador | `.github/agents/agente-orquestrador.md` |
 | 0 — Consulta base | Agente Base | `.github/agents/agente-base-conhecimento.md` |
-| 1 — Eng. Reversa | Agente Eng. Reversa | `.github/agents/agente-eng-reversa.md` |
+| 1 — Eng. Reversa (incl. Analise de Impacto) | Agente Eng. Reversa | `.github/agents/agente-eng-reversa.md` |
 | 2/3/4 — DDD + C4 + Fluxos | Agente DDD | `.github/agents/agente-ddd.md` |
-| 5/6 — Impacto + Backlog | Agente Backlog | `.github/agents/agente-backlog.md` |
+| 5 — Backlog | Agente Backlog | `.github/agents/agente-backlog.md` |
+| 6 — Refatoracao (PL/SQL) | Agente Refatoracao | `.github/agents/agente-refatoracao.md` |
+| 6.1 — Testes utPLSQL | Agente Testes | `.github/agents/agente-testes.md` |
+| Auditoria por track (transversal) | Agente Auditor | `.github/agents/agente-auditor.md` |
 | F — Retroalimentacao | Agente Base | `.github/agents/agente-base-conhecimento.md` |
 | Scripts | Agente Scripts | `.github/agents/agente-scripts.md` |
 
@@ -131,7 +134,6 @@ WS-PROJETO-REFACT-SIGO/
 ?       ??? 03-c4-model/src/ + svg/
 ?       ??? 04-fluxos/src/ + svg/
 ?       ??? 05-refact/                  ? codigo PL/SQL inicial refatorado (gerado pelo Agente DDD)
-?       ??? 06-analise-impacto/
 ?       ??? 07-backlog/
 ?
 ??? _shared/
@@ -165,8 +167,7 @@ WS-PROJETO-REFACT-SIGO/
             ??? 03-c4-model/src/ + svg/
             ??? 04-fluxos/src/ + svg/
             ??? 05-refact/              ? codigo PL/SQL inicial refatorado (gerado pelo Agente DDD)
-            ??? 06-analise-impacto/
-            ??? 07-backlog/
+            ??? 07-backlog/             ? backlog (analise de impacto vai dentro de 01-engenharia-reversa/reversa-[nome].md, secoes 11-15)
 ```
 
 ---
@@ -290,6 +291,12 @@ Usados em todos os artefatos `.md`. **Emojis sao proibidos** em arquivos do proj
 | `[HANDOFF-BACKLOG]` | DDD concluido — pronto para backlog |
 | `[MIGRACAO]` | Ponto de atencao para futura migracao para microsservico |
 | `[ADR-AUSENTE]` | Decisao sem ADR correspondente — requer criacao de ADR |
+| `[QUESTIONADO]` | Item levantado pelo Agente Auditor, em discussao |
+| `[DEFENDIDO]` | Resposta a auditoria com evidencia aceita |
+| `[REFUTADO]` | Resposta a auditoria inadequada — virou pendencia |
+| `[CONCEDIDO]` | Agente aceitou critica do auditor e ajustou artefato |
+| `[AUDITORIA-OK]` | Auditoria de track concluida sem ressalvas |
+| `[AUDITORIA-COM-RESSALVAS]` | Auditoria concluida com pendencias registradas |
 
 ---
 

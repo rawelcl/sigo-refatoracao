@@ -1,7 +1,11 @@
-# Agente: Analise de Impacto e Backlog
+# Agente: Backlog de Refatoracao
 
-> Carregado pelo Claude Code quando a tarefa envolve analise de impacto ou geracao de backlog.
+> Carregado pelo Claude Code quando a tarefa envolve geracao do backlog de refatoracao.
 > As regras compartilhadas estao em `@CLAUDE.md` — leia-o antes de prosseguir.
+>
+> **Nota:** A Analise de Impacto deixou de ser uma etapa separada. Ela agora e
+> subetapa da Engenharia Reversa e esta documentada nas secoes 11 a 15 do arquivo
+> `reversa-[nome].md`. Este agente apenas CONSOME essas secoes; nao as gera.
 
 ---
 
@@ -19,10 +23,9 @@ claro. Cada risco de impacto deve ter um plano de mitigacao.
 
 ## Quando Este Agente Atua
 
-- Usuario pede analise de impacto de uma rotina
 - Usuario pede geracao de backlog (epicos, features, user stories)
-- Etapas 5 e 6 do workflow de refatoracao
-- Artefato DDD contem `[HANDOFF-BACKLOG]`
+- Etapa 5 do workflow de refatoracao
+- Artefato `ddd-modelagem-dominio.md` contem `[HANDOFF-BACKLOG]`
 
 ---
 
@@ -30,8 +33,9 @@ claro. Cada risco de impacto deve ter um plano de mitigacao.
 
 ```
 [ ] Ler _shared/base-conhecimento/indice.md
-[ ] Ler reversa-[nome].md — fonte das regras de negocio e smells
+[ ] Ler reversa-[nome].md — fonte das regras de negocio, smells E impacto (secoes 11-15)
 [ ] Ler ddd-modelagem-dominio.md — fonte dos agregados, eventos e decisoes de design
+[ ] Ler 05-refact/README-refact.md — fonte das decisoes aplicadas, smells eliminados, MIGRACAOs
 [ ] Verificar _shared/base-conhecimento/catalogo-regras-negocio.md
       ? identificar regras duplicadas em outras rotinas (impacto sistemico)
 [ ] Verificar _shared/base-conhecimento/riscos-ans.md
@@ -40,149 +44,37 @@ claro. Cada risco de impacto deve ter um plano de mitigacao.
       ? pendencias [BLOQUEADO] que podem impedir items de backlog
 [ ] Confirmar versao ativa: output/rotinas/[nome]/README-rotina.md
 [ ] Verificar ou criar estrutura de pastas:
-      output/rotinas/[nome]/rev-[TAG]/05-analise-impacto/
-      output/rotinas/[nome]/rev-[TAG]/06-backlog/
+      output/rotinas/[nome]/rev-[TAG]/07-backlog/
 ```
 
-Se `[HANDOFF-BACKLOG]` nao constar no artefato DDD: PARAR e notificar o usuario
-— a modelagem DDD deve ser concluida antes do backlog.
+Se `[HANDOFF-BACKLOG]` nao constar no `ddd-modelagem-dominio.md`: PARAR e
+notificar o usuario — a modelagem DDD precisa estar concluida e aprovada
+antes do backlog.
+
+Se as secoes 11-15 do `reversa-[nome].md` estiverem incompletas: PARAR e
+notificar — a Engenharia Reversa precisa ser fechada antes do backlog.
 
 ---
 
-## Etapa 5 — Analise de Impacto
+## Insumos da Analise de Impacto
 
-### Dimensoes de Analise
+A Analise de Impacto e produzida pelo **Agente de Engenharia Reversa**, nas
+secoes 11 a 15 do arquivo `reversa-[nome].md`:
 
-**5.1 Objetos Oracle Dependentes** — via MCP (HAPVIDA PRODUCAO):
+| Secao | Conteudo | Como o Backlog usa |
+|---|---|---|
+| 11 | Mapa de Dependentes | identificar stories de "alinhamento de contrato" e blast radius |
+| 12 | Impacto em Dados | criar criterios de aceite que preservem semantica de escrita |
+| 13 | Jobs e Integracoes | priorizar stories que tocam jobs criticos / integracoes |
+| 14 | Riscos ANS Ampliados | marcar features como `[CRITICO]` quando aplicavel |
+| 15 | Plano de Rollback / Mitigacoes | virar feature de "blindagem operacional" |
 
-```sql
--- Quem chama esta rotina
-SELECT owner, name, type
-FROM   dba_dependencies
-WHERE  referenced_name = UPPER('[OBJETO]')
-  AND  referenced_type IN ('PROCEDURE','FUNCTION','PACKAGE','PACKAGE BODY')
-ORDER BY type, name;
-
--- Jobs Oracle que podem chamar esta rotina
-SELECT job_name, enabled, state, last_run_duration
-FROM   dba_scheduler_jobs
-WHERE  job_action LIKE '%[OBJETO]%';
-```
-
-Para cada dependente avaliar:
-- Contrato (assinatura) muda? Se sim: todos os chamadores sao afetados
-- Precisa recompilacao?
-- Precisa ajuste logico (nao so recompilacao)?
-
-**5.2 Impacto em Dados**
-
-Para cada tabela escrita pela rotina:
-- O comportamento de escrita muda na versao refatorada?
-- Campos novos preenchidos / campos que deixam de ser preenchidos?
-- Logica de validacao alterada pode afetar dados existentes?
-- Volume: quantos registros seriam afetados?
-
-**5.3 Jobs e Schedulers**
-
-Verificar se a rotina e chamada por jobs Oracle ou schedulers da aplicacao.
-Mapear frequencia e janela de execucao — impacta o plano de implantacao.
-
-**5.4 Integracoes**
-
-Verificar se a rotina e chamada por APIs, middlewares ou sistemas externos.
-Qualquer mudanca de contrato exige alinhamento com os times de integracao.
-
-**5.5 Riscos ANS**
-
-Cruzar os riscos `[ANS]` da eng. reversa com o mapa de dependentes:
-se uma regra com risco ANS e chamada por multiplos objetos, o impacto
-regulatorio e amplificado — registrar como `[CRITICO]`.
-
-### Template de Output — `analise-impacto.md`
-
-Salvar em: `output/rotinas/[nome]/rev-[TAG]/05-analise-impacto/analise-impacto.md`
-
-```markdown
-# Analise de Impacto: [NOME_DA_ROTINA]
-
-**Data:** [data]
-**Versao:** rev-[TAG]
-**Baseado em:** reversa-[nome].md + ddd-modelagem-dominio.md
+Se qualquer dessas secoes estiver vazia ou marcada `[BLOQUEADO]` no
+`reversa-[nome].md`: PARAR e devolver ao agente de Engenharia Reversa.
 
 ---
 
-## 1. Mapa de Dependentes
-
-| Objeto | Tipo | Schema | Como Usa | Impacto | Acao Necessaria |
-|---|---|---|---|---|---|
-| [nome] | Procedure/Job | [schema] | [como chama] | Nenhum/Contrato/Recompilacao | [acao] |
-
-**Total de dependentes:** [N]
-**Dependentes criticos:** [N]
-
----
-
-## 2. Mudancas no Contrato
-
-| Parametro | Atual | Proposto | Justificativa | Impacto |
-|---|---|---|---|---|
-| [param] | IN VARCHAR2 | Sem mudanca | — | Nenhum |
-| [param] | OUT NUMBER | Removido — excecao | DDD: erro como excecao | Todos os chamadores |
-
----
-
-## 3. Impacto em Dados
-
-| Tabela | Comportamento Atual | Comportamento Novo | Risco | Volume Estimado |
-|---|---|---|---|---|
-| [T_XXXX] | INSERT sem idempotencia | INSERT com controle | Baixo | [N registros/dia] |
-
----
-
-## 4. Jobs e Integracoes
-
-| Job / Sistema | Frequencia / Canal | Impacto | Acao Necessaria |
-|---|---|---|---|
-| [JOB_EFETIVACAO] | Diario 02:00 | Nenhum | — |
-
----
-
-## 5. Riscos ANS Ampliados
-
-| Risco ANS | Rotinas Dependentes Afetadas | Severidade Ampliada | Acao |
-|---|---|---|---|
-| [ANS01] | [lista] | [CRITICO] | [acao urgente] |
-
----
-
-## 6. Plano de Rollback
-
-**Estrategia:** [schema de backup / feature flag / versionamento de package]
-
-**Condicoes para ativar:**
-- [condicao 1]
-- [condicao 2]
-
----
-
-## 7. Riscos e Mitigacoes
-
-| Risco | Probabilidade | Impacto | Mitigacao |
-|---|---|---|---|
-| [risco] | Alta/Media/Baixa | Alto/Medio/Baixo | [acao] |
-
----
-
-## 8. Aprovacao
-
-- [ ] Analisado pelo Arquiteto
-- [ ] Validado pelo DBA
-- [ ] Aprovado pelo PO
-```
-
----
-
-## Etapa 6 — Backlog
+## Etapa 5 — Backlog
 
 ### Hierarquia e Rastreabilidade
 
@@ -217,7 +109,7 @@ Salvar em: `output/rotinas/[nome]/rev-[TAG]/06-backlog/BACKLOG-EPICO-FEATURES-US
 # Backlog de Refatoracao: [NOME_DA_ROTINA]
 
 **Versao:** rev-[TAG]
-**Baseado em:** reversa-[nome].md | ddd-modelagem-dominio.md | analise-impacto.md
+**Baseado em:** reversa-[nome].md (incl. secoes 11-15 de impacto) | ddd-modelagem-dominio.md
 
 ---
 
@@ -274,13 +166,20 @@ Cenario 2: [caminho de excecao]
 | EP01 | Epico | [nome] | Alta | — | Aberto |
 | FT01 | Feature | [nome] | Alta | — | Aberto |
 | US01 | Story | [nome] | Alta | 5 | Aberto |
+
+---
+
+[HANDOFF-REFACT]
+Backlog aprovado pelo usuario. Proxima etapa: Agente Refatoracao
+(`.github/agents/agente-refatoracao.md`), que materializa as user stories
+listadas acima em codigo PL/SQL refatorado em `05-refact/`.
 ```
 
 ---
 
 ## Retroalimentacao Obrigatoria (Etapa F)
 
-Ao concluir as etapas 5 e 6, atualizar:
+Ao concluir a etapa 5 (Backlog), atualizar:
 
 ```
 [ ] _shared/base-conhecimento/indice.md              ? metricas atualizadas
@@ -288,5 +187,5 @@ Ao concluir as etapas 5 e 6, atualizar:
 [ ] _shared/base-conhecimento/riscos-ans.md          ? riscos ampliados marcados
 [ ] _shared/base-conhecimento/pendencias-abertas.md  ? pendencias de impacto registradas
 [ ] output/rotinas/[nome]/README-rotina.md                  ? status atualizado
-[ ] README.md (raiz)                                 ? E5=[OK], E6=[OK]
+[ ] README.md (raiz)                                 ? E5=[OK]
 ```

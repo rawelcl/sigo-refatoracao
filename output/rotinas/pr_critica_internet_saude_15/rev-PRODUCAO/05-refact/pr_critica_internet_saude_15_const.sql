@@ -1,0 +1,9 @@
+-- Constantes para a rotina pr_critica_internet_saude_15
+CREATE OR REPLACE PACKAGE pr_critica_internet_saude_15_const AS
+  C_IDADE_PADRAO CONSTANT NUMBER := 708; -- 59 anos em meses
+  C_IDADE_ALTERNATIVA CONSTANT NUMBER := 780; -- 65 anos em meses
+  C_CANAL_VENDA_EXCLUIDO CONSTANT NUMBER := 5;
+  C_CRITICA_TITULAR CONSTANT VARCHAR2(50) := '100MT-INCLUSAO PENDENTE';
+  C_CRITICA_DEPENDENTE CONSTANT VARCHAR2(50) := '100MD-INCLUSAO PENDENTE';
+END pr_critica_internet_saude_15_const;
+/
